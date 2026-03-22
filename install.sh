@@ -32,22 +32,40 @@ apt-get install -y -qq curl git nodejs npm >/dev/null 2>&1 || true
 # Install pnpm if missing
 if ! command -v pnpm &>/dev/null; then
     echo -e "${YELLOW}Installing pnpm...${NC}"
-    # Try npm install first
-    npm install -g pnpm >/dev/null 2>&1 || {
+    # Ensure npm is available
+    if ! command -v npm &>/dev/null; then
+        echo -e "${RED}✗ npm not found. Installing nodejs...${NC}"
+        apt-get install -y -qq nodejs npm >/dev/null 2>&1 || apt-get install -y nodejs npm
+    fi
+    
+    # Try npm install
+    echo -e "${YELLOW}Trying: npm install -g pnpm${NC}"
+    if npm install -g pnpm 2>&1 | tail -5; then
+        echo -e "${GREEN}✓ pnpm installed via npm${NC}"
+    else
         # Fallback: curl installer
-        curl -fsSL https://get.pnpm.io/install.sh | sh - >/dev/null 2>&1 || {
-            echo -e "${RED}✗ pnpm install failed. Trying alternative...${NC}"
-            npm install -g pnpm 2>&1 | tail -3
-        }
-    }
-    # Source pnpm if installed via curl
-    [ -f "$HOME/.local/share/pnpm/pnpm" ] && export PATH="$HOME/.local/share/pnpm:$PATH"
-    [ -f "$HOME/.pnpm/pnpm" ] && export PATH="$HOME/.pnpm:$PATH"
+        echo -e "${YELLOW}Trying: curl installer${NC}"
+        if curl -fsSL https://get.pnpm.io/install.sh | sh - 2>&1 | tail -5; then
+            echo -e "${GREEN}✓ pnpm installed via curl${NC}"
+            # Source pnpm
+            [ -d "$HOME/.local/share/pnpm" ] && export PATH="$HOME/.local/share/pnpm:$PATH"
+            [ -d "$HOME/.pnpm" ] && export PATH="$HOME/.pnpm:$PATH"
+            hash -r
+        else
+            echo -e "${RED}✗ Both pnpm install methods failed.${NC}"
+            echo -e "${YELLOW}Trying alternative: npm with --force${NC}"
+            npm install -g pnpm --force 2>&1 | tail -5
+        fi
+    fi
 fi
+
 # Verify pnpm
 if ! command -v pnpm &>/dev/null; then
-    echo -e "${RED}✗ pnpm not available. Cannot proceed.${NC}"
+    echo -e "${RED}✗ pnpm still not available. Check npm/nodejs installation.${NC}"
+    which npm node 2>/dev/null || echo "npm/node not found"
     exit 1
+fi
+echo -e "${GREEN}✓ pnpm ready: $(pnpm --version)${NC}"
 fi
 
 # Clone source
