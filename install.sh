@@ -59,14 +59,26 @@ if ! command -v pnpm &>/dev/null; then
     fi
 fi
 
-# Verify pnpm
+# Verify pnpm (refresh PATH after npm install)
+hash -r  # Clear bash command cache
+export PATH="/usr/local/lib/node_modules:$PATH:/usr/local/bin:$HOME/.local/share/pnpm:$HOME/.npm-global/bin"
+
 if ! command -v pnpm &>/dev/null; then
-    echo -e "${RED}✗ pnpm still not available. Check npm/nodejs installation.${NC}"
-    which npm node 2>/dev/null || echo "npm/node not found"
+    # Try to find pnpm in common locations
+    PNPM_BIN=$(find /usr -name "pnpm" -type f 2>/dev/null | head -1)
+    if [ -n "$PNPM_BIN" ]; then
+        export PATH="$(dirname $PNPM_BIN):$PATH"
+        hash -r
+    fi
+fi
+
+if ! command -v pnpm &>/dev/null; then
+    echo -e "${RED}✗ pnpm not in PATH. Checking locations...${NC}"
+    find /usr -name "pnpm" 2>/dev/null | head -5
+    npm config get prefix 2>/dev/null
     exit 1
 fi
 echo -e "${GREEN}✓ pnpm ready: $(pnpm --version)${NC}"
-fi
 
 # Clone source
 OPENCLAW_DIR="/home/openclaw/Project/openclaw"
