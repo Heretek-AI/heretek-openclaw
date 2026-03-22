@@ -140,13 +140,48 @@ fi
 # Build
 echo -e "${YELLOW}Building OpenClaw (this may take 3-5 min)...${NC}"
 cd "$OPENCLAW_DIR"
-pnpm install --prefer-offline --silent 2>/dev/null || pnpm install 2>&1 | tail -5
-pnpm build 2>&1 | tail -10 || {
-    echo -e "${RED}✗ Build failed. Check output above.${NC}"
+
+# Add swap if low memory (< 2GB)
+MEM_TOTAL=$(grep MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}')
+if [ -n "$MEM_TOTAL" ] && [ "$MEM_TOTAL" -lt 2000000 ]; then
+    echo -e "${YELLOW}Low memory detected (${MEM_TOTAL}KB). Adding 1GB swap...${NC}"
+    if [ ! -f /swapfile ]; then
+        dd if=/dev/zero of=/swapfile bs=1M count=1024 status=none 2>/dev/null && \
+        chmod 600 /swapfile && \
+        mkswap /swapfile >/dev/null 2>&1 && \
+        swapon /swapfile 2>/dev/null && \
+        echo -e "${GREEN}✓ Swap added${NC}"
+    fi
+fi
+
+# Install deps (show output for debugging)
+echo -e "${YELLOW}Running: pnpm install${NC}"
+if pnpm install --prefer-offline 2>&1 | tail -15; then
+    echo -e "${GREEN}✓ Dependencies installed${NC}"
+else
+    echo -e "${RED}✗ pnpm install failed. Retrying without --prefer-offline...${NC}"
+    pnpm install 2>&1 | tail -15 || {
+        echo -e "${RED}✗ Failed to install dependencies.${NC}"
+        exit 1
+    }
+fi
+
+# Build (show output)
+echo -e "${YELLOW}Running: pnpm build${NC}"
+if pnpm build 2>&1 | tail -20; then
+    echo -e "${GREEN}✓ Build complete${NC}"
+else
+    echo -e "${RED}✗ Build failed.${NC}"
     exit 1
-}
-pnpm link --global --silent 2>/dev/null || pnpm link --global 2>&1 | tail -3
-echo -e "${GREEN}✓ Build complete${NC}"
+fi
+
+# Link
+echo -e "${YELLOW}Running: pnpm link --global${NC}"
+if pnpm link --global 2>&1 | tail -5; then
+    echo -e "${GREEN}✓ Linked globally${NC}"
+else
+    echo -e "${YELLOW}⚠ Link may have warnings but continuing...${NC}"
+fi
 
 # Write liberated config
 echo -e "${YELLOW}Writing liberated configuration...${NC}"
