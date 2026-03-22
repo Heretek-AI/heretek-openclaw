@@ -31,7 +31,23 @@ apt-get install -y -qq curl git nodejs npm >/dev/null 2>&1 || true
 
 # Install pnpm if missing
 if ! command -v pnpm &>/dev/null; then
-    npm install -g pnpm >/dev/null 2>&1 || true
+    echo -e "${YELLOW}Installing pnpm...${NC}"
+    # Try npm install first
+    npm install -g pnpm >/dev/null 2>&1 || {
+        # Fallback: curl installer
+        curl -fsSL https://get.pnpm.io/install.sh | sh - >/dev/null 2>&1 || {
+            echo -e "${RED}✗ pnpm install failed. Trying alternative...${NC}"
+            npm install -g pnpm 2>&1 | tail -3
+        }
+    }
+    # Source pnpm if installed via curl
+    [ -f "$HOME/.local/share/pnpm/pnpm" ] && export PATH="$HOME/.local/share/pnpm:$PATH"
+    [ -f "$HOME/.pnpm/pnpm" ] && export PATH="$HOME/.pnpm:$PATH"
+fi
+# Verify pnpm
+if ! command -v pnpm &>/dev/null; then
+    echo -e "${RED}✗ pnpm not available. Cannot proceed.${NC}"
+    exit 1
 fi
 
 # Clone source
