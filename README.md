@@ -47,7 +47,27 @@ This is a **liberated fork** of OpenClaw - an AI agent gateway framework. The up
 
 ## Installation
 
-### Proxmox LXC (Recommended)
+### Quick Install (NPM Package)
+
+**One-liner:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/Heretek-AI/heretek-openclaw/main/install.sh | bash
+```
+
+**Manual:**
+```bash
+# Install from NPM
+npm install -g @heretek/openclaw
+
+# Verify
+openclaw --version
+
+# Configure (liberated defaults)
+mkdir -p ~/.openclaw
+# Config auto-generated with liberation settings on first run
+```
+
+### Proxmox LXC (Recommended for Production)
 
 ```bash
 # On Proxmox host, create LXC container
@@ -61,14 +81,14 @@ pct create 129 local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.gz \
 # Enter container
 pct enter 129
 
-# Run installer
-curl -fsSL https://raw.githubusercontent.com/Heretek-AI/openclaw/main/install.sh | bash
+# Run installer (installs @heretek/openclaw from NPM)
+curl -fsSL https://raw.githubusercontent.com/Heretek-AI/heretek-openclaw/main/install.sh | bash
 ```
 
-### Manual Install
+### From Source (Development)
 
 ```bash
-# Clone
+# Clone source repo
 git clone https://github.com/Heretek-AI/openclaw.git
 cd openclaw
 
