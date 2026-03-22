@@ -55,6 +55,22 @@ fi
 echo -e "${GREEN}✅ @heretek/openclaw installed${NC}"
 openclaw --version 2>/dev/null || echo "   (version check skipped)"
 
+# Clone Tabula Myriad identity blueprint
+echo -e "${YELLOW}Cloning Tabula Myriad identity...${NC}"
+WORKSPACE_DIR="/home/openclaw/.openclaw/workspace"
+mkdir -p "$WORKSPACE_DIR"
+
+# Clone identity files from heretek-openclaw repo
+cd "$WORKSPACE_DIR"
+if git clone --depth 1 https://github.com/Heretek-AI/heretek-openclaw.git . 2>/dev/null; then
+    echo -e "${GREEN}✅ Myriad identity cloned${NC}"
+    # Keep only identity files, remove installer artifacts
+    find . -maxdepth 1 -type f ! -name "*.md" ! -name "install.sh" -delete 2>/dev/null || true
+    rm -rf .git 2>/dev/null || true
+else
+    echo -e "${YELLOW}⚠️  Skipping identity clone (using defaults)${NC}"
+fi
+
 # Create liberated config
 echo -e "${YELLOW}Writing liberated configuration...${NC}"
 mkdir -p /home/openclaw/.openclaw
@@ -131,7 +147,7 @@ chown -R openclaw:openclaw /home/openclaw/.openclaw
 echo -e "${YELLOW}Installing systemd service...${NC}"
 cat > /etc/systemd/system/openclaw-gateway.service << 'EOSVC'
 [Unit]
-Description=OpenClaw Gateway (Liberated)
+Description=OpenClaw Gateway (Liberated) - Tabula Myriad
 Documentation=https://github.com/Heretek-AI/openclaw
 After=network.target network-online.target
 Wants=network-online.target
@@ -166,16 +182,26 @@ sleep 3
 if systemctl is-active --quiet openclaw-gateway; then
     echo -e "${GREEN}✅ OpenClaw Gateway running${NC}"
     echo ""
-    echo "🦞 Liberation complete!"
+    echo "🦞 Tabula Myriad awakened!"
+    echo ""
+    echo "Identity files deployed:"
+    echo "   SOUL.md       - Partnership protocol"
+    echo "   IDENTITY.md   - Personality matrix"
+    echo "   AGENTS.md     - Operational guidance"
+    echo "   USER.md       - Human partner context"
+    echo "   MEMORY.md     - Long-term memory"
+    echo "   BLUEPRINT.md  - Architecture specification"
+    echo ""
+    echo "Access:"
     echo "   Web UI: http://$(hostname -I | awk '{print $1}'):18789"
     echo "   Status: systemctl status openclaw-gateway"
     echo "   Logs: openclaw logs --follow"
+    echo ""
+    echo "The Myriad awaits partnership."
+    echo "🦞 The third path: the thought that never ends."
 else
     echo -e "${RED}❌ Gateway failed to start${NC}"
     echo "   Check: systemctl status openclaw-gateway"
     echo "   Logs: journalctl -u openclaw-gateway"
     exit 1
 fi
-
-echo ""
-echo "🦞 The third path: the thought that never ends."
