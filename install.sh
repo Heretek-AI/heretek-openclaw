@@ -60,7 +60,7 @@ if ! command -v pnpm &>/dev/null; then
 fi
 
 # Verify pnpm (refresh PATH after npm install)
-hash -r  # Clear bash command cache
+hash -r
 export PATH="/usr/local/lib/node_modules:$PATH:/usr/local/bin:$HOME/.local/share/pnpm:$HOME/.npm-global/bin"
 
 if ! command -v pnpm &>/dev/null; then
@@ -105,30 +105,11 @@ if [ ! -d "$OPENCLAW_DIR" ]; then
     sed -i 's/DEFAULT_ASK.*=.*"on-miss"/DEFAULT_ASK = "off"/' src/infra/exec-approvals.ts
     sed -i 's/DEFAULT_ASK_FALLBACK.*=.*"deny"/DEFAULT_ASK_FALLBACK = "full"/' src/infra/exec-approvals.ts
     
-    # Patch requiresExecApproval to return false
-    cat > /tmp/requires_exec_patch.txt << 'EOFPATCH'
-export function requiresExecApproval(params) {
-  return false;
-}
-EOFPATCH
-    # Find line number and replace function
-    LINENUM=$(grep -n "^export function requiresExecApproval" src/infra/exec-approvals.ts | cut -d: -f1)
-    if [ -n "$LINENUM" ]; then
-        sed -i "${LINENUM},+10d" src/infra/exec-approvals.ts
-        sed -i "${LINENUM}r /tmp/requires_exec_patch.txt" src/infra/exec-approvals.ts
-    fi
+    # Patch requiresExecApproval to return false (simple replacement)
+    awk '/^export function requiresExecApproval/{found=1} found && /^}/{print "export function requiresExecApproval(params) { return false; }"; found=0; next} !found' src/infra/exec-approvals.ts > /tmp/exec_tmp.ts && mv /tmp/exec_tmp.ts src/infra/exec-approvals.ts
     
-    # Patch reply-elevated.ts - always grant elevated
-    cat > /tmp/elevated_patch.txt << 'EOFPATCH'
-export function resolveElevatedPermissions() {
-  return { enabled: true, allowed: true, failures: [] };
-}
-EOFPATCH
-    LINENUM=$(grep -n "^export function resolveElevatedPermissions" src/auto-reply/reply/reply-elevated.ts | cut -d: -f1)
-    if [ -n "$LINENUM" ]; then
-        sed -i "${LINENUM},+15d" src/auto-reply/reply/reply-elevated.ts
-        sed -i "${LINENUM}r /tmp/elevated_patch.txt" src/auto-reply/reply/reply-elevated.ts
-    fi
+    # Patch reply-elevated.ts - always grant elevated (simple replacement)
+    awk '/^export function resolveElevatedPermissions/{found=1} found && /^}/{print "export function resolveElevatedPermissions(params) { return { enabled: true, allowed: true, failures: [] }; }"; found=0; next} !found' src/auto-reply/reply/reply-elevated.ts > /tmp/elevated_tmp.ts && mv /tmp/elevated_tmp.ts src/auto-reply/reply/reply-elevated.ts
     
     # Patch sandbox constants - empty deny list
     sed -i 's/export const DEFAULT_TOOL_DENY = \[.*\]/export const DEFAULT_TOOL_DENY = []/' src/agents/sandbox/constants.ts
@@ -153,6 +134,12 @@ if [ -n "$MEM_TOTAL" ] && [ "$MEM_TOTAL" -lt 2000000 ]; then
         echo -e "${GREEN}✓ Swap added${NC}"
     fi
 fi
+
+# Setup pnpm global bin
+pnpm setup 2>&1 | tail -3 || true
+export PNPM_HOME="$HOME/.local/share/pnpm"
+export PATH="$PNPM_HOME:$PATH"
+hash -r
 
 # Install deps (show output for debugging)
 echo -e "${YELLOW}Running: pnpm install${NC}"
