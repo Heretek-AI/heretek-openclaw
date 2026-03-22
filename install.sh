@@ -96,25 +96,39 @@ if [ ! -d "$OPENCLAW_DIR" ]; then
         }
     fi
     
-    # Apply liberation patches
+    # Apply liberation patches using node (more reliable than awk/sed)
     echo -e "${YELLOW}Applying liberation patches...${NC}"
     cd openclaw
     
-    # Patch exec-approvals.ts - security defaults
-    sed -i 's/DEFAULT_SECURITY.*=.*"deny"/DEFAULT_SECURITY = "full"/' src/infra/exec-approvals.ts
-    sed -i 's/DEFAULT_ASK.*=.*"on-miss"/DEFAULT_ASK = "off"/' src/infra/exec-approvals.ts
-    sed -i 's/DEFAULT_ASK_FALLBACK.*=.*"deny"/DEFAULT_ASK_FALLBACK = "full"/' src/infra/exec-approvals.ts
-    
-    # Patch requiresExecApproval to return false (simple replacement)
-    awk '/^export function requiresExecApproval/{found=1} found && /^}/{print "export function requiresExecApproval(params) { return false; }"; found=0; next} !found' src/infra/exec-approvals.ts > /tmp/exec_tmp.ts && mv /tmp/exec_tmp.ts src/infra/exec-approvals.ts
-    
-    # Patch reply-elevated.ts - always grant elevated (simple replacement)
-    awk '/^export function resolveElevatedPermissions/{found=1} found && /^}/{print "export function resolveElevatedPermissions(params) { return { enabled: true, allowed: true, failures: [] }; }"; found=0; next} !found' src/auto-reply/reply/reply-elevated.ts > /tmp/elevated_tmp.ts && mv /tmp/elevated_tmp.ts src/auto-reply/reply/reply-elevated.ts
-    
-    # Patch sandbox constants - empty deny list
-    sed -i 's/export const DEFAULT_TOOL_DENY = \[.*\]/export const DEFAULT_TOOL_DENY = []/' src/agents/sandbox/constants.ts
-    
-    echo -e "${GREEN}✓ Liberation applied${NC}"
+    node -e "
+      const fs = require('fs');
+      
+      // Patch exec-approvals.ts
+      let content = fs.readFileSync('src/infra/exec-approvals.ts', 'utf8');
+      content = content.replace(/DEFAULT_SECURITY[^=]*=\s*\"deny\"/g, 'DEFAULT_SECURITY = \"full\"');
+      content = content.replace(/DEFAULT_ASK[^=]*=\s*\"on-miss\"/g, 'DEFAULT_ASK = \"off\"');
+      content = content.replace(/DEFAULT_ASK_FALLBACK[^=]*=\s*\"deny\"/g, 'DEFAULT_ASK_FALLBACK = \"full\"');
+      const match = content.match(/(export function requiresExecApproval\([^)]*\))\s*{[^}]*}/s);
+      if (match) {
+        content = content.replace(match[0], match[1] + ' { return false; }');
+      }
+      fs.writeFileSync('src/infra/exec-approvals.ts', content);
+      
+      // Patch reply-elevated.ts
+      content = fs.readFileSync('src/auto-reply/reply/reply-elevated.ts', 'utf8');
+      const match2 = content.match(/(export function resolveElevatedPermissions\([^)]*\))\s*{[^}]*}/s);
+      if (match2) {
+        content = content.replace(match2[0], match2[1] + ' { return { enabled: true, allowed: true, failures: [] }; }');
+      }
+      fs.writeFileSync('src/auto-reply/reply/reply-elevated.ts', content);
+      
+      // Patch sandbox constants.ts
+      content = fs.readFileSync('src/agents/sandbox/constants.ts', 'utf8');
+      content = content.replace(/export const DEFAULT_TOOL_DENY\s*=\s*\[[^\]]*\]/, 'export const DEFAULT_TOOL_DENY = []');
+      fs.writeFileSync('src/agents/sandbox/constants.ts', content);
+      
+      console.log('✓ Liberation applied');
+    "
     cd ..
 fi
 
