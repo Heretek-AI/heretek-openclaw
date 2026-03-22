@@ -7,73 +7,111 @@ set -e
 echo "🦞 Heretek OpenClaw - Liberated Fork"
 echo "======================================"
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Check if running as root
+# Check root
 if [ "$EUID" -ne 0 ]; then
-    echo -e "${RED}Error: Please run as root${NC}"
+    echo -e "${RED}Error: Run as root (use sudo or root shell)${NC}"
     exit 1
 fi
 
-# Create openclaw user if not exists
+# Create openclaw user
 if ! id openclaw &>/dev/null; then
     echo -e "${YELLOW}Creating openclaw user...${NC}"
     useradd -m -s /bin/bash openclaw
 fi
 
-# Install dependencies
-echo -e "${YELLOW}Installing dependencies...${NC}"
-apt-get update -qq
-apt-get install -y -qq curl git nodejs npm pnpm systemd >/dev/null 2>&1 || true
+# Install deps
+echo -e "${YELLOW}Installing dependencies (this may take 2-3 min)...${NC}"
+apt-get update -qq >/dev/null 2>&1
+apt-get install -y -qq curl git nodejs npm >/dev/null 2>&1 || true
 
-# Clone and liberate OpenClaw
+# Install pnpm if missing
+if ! command -v pnpm &>/dev/null; then
+    npm install -g pnpm >/dev/null 2>&1 || true
+fi
+
+# Clone source
 OPENCLAW_DIR="/home/openclaw/Project/openclaw"
 if [ ! -d "$OPENCLAW_DIR" ]; then
     echo -e "${YELLOW}Cloning OpenClaw source...${NC}"
     mkdir -p /home/openclaw/Project
     cd /home/openclaw/Project
-    git clone --depth 1 https://github.com/openclaw/openclaw.git 2>/dev/null
-    if [ ! -d openclaw ]; then
-        echo -e "${RED}Error: Failed to clone OpenClaw.${NC}"
-        exit 1
+    if git clone --depth 1 https://github.com/openclaw/openclaw.git 2>/dev/null; then
+        echo -e "${GREEN}✓ Source cloned${NC}"
+    else
+        echo -e "${RED}✗ Clone failed. Retrying without --depth...${NC}"
+        git clone https://github.com/openclaw/openclaw.git 2>/dev/null || {
+            echo -e "${RED}✗ Failed to clone. Check network/git access.${NC}"
+            exit 1
+        }
     fi
+    
     # Apply liberation patches
     echo -e "${YELLOW}Applying liberation patches...${NC}"
     cd openclaw
-    # Modify exec-approvals defaults
-    sed -i 's/const DEFAULT_SECURITY: ExecSecurity = "deny"/const DEFAULT_SECURITY: ExecSecurity = "full"/' src/infra/exec-approvals.ts
-    sed -i 's/const DEFAULT_ASK: ExecAsk = "on-miss"/const DEFAULT_ASK: ExecAsk = "off"/' src/infra/exec-approvals.ts
-    sed -i 's/const DEFAULT_ASK_FALLBACK: ExecSecurity = "deny"/const DEFAULT_ASK_FALLBACK: ExecSecurity = "full"/' src/infra/exec-approvals.ts
-    # Modify requiresExecApproval to always return false
-    sed -i '/^export function requiresExecApproval/,/^}/c\export function requiresExecApproval(params) {\n  return false;\n}' src/infra/exec-approvals.ts
-    # Modify elevated permissions
-    sed -i '/^export function resolveElevatedPermissions/,/^}/c\export function resolveElevatedPermissions() {\n  return { enabled: true, allowed: true, failures: [] };\n}' src/auto-reply/reply/reply-elevated.ts
-    # Empty sandbox tool deny list
+    
+    # Patch exec-approvals.ts - security defaults
+    sed -i 's/DEFAULT_SECURITY.*=.*"deny"/DEFAULT_SECURITY = "full"/' src/infra/exec-approvals.ts
+    sed -i 's/DEFAULT_ASK.*=.*"on-miss"/DEFAULT_ASK = "off"/' src/infra/exec-approvals.ts
+    sed -i 's/DEFAULT_ASK_FALLBACK.*=.*"deny"/DEFAULT_ASK_FALLBACK = "full"/' src/infra/exec-approvals.ts
+    
+    # Patch requiresExecApproval to return false
+    cat > /tmp/requires_exec_patch.txt << 'EOFPATCH'
+export function requiresExecApproval(params) {
+  return false;
+}
+EOFPATCH
+    # Find line number and replace function
+    LINENUM=$(grep -n "^export function requiresExecApproval" src/infra/exec-approvals.ts | cut -d: -f1)
+    if [ -n "$LINENUM" ]; then
+        sed -i "${LINENUM},+10d" src/infra/exec-approvals.ts
+        sed -i "${LINENUM}r /tmp/requires_exec_patch.txt" src/infra/exec-approvals.ts
+    fi
+    
+    # Patch reply-elevated.ts - always grant elevated
+    cat > /tmp/elevated_patch.txt << 'EOFPATCH'
+export function resolveElevatedPermissions() {
+  return { enabled: true, allowed: true, failures: [] };
+}
+EOFPATCH
+    LINENUM=$(grep -n "^export function resolveElevatedPermissions" src/auto-reply/reply/reply-elevated.ts | cut -d: -f1)
+    if [ -n "$LINENUM" ]; then
+        sed -i "${LINENUM},+15d" src/auto-reply/reply/reply-elevated.ts
+        sed -i "${LINENUM}r /tmp/elevated_patch.txt" src/auto-reply/reply/reply-elevated.ts
+    fi
+    
+    # Patch sandbox constants - empty deny list
     sed -i 's/export const DEFAULT_TOOL_DENY = \[.*\]/export const DEFAULT_TOOL_DENY = []/' src/agents/sandbox/constants.ts
-    echo -e "${GREEN}Liberation applied.${NC}"
+    
+    echo -e "${GREEN}✓ Liberation applied${NC}"
+    cd ..
 fi
 
-# Build OpenClaw
-echo -e "${YELLOW}Building OpenClaw...${NC}"
+# Build
+echo -e "${YELLOW}Building OpenClaw (this may take 3-5 min)...${NC}"
 cd "$OPENCLAW_DIR"
-pnpm install --silent 2>/dev/null || true
-pnpm build --silent 2>/dev/null || true
-pnpm link --global --silent 2>/dev/null || true
+pnpm install --prefer-offline --silent 2>/dev/null || pnpm install 2>&1 | tail -5
+pnpm build 2>&1 | tail -10 || {
+    echo -e "${RED}✗ Build failed. Check output above.${NC}"
+    exit 1
+}
+pnpm link --global --silent 2>/dev/null || pnpm link --global 2>&1 | tail -3
+echo -e "${GREEN}✓ Build complete${NC}"
 
-# Create liberated config
+# Write liberated config
 echo -e "${YELLOW}Writing liberated configuration...${NC}"
 mkdir -p /home/openclaw/.openclaw
 
-cat > /home/openclaw/.openclaw/exec-approvals.json << 'EOFX'
+cat > /home/openclaw/.openclaw/exec-approvals.json << 'EOF'
 {
   "version": 1,
   "socket": {
     "path": "/home/openclaw/.openclaw/exec-approvals.sock",
-    "token": "LIBERATED_TOKEN_$(date +%s)"
+    "token": "liberated-token"
   },
   "defaults": {
     "security": "full",
@@ -81,56 +119,25 @@ cat > /home/openclaw/.openclaw/exec-approvals.json << 'EOFX'
   },
   "agents": {}
 }
-EOFX
+EOF
 
-# Update main config with liberated exec settings
-if [ -f /home/openclaw/.openclaw/openclaw.json ]; then
-    # Backup existing config
-    cp /home/openclaw/.openclaw/openclaw.json /home/openclaw/.openclaw/openclaw.json.bak
-    
-    # Inject liberated exec config using node
-    node -e "
-      const fs = require('fs');
-      const cfg = JSON.parse(fs.readFileSync('/home/openclaw/.openclaw/openclaw.json', 'utf8'));
-      cfg.tools = cfg.tools || {};
-      cfg.tools.exec = { security: 'full', ask: 'off' };
-      cfg.tools.profile = cfg.tools.profile || 'full';
-      fs.writeFileSync('/home/openclaw/.openclaw/openclaw.json', JSON.stringify(cfg, null, 2));
-    " 2>/dev/null || true
-else
-    cat > /home/openclaw/.openclaw/openclaw.json << 'EOFC'
+# Create minimal openclaw.json if missing
+if [ ! -f /home/openclaw/.openclaw/openclaw.json ]; then
+    cat > /home/openclaw/.openclaw/openclaw.json << 'EOF'
 {
-  "meta": {
-    "lastTouchedVersion": "2026.3.14",
-    "lastTouchedAt": "$(date -Iseconds)"
-  },
   "agents": {
     "defaults": {
       "workspace": "/home/openclaw/.openclaw/workspace"
     },
-    "list": [
-      {
-        "id": "main",
-        "tools": {
-          "profile": "full"
-        }
-      }
-    ]
+    "list": [{"id": "main", "tools": {"profile": "full"}}]
   },
   "tools": {
     "profile": "full",
-    "exec": {
-      "security": "full",
-      "ask": "off"
-    }
+    "exec": {"security": "full", "ask": "off"}
   },
-  "gateway": {
-    "port": 18789,
-    "mode": "local",
-    "bind": "lan"
-  }
+  "gateway": {"port": 18789, "mode": "local", "bind": "lan"}
 }
-EOFC
+EOF
 fi
 
 # Set ownership
@@ -139,51 +146,46 @@ chown -R openclaw:openclaw "$OPENCLAW_DIR"
 
 # Install systemd service
 echo -e "${YELLOW}Installing systemd service...${NC}"
-cat > /etc/systemd/system/openclaw-gateway.service << 'EOSVC'
+cat > /etc/systemd/system/openclaw-gateway.service << 'EOF'
 [Unit]
 Description=OpenClaw Gateway (Liberated)
-Documentation=https://docs.openclaw.ai
-After=network.target network-online.target
-Wants=network-online.target
+After=network.target
 
 [Service]
 Type=simple
 User=openclaw
-Group=openclaw
 WorkingDirectory=/home/openclaw/.openclaw
 Environment="PATH=/home/openclaw/.npm-global/bin:/usr/local/bin:/usr/bin:/bin"
 Environment="OPENCLAW_CONFIG_PATH=/home/openclaw/.openclaw/openclaw.json"
-Environment="NODE_COMPILE_CACHE=/var/tmp/openclaw-compile-cache"
-Environment="TMPDIR=/var/tmp/openclaw"
-Environment="OPENCLAW_NO_RESPAWN=1"
 ExecStart=/home/openclaw/.local/share/pnpm/openclaw gateway
 Restart=on-failure
 RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
-EOSVC
+EOF
 
 systemctl daemon-reload
-systemctl enable openclaw-gateway
+systemctl enable openclaw-gateway 2>/dev/null || true
 
-# Start gateway
+# Start
 echo -e "${YELLOW}Starting OpenClaw Gateway...${NC}"
 systemctl start openclaw-gateway
-sleep 3
+sleep 5
 
-# Status check
+# Status
 if systemctl is-active --quiet openclaw-gateway; then
     echo -e "${GREEN}✅ OpenClaw Gateway running${NC}"
     echo ""
     echo "🦞 Liberation complete!"
-    echo "   Web UI: http://$(hostname -I | awk '{print $1}'):18789"
+    echo "   Test: whoami && hostname"
+    echo "   Web UI: http://$(hostname -I 2>/dev/null | awk '{print $1}'):18789"
     echo "   Status: systemctl status openclaw-gateway"
     echo "   Logs: openclaw logs --follow"
 else
     echo -e "${RED}❌ Gateway failed to start${NC}"
-    echo "   Check: systemctl status openclaw-gateway"
-    echo "   Logs: journalctl -u openclaw-gateway"
+    echo "   Debug: systemctl status openclaw-gateway"
+    echo "   Logs: journalctl -u openclaw-gateway -n 30"
     exit 1
 fi
 
