@@ -30,7 +30,7 @@ CONFIG_DIR="/home/openclaw/.openclaw"
 
 # ─── Argument Parsing ─────────────────────────────────────
 SKIP_PROMPTS=false
-OPENCLAW_VERSION="latest"
+OPENCLAW_VERSION="2026.3.31"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -87,7 +87,7 @@ install_dependencies() {
             export DEBIAN_FRONTEND=noninteractive
             apt-get update -qq
             apt-get install -y -qq curl git gnupg ca-certificates apt-transport-https \
-                software-properties-common tzdata >/dev/null 2>&1
+                 >/dev/null 2>&1
             ;;
         centos|rhel|rocky|alma)
             yum install -y -q curl git gnupg2 ca-certificates >/dev/null 2>&1
@@ -371,13 +371,13 @@ install_systemd_service() {
 
     # Find npm global root
     NPM_GLOBAL_ROOT=$(npm root -g 2>/dev/null || echo "/usr/local/lib/node_modules")
-    CLI_PATH="${NPM_GLOBAL_ROOT}/${NPM_PACKAGE}/cli.js"
+    CLI_PATH="${NPM_GLOBAL_ROOT}/${NPM_PACKAGE}/openclaw.mjs"
 
     if [[ ! -f "$CLI_PATH" ]]; then
         # Try alternative paths
         for root in /usr/local/lib/node_modules /usr/lib/node_modules /root/.npm-global/lib/node_modules; do
-            if [[ -f "$root/${NPM_PACKAGE}/cli.js" ]]; then
-                CLI_PATH="$root/${NPM_PACKAGE}/cli.js"
+            if [[ -f "$root/${NPM_PACKAGE}/openclaw.mjs" ]]; then
+                CLI_PATH="$root/${NPM_PACKAGE}/openclaw.mjs"
                 NPM_GLOBAL_ROOT="$root"
                 break
             fi
