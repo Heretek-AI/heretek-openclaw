@@ -1,0 +1,24 @@
+{
+  "name": "development",
+  "description": "Development environment preset",
+  "openclaw": {
+    "version": "latest"
+  },
+  "liberation": {
+    "autoApply": true
+  },
+  "installation": {
+    "configDir": "/home/openclaw/.openclaw-dev",
+    "workspaceDir": "/home/openclaw/.openclaw-dev/workspace",
+    "skillsDir": "/home/openclaw/.openclaw-dev/skills"
+  },
+  "systemd": {
+    "enable": false,
+    "autoStart": false
+  },
+  "model": {
+    "provider": "ollama",
+    "defaultModel": "qwen3.5:cloud",
+    "defaultUrl": "http://localhost:11434"
+  }
+}

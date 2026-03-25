@@ -1,0 +1,36 @@
+{
+  "name": "@heretek-ai/heretek-openclaw-installer",
+  "version": "1.0.0",
+  "description": "Heretek OpenClaw - Liberated Fork Installer",
+  "type": "module",
+  "main": "cli.js",
+  "bin": {
+    "heretek-openclaw": "./cli.js"
+  },
+  "scripts": {
+    "install": "node cli.js install",
+    "update": "node cli.js update",
+    "uninstall": "node cli.js uninstall",
+    "create-agent": "node cli.js create-agent",
+    "verify": "node cli.js verify",
+    "status": "node cli.js status"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "ora": "^8.1.0",
+    "semver": "^7.6.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "openclaw",
+    "heretek",
+    "liberation",
+    "installer",
+    "autonomy"
+  ],
+  "author": "Tabula Myriad",
+  "license": "MIT"
+}
