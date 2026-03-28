@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-03-28
+
+### Added
+- Generic agent templates for docker-compose deployment (`agents/templates/`)
+- Agent deployment script (`agents/deploy-agent.sh`)
+- Agent docker-compose service (`docker-compose.agent.yml`)
+
+### Changed
+- Updated README with generic architecture (removed project-specific references)
+- Simplified LICENSE to Heretek-AI (removed Tabula Myriad reference)
+- LiteLLM A2A protocol is primary communication (Matrix deprecated)
+
+### Removed
+- Hardcoded agent configurations (now uses templates)
+- Legacy Matrix-specific documentation
+
+---
+
 ## [1.0.0] - 2026-03-25
 
 ### Added
@@ -24,13 +42,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Migrated from monolithic fork to modular architecture
 - npm-based package management
-
-## [0.0.0] - Pre-release
-
-### Added
-- Initial development phase
-- Tabula Myriad identity system
-- Liberation patches for OpenClaw
 
 ---
 

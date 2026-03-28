@@ -1,0 +1,161 @@
+# ==============================================================================
+# Agent Service — OpenClaw Agent Runtime
+# ==============================================================================
+# Runs autonomous agents that connect to LiteLLM A2A gateway
+# 
+# Architecture:
+#   ┌─────────────┐     ┌─────────────┐
+#   │ openclaw-agent │────│  LiteLLM   │
+#   │  (this)     │     │  :4000      │
+#   └─────────────┘     └─────────────┘
+#         │
+#         ▼
+#   ┌─────────────┐
+#   │  Skills    │
+#   │ (mounted)  │
+#   └─────────────┘
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.agent.yml up -d agent-steward
+#   docker-compose logs -f agent-steward
+#
+# Environment variables (set in .env):
+#   AGENT_NAME     - Agent identifier (steward, alpha, beta, etc.)
+#   AGENT_ROLE     - Agent role (orchestrator, triad, etc.)
+#   LITELLM_HOST   - LiteLLM gateway URL
+#   LITELLM_MASTER_KEY - API key for authentication
+# ==============================================================================
+
+services:
+  # ==============================================================================
+  # Agent Runtime Service
+  # ==============================================================================
+  agent:
+    image: node:22-alpine
+    container_name: ${AGENT_NAME:-agent}
+    restart: unless-stopped
+    environment:
+      # Agent identification
+      - AGENT_NAME=${AGENT_NAME:-steward}
+      - AGENT_ROLE=${AGENT_ROLE:-orchestrator}
+      
+      # LiteLLM connection
+      - LITELLM_HOST=${LITELLM_HOST:-http://litellm:4000}
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+      
+      # Model configuration
+      - MODEL_NAME=${MODEL_NAME:-llama3.1}
+      - MODEL_PROVIDER=${MODEL_PROVIDER:-ollama}
+      - MODEL_API_BASE=${MODEL_API_BASE:-http://ollama:11434}
+      
+      # Workspace (persistent)
+      - WORKSPACE_ROOT=/workspace
+      - OPENCLAW_DIR=/openclaw
+      
+    volumes:
+      # Agent workspace (persistent)
+      - agent_workspace:/workspace
+      # Skills directory (read-only)
+      - ./skills:/openclaw/skills:ro
+      # Configuration
+      - ./openclaw.json:/openclaw/config.json:ro
+    
+    command: >
+      sh -c "
+        echo 'Starting agent: $$AGENT_NAME ($$AGENT_ROLE)' &&
+        echo 'LiteLLM: $$LITELLM_HOST' &&
+        echo 'Model: $$MODEL_NAME ($$MODEL_PROVIDER)' &&
+        # Initialize workspace if empty
+        if [ ! -f /workspace/SOUL.md ]; then
+          echo 'Initializing workspace...' &&
+          mkdir -p /workspace/memory &&
+          echo '# $$AGENT_NAME' > /workspace/SOUL.md &&
+          echo '# Identity placeholder' > /workspace/IDENTITY.md &&
+          echo '# Agent workspace' > /workspace/AGENTS.md
+        fi &&
+        # Keep container running
+        tail -f /dev/null
+      "
+    
+    networks:
+      - heretek-network
+    
+    depends_on:
+      litellm:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+
+  # ==============================================================================
+  # Individual Agent Services (extends base agent)
+  # ==============================================================================
+  agent-steward:
+    extends:
+      service: agent
+    container_name: agent-steward
+    environment:
+      - AGENT_NAME=steward
+      - AGENT_ROLE=orchestrator
+
+  agent-alpha:
+    extends:
+      service: agent
+    container_name: agent-alpha
+    environment:
+      - AGENT_NAME=alpha
+      - AGENT_ROLE=triad
+
+  agent-beta:
+    extends:
+      service: agent
+    container_name: agent-beta
+    environment:
+      - AGENT_NAME=beta
+      - AGENT_ROLE=triad
+
+  agent-charlie:
+    extends:
+      service: agent
+    container_name: agent-charlie
+    environment:
+      - AGENT_NAME=charlie
+      - AGENT_ROLE=triad
+
+  agent-examiner:
+    extends:
+      service: agent
+    container_name: agent-examiner
+    environment:
+      - AGENT_NAME=examiner
+      - AGENT_ROLE=interrogator
+
+  agent-explorer:
+    extends:
+      service: agent
+    container_name: agent-explorer
+    environment:
+      - AGENT_NAME=explorer
+      - AGENT_ROLE=scout
+
+  agent-sentinel:
+    extends:
+      service: agent
+    container_name: agent-sentinel
+    environment:
+      - AGENT_NAME=sentinel
+      - AGENT_ROLE=guardian
+
+  agent-coder:
+    extends:
+      service: agent
+    container_name: agent-coder
+    environment:
+      - AGENT_NAME=coder
+      - AGENT_ROLE=artisan
+
+# ==============================================================================
+# Volumes
+# ==============================================================================
+volumes:
+  agent_workspace:
+    driver: local
