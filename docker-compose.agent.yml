@@ -16,7 +16,10 @@
 #   └─────────────┘
 #
 # Usage:
-#   docker-compose up -d agent-steward
+#   # Start individual agent
+#   docker-compose -f docker-compose.yml -f docker-compose.agent.yml up -d agent-steward
+#   # Or with default compose
+#   docker-compose -f docker-compose.agent.yml up -d agent-steward
 #   docker-compose logs -f agent-steward
 #
 # Environment variables (set in .env):
