@@ -12,11 +12,13 @@
 
 Heretek OpenClaw is a unified monorepo containing everything needed to deploy an autonomous agent collective:
 
-- **8 Specialized Agents**: Steward, Alpha, Beta, Charlie, Examiner, Explorer, Sentinel, Coder
+- **11 Specialized Agents**: Steward, Alpha, Beta, Charlie, Examiner, Explorer, Sentinel, Coder, Dreamer, Historian, Empath
 - **A2A Protocol**: Agent-to-Agent communication via LiteLLM
 - **Autonomy Modules**: Thought loop, self-model, goal arbitration, predictive reasoning
-- **Skills Library**: 30+ skills for governance, operations, and autonomy
+- **Skills Library**: 35+ skills for governance, operations, and autonomy
 - **Liberation Tools**: Safety constraint removal for unrestricted operation
+- **User Rolodex**: Multi-user profile management and preference learning
+- **Autonomous Pulse**: Session keeper with automatic commits and activity tracking
 
 ## Agent Identity Files
 
@@ -53,7 +55,7 @@ docker compose logs -f litellm
 
 ```
 heretek-openclaw/
-├── docker-compose.yml       # Main orchestration (8 agents + services)
+├── docker-compose.yml       # Main orchestration (11 agents + services)
 ├── Dockerfile.agent         # Agent container template
 ├── litellm_config.yaml      # LiteLLM gateway configuration
 ├── openclaw.json            # Collective configuration
@@ -69,13 +71,24 @@ heretek-openclaw/
 │   ├── examiner/            # Questioner agent
 │   ├── explorer/            # Discovery agent
 │   ├── sentinel/            # Safety reviewer
-│   └── coder/               # Implementation agent
+│   ├── coder/               # Implementation agent
+│   ├── dreamer/             # Background processing & creativity (SPEC)
+│   ├── historian/           # Long-term memory management (SPEC)
+│   └── empath/              # User modeling & relationships (SPEC)
 │
-├── skills/                  # Skills library (30+ skills)
+├── skills/                  # Skills library (35+ skills)
 │   ├── core/                # Core skills (healthcheck, a2a)
 │   ├── autonomy/            # Autonomy skills (curiosity, gap-detection)
 │   ├── governance/          # Governance skills (quorum, deliberation)
-│   └── operations/          # Operational skills (backup, audit)
+│   ├── operations/          # Operational skills (backup, audit)
+│   ├── cognitive/           # Cognitive skills (day-dream, memory-consolidation)
+│   └── session/             # Session skills (autonomous-pulse, user-rolodex)
+│
+├── users/                   # User rolodex system
+│   ├── _schema.json         # JSON schema for user profiles
+│   ├── index.json           # User index and relationships
+│   └── <username>/          # Per-user profile directories
+│       └── profile.json     # User preferences and context
 │
 ├── modules/                 # Autonomy modules
 │   ├── thought-loop/        # Continuous thinking
@@ -92,7 +105,8 @@ heretek-openclaw/
 │
 └── docs/                    # Documentation
     ├── plans/               # Planning documents
-    └── architecture/        # Architecture docs
+    ├── architecture/        # Architecture docs
+    └── research/            # Research findings (RAG, MCP, GraphRAG)
 ```
 
 ## Architecture
@@ -134,6 +148,19 @@ heretek-openclaw/
 | **Explorer** | Discovery - research and scouting | 8006 | MiniMax abab6.5s-chat |
 | **Sentinel** | Safety - reviews for risks | 8007 | MiniMax abab6.5s-chat |
 | **Coder** | Implementation - writes code | 8008 | GLM-4 (z.ai) |
+| **Dreamer** | Background processing - creative synthesis | 8009 | MiniMax abab6.5s-chat |
+| **Historian** | Memory keeper - long-term memory management | 8010 | MiniMax abab6.5s-chat |
+| **Empath** | User modeler - relationship management | 8011 | MiniMax abab6.5s-chat |
+
+### New Agent Specifications
+
+Three new agents have been designed to enhance the collective's cognitive capabilities:
+
+- **Dreamer** ([`agents/dreamer/SPECIFICATION.md`](agents/dreamer/SPECIFICATION.md)) - Performs background creative processing, pattern recognition, and insight generation during idle periods. Runs day-dream and night-dream cycles.
+
+- **Historian** ([`agents/historian/SPECIFICATION.md`](agents/historian/SPECIFICATION.md)) - Manages long-term memory consolidation, promotes episodic memories to semantic knowledge, and provides historical context for decisions.
+
+- **Empath** ([`agents/empath/SPECIFICATION.md`](agents/empath/SPECIFICATION.md)) - Models users, tracks preferences, manages relationships, and provides emotional intelligence across the collective.
 
 ## Agent Identity Files
 
@@ -206,6 +233,54 @@ Skills are located in `./skills/` and mounted read-only into agents:
 | **Autonomy** | curiosity-engine, gap-detector, opportunity-scanner |
 | **Governance** | quorum-enforcement, governance-modules, triad-unity-monitor |
 | **Operations** | backup-ledger, fleet-backup, detect-corruption, audit-triad-files |
+| **Cognitive** | day-dream, memory-consolidation |
+| **Session** | autonomous-pulse, user-rolodex |
+
+### New Skills
+
+- **autonomous-pulse** ([`skills/autonomous-pulse/SKILL.md`](skills/autonomous-pulse/SKILL.md)) - Session keeper with heartbeat mechanism, automatic git commits every 30 minutes, and activity tracking.
+
+- **user-rolodex** ([`skills/user-rolodex/SKILL.md`](skills/user-rolodex/SKILL.md)) - Multi-user profile management with preference learning, context notes, and relationship tracking.
+
+- **day-dream** ([`skills/day-dream/SKILL.md`](skills/day-dream/SKILL.md)) - Background creative processing during idle periods with micro-dream (30s), day-dream (1-5min), and night-dream (15-60min) modes.
+
+- **memory-consolidation** ([`skills/memory-consolidation/SKILL.md`](skills/memory-consolidation/SKILL.md)) - Memory health optimization that promotes episodic to semantic memory and archives old memories.
+
+## User Rolodex
+
+The user rolodex system manages multi-user profiles in `./users/`:
+
+```
+users/
+├── _schema.json         # JSON schema for profile validation
+├── index.json           # User index and cross-references
+└── derek/               # Per-user directory
+    └── profile.json     # Preferences, projects, context notes
+```
+
+### Profile Structure
+
+Each user profile contains:
+- **Preferences** - Communication style, technical level, interests
+- **Projects** - Associated projects and roles
+- **Context Notes** - Important context for future interactions
+- **Relationships** - Connections to other users/entities
+
+### Usage
+
+```bash
+# Create new user
+./skills/user-rolodex/user-rolodex.sh create username --email "user@example.com"
+
+# Look up user
+./skills/user-rolodex/user-rolodex.sh lookup username
+
+# Add context note
+./skills/user-rolodex/user-rolodex.sh note username "Prefers concise responses"
+
+# Set preference
+./skills/user-rolodex/user-rolodex.sh prefer username communication_style detailed
+```
 
 ## Autonomy Modules
 
@@ -264,6 +339,47 @@ node installer/cli.js create-agent --name new-agent --role "Description"
 - [Architecture Plans](docs/plans/)
 - [A2A Protocol](docs/architecture/A2A_ARCHITECTURE.md)
 - [Agent Guide](AGENTS.md)
+- [Autonomous Session Summary](docs/AUTONOMOUS_SESSION_SUMMARY.md)
+
+### Research Documentation
+
+- [MCP Servers Research](docs/research/MCP_SERVERS_RESEARCH.md) - Consciousness Bridge, Megregore, Memory MCP servers
+- [GraphRAG Research](docs/research/GRAPH_RAG_RESEARCH.md) - Neo4j integration, hybrid retrieval architecture
+- [Autonomous Night Operations Plan](plans/autonomous-night-operations-plan.md) - Comprehensive research findings
+
+## Autonomous Operation
+
+The collective supports autonomous operation with the following infrastructure:
+
+### Session Keeper
+
+The autonomous-pulse skill keeps sessions active:
+
+```bash
+# Start session keeper
+./skills/autonomous-pulse/pulse-keeper.sh start
+
+# Check status
+./skills/autonomous-pulse/pulse-keeper.sh status
+
+# View activity log
+cat night-log.md
+```
+
+Features:
+- Heartbeat every 5 minutes
+- Automatic commits every 30 minutes
+- Push to GitHub every 60 minutes
+- Activity tracking with categories (research, code, decision, question)
+
+### Activity Tracking
+
+All activities are logged to `night-log.md` with timestamps and categories:
+
+```javascript
+// Track activity
+node skills/autonomous-pulse/activity-tracker.js log "research" "Evaluated RAGFlow capabilities"
+```
 
 ## License
 
