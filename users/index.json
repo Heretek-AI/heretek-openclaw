@@ -1,0 +1,22 @@
+{
+  "$schema": "user-index-v1",
+  "version": "1.0.0",
+  "updated": "2026-03-29T04:09:00Z",
+  "description": "Index of all users in the rolodex for quick lookup",
+  "users": [
+    {
+      "slug": "derek",
+      "name": "Derek",
+      "type": "primary",
+      "since": "2026-03-01",
+      "trust_level": 1.0,
+      "projects": ["heretek-openclaw"]
+    }
+  ],
+  "stats": {
+    "total_users": 1,
+    "primary_users": 1,
+    "collaborators": 0,
+    "occasional_users": 0
+  }
+}
