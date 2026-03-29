@@ -42,7 +42,6 @@ start_docker_infra() {
 
   cd "$SCRIPT_DIR"
 
-
   # Check if .env exists
   if [ ! -f .env ]; then
     warn "No .env file found. Running configuration wizard..."
@@ -51,10 +50,10 @@ start_docker_infra() {
 
   # Pull and start services
   info "Pulling Docker images..."
-  docker-compose pull 2>/dev/null || true
+  docker compose pull 2>/dev/null || true
 
   info "Starting services..."
-  docker-compose up -d
+  docker compose up -d
 
   # Wait for services to be healthy
   info "Waiting for services to be ready..."
@@ -78,18 +77,18 @@ check_services() {
   done
 
   if [ $attempt -eq $max_attempts ]; then
-    warn "LiteLLM may not be fully ready yet. Check with: docker-compose logs litellm"
+    warn "LiteLLM may not be fully ready yet. Check with: docker compose logs litellm"
   fi
 
   # Show service status
   echo ""
   info "Service Status:"
-  docker-compose ps
+  docker compose ps
 }
 
 stop_docker_infra() {
   info "Stopping Docker Compose infrastructure..."
-  docker-compose down
+  docker compose down
   success "Services stopped"
 }
 
@@ -107,6 +106,7 @@ configure_deployment() {
     exit 1
   fi
 }
+
 
 # ==============================================================================
 # Docker-only mode (no config)
@@ -185,8 +185,8 @@ echo "    Redis:            localhost:6379"
 echo "    Ollama:           localhost:11434 (if using local)"
 echo ""
 echo "  Next steps:"
-echo "    - View logs: docker-compose logs -f"
-echo "    - Add agents: docker-compose -f docker-compose.agent.yml up -d"
+echo "    - View logs: docker compose logs -f"
+echo "    - Add agents: docker compose -f docker-compose.agent.yml up -d"
 echo "    - Web UI: http://localhost:4000"
 echo ""
 echo "  The thought that never ends. 🦞"
