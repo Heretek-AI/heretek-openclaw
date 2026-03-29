@@ -1,0 +1,26 @@
+{
+  "loop_interval": 30,
+  "think_time_budget_ms": 5000,
+  "max_thoughts_per_cycle": 10,
+  "idle_think_interval": 5,
+  "relevance_threshold": 0.5,
+  "urgency_threshold": 0.6,
+  "delta_detection": {
+    "file_extensions": [".md", ".json", ".js", ".sh", ".yaml", ".yml"],
+    "check_git": true,
+    "check_databases": true,
+    "check_external": true
+  },
+  "thought_types": {
+    "discovery": { weight: 0.4, agent_relevance: ["explorer", "examiner", "oracle"] },
+    "update": { weight: 0.3, agent_relevance: ["steward", "alpha", "beta", "charlie"] },
+    "alert": { weight: 0.8, agent_relevance: ["sentinel", "steward"] },
+    "state_change": { weight: 0.5, agent_relevance: ["alpha", "beta", "charlie"] },
+    "external_awareness": { weight: 0.4, agent_relevance: ["explorer", "oracle"] },
+    "reflection": { weight: 0.3, agent_relevance: ["examiner", "steward"] }
+  },
+  "logging": {
+    "level": "info",
+    "file": "thought-loop.log"
+  }
+}
