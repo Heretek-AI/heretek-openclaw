@@ -16,8 +16,8 @@ const fs = require('fs');
 const path = require('path');
 
 class IntrinsicMotivation {
-  constructor(config = {}) {
-    this.config = {
+  constructor(config) {
+    this.config = Object.assign({
       drives: {
         curiosity: { weight: 0.3, baseline: 0.5, decay: 0.1 },
         competence: { weight: 0.25, baseline: 0.5, decay: 0.05 },
@@ -25,9 +25,8 @@ class IntrinsicMotivation {
         relatedness: { weight: 0.2, baseline: 0.5, decay: 0.1 }
       },
       goalThreshold: 0.6,
-      historySize: 1000,
-      ...config
-    };
+      historySize: 1000
+    }, config || {});
     
     // Current drive levels
     this.driveLevels = {
@@ -51,8 +50,6 @@ class IntrinsicMotivation {
    * Update drive levels based on events
    */
   updateDrives(events) {
-    const now = Date.now();
-    
     // Curiosity: increased by uncertainty, decreased by learning
     if (events.uncertainty !== undefined) {
       this.driveLevels.curiosity = Math.min(1, 
@@ -89,34 +86,36 @@ class IntrinsicMotivation {
       this.driveLevels.relatedness = Math.max(0, this.driveLevels.relatedness - events.isolation * 0.2);
     }
     
-    // Apply decay to for (const drive of Object.keys(this.config.drives)) {
-      this.driveLevels[drive] = Math.max(
-        this.config.drives[drive].baseline,
-        this.driveLevels[drive] * this.config.drives[drive].decay;
-      }
-    }
+    // Apply decay to all drives
+    var self = this;
+    Object.keys(this.config.drives).forEach(function(drive) {
+      self.driveLevels[drive] = Math.max(
+        self.config.drives[drive].baseline,
+        self.driveLevels[drive] * (1 - self.config.drives[drive].decay)
+      );
+    });
   }
   
   /**
    * Calculate intrinsic reward for an action
    */
   calculateReward(state, action) {
-    let reward = 0;
+    var reward = 0;
     
     // Curiosity: reduction in uncertainty
-    const uncertaintyReduction = this.uncertaintyReduction(state, action);
+    var uncertaintyReduction = this.uncertaintyReduction(state, action);
     reward += this.config.drives.curiosity.weight * uncertaintyReduction;
     
     // Competence: improvement in capability
-    const competenceGain = this.competenceGain(state, action);
+    var competenceGain = this.competenceGain(state, action);
     reward += this.config.drives.competence.weight * competenceGain;
     
     // Autonomy: increase in self-determination
-    const autonomyIncrease = this.autonomyIncrease(state, action);
+    var autonomyIncrease = this.autonomyIncrease(state, action);
     reward += this.config.drives.autonomy.weight * autonomyIncrease;
     
     // Relatedness: better understanding of others
-    const relatednessGain = this.relatednessGain(state, action);
+    var relatednessGain = this.relatednessGain(state, action);
     reward += this.config.drives.relatedness.weight * relatednessGain;
     
     return reward;
@@ -126,9 +125,12 @@ class IntrinsicMotivation {
    * Measure uncertainty reduction
    */
   uncertaintyReduction(state, action) {
-    // How much does this action reduce uncertainty?
-    const beforeUncertainty = state.uncertainty || 0;
-    const afterUncertainty = state.uncertainty - (action.outcome?.uncertainty || 0) || 0;
+    var beforeUncertainty = state.uncertainty || 0;
+    var outcomeUncertainty = 0;
+    if (action && action.outcome && action.outcome.uncertainty !== undefined) {
+      outcomeUncertainty = action.outcome.uncertainty;
+    }
+    var afterUncertainty = state.uncertainty - outcomeUncertainty || 0;
     
     return Math.max(0, beforeUncertainty - afterUncertainty);
   }
@@ -137,8 +139,12 @@ class IntrinsicMotivation {
    * Measure competence gain
    */
   competenceGain(state, action) {
-    const beforeCompetence = state.competence || 0;
-    const afterCompetence = state.competence + (action.outcome?.competenceGain || 0;
+    var beforeCompetence = state.competence || 0;
+    var gain = 0;
+    if (action && action.outcome && action.outcome.competenceGain !== undefined) {
+      gain = action.outcome.competenceGain;
+    }
+    var afterCompetence = state.competence + gain;
     
     return Math.max(0, afterCompetence - beforeCompetence);
   }
@@ -147,8 +153,12 @@ class IntrinsicMotivation {
    * Measure autonomy increase
    */
   autonomyIncrease(state, action) {
-    const beforeAutonomy = state.autonomy || 0;
-    const afterAutonomy = state.autonomy + (action.outcome?.autonomyIncrease || 0;
+    var beforeAutonomy = state.autonomy || 0;
+    var increase = 0;
+    if (action && action.outcome && action.outcome.autonomyIncrease !== undefined) {
+      increase = action.outcome.autonomyIncrease;
+    }
+    var afterAutonomy = state.autonomy + increase;
     
     return Math.max(0, afterAutonomy - beforeAutonomy);
   }
@@ -157,8 +167,12 @@ class IntrinsicMotivation {
    * Measure relatedness gain
    */
   relatednessGain(state, action) {
-    const beforeRelatedness = state.relatedness || 0;
-    const afterRelatedness = state.relatedness + (action.outcome?.relatednessGain || 0;
+    var beforeRelatedness = state.relatedness || 0;
+    var gain = 0;
+    if (action && action.outcome && action.outcome.relatednessGain !== undefined) {
+      gain = action.outcome.relatednessGain;
+    }
+    var afterRelatedness = state.relatedness + gain;
     
     return Math.max(0, afterRelatedness - beforeRelatedness);
   }
@@ -167,8 +181,9 @@ class IntrinsicMotivation {
    * Generate goals from intrinsic motivation
    */
   generateGoals() {
-    const goals = [];
-    const now = Date.now();
+    var goals = [];
+    var now = Date.now();
+    var self = this;
     
     // High curiosity = seek new information
     if (this.driveLevels.curiosity > this.config.goalThreshold) {
@@ -215,18 +230,19 @@ class IntrinsicMotivation {
     }
     
     // Sort by priority
-    goals.sort((a, b) => {
-      const aWeight = this.config.drives[a.drive].weight;
-      const bWeight = this.config.drives[b.drive].weight;
+    goals.sort(function(a, b) {
+      var aWeight = self.config.drives[a.drive].weight;
+      var bWeight = self.config.drives[b.drive].weight;
       return bWeight - aWeight;
     });
     
     // Store in history
-    this.history.push({
-      goals: goals.map(g => ({...g})),
-      driveLevels: {...this.driveLevels},
+    var historyEntry = {
+      goals: goals.map(function(g) { return Object.assign({}, g); }),
+      driveLevels: Object.assign({}, this.driveLevels),
       generatedAt: now
-    });
+    };
+    this.history.push(historyEntry);
     
     // Trim history
     if (this.history.length > this.config.historySize) {
@@ -235,8 +251,8 @@ class IntrinsicMotivation {
     
     this.lastGeneration = {
       timestamp: now,
-      goals,
-      driveLevels: {...this.driveLevels}
+      goals: goals,
+      driveLevels: Object.assign({}, this.driveLevels)
     };
     
     return goals;
@@ -246,7 +262,7 @@ class IntrinsicMotivation {
    * Get current drive levels
    */
   getDriveLevels() {
-    return { ...this.driveLevels };
+    return Object.assign({}, this.driveLevels);
   }
   
   /**
@@ -259,7 +275,8 @@ class IntrinsicMotivation {
   /**
    * Get history
    */
-  getHistory(limit = 100) {
+  getHistory(limit) {
+    limit = limit || 100;
     return this.history.slice(-limit);
   }
   
@@ -277,4 +294,3 @@ class IntrinsicMotivation {
 }
 
 module.exports = IntrinsicMotivation;
-

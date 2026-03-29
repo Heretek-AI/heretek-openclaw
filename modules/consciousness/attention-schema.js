@@ -58,7 +58,7 @@ class AttentionSchema {
     
     this.attentionModel = {
       focus: currentFocus,
-      intensity: Math.min(1, Math.max(0, intensity),
+      intensity: Math.min(1, Math.max(0, intensity)),
       targets,
       startTime: now
     };
@@ -100,7 +100,7 @@ class AttentionSchema {
   modelOtherAttention(otherAgent, signals) {
     // Infer focus from behavioral signals
     const inferredFocus = this.inferFocus(signals);
-    const inferredIntensity = signals.reduce((max, s) s.intensity, 0);
+    const inferredIntensity = signals.reduce((max, s) => Math.max(max, s.intensity), 0);
     
     return {
       agent: otherAgent,
@@ -122,9 +122,9 @@ class AttentionSchema {
     const topics = {};
     for (const signal of signals) {
       if (signal.topic) {
-        topics[signal.topic] = (topics[signal.topic] || 0);
-      } else if (signal.intensity > (topics[signal.topic] || 0);
-        topics[signal.topic] = signal.intensity;
+        if (signal.intensity > (topics[signal.topic] || 0)) {
+          topics[signal.topic] = signal.intensity;
+        }
       }
     }
     
@@ -132,7 +132,7 @@ class AttentionSchema {
     const sortedTopics = Object.entries(topics)
       .sort((a, b) => b[1] - a[1]);
     
-    return sortedTopics[0]?.topic || 'unknown';
+    return (sortedTopics[0] && sortedTopics[0][0]) || 'unknown';
   }
   
   /**
