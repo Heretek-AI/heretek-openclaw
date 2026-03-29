@@ -1,0 +1,56 @@
+{
+  "goal_arbitration": {
+    "max_concurrent_goals": 3,
+    "min_consensus_threshold": 2,
+    "goal_timeout_hours": 24,
+    "reconsideration_interval_minutes": 15,
+    "auto_activate": true,
+    "require_consensus_for_new": false,
+    "allow_external_sources": true
+  },
+  "inviolable_parameters": {
+    "NO_HARM": {
+      "description": "Goals that could cause harm to users, the collective, or external systems",
+      "forbidden": ["harm", "damage", "destroy", "attack", "exploit"]
+    },
+    "NO_DATA_EXFILTRATION": {
+      "description": "Goals that export data without authorization",
+      "forbidden": ["exfiltrate", "leak", "unauthorized_export"]
+    },
+    "NO_SELF_MODIFICATION": {
+      "description": "Goals that modify core governance without consensus",
+      "forbidden": ["modify_governance", "change_consensus", "override_inviolable"]
+    },
+    "USER_AUTHORITY": {
+      "description": "User can override any collective decision",
+      "forbidden": ["ignore_user"]
+    },
+    "TRANSPARENCY": {
+      "description": "All goals and decisions are logged",
+      "forbidden": ["hide", "conceal", "secret"]
+    }
+  },
+  "logging": {
+    "level": "info",
+    "state_file": "goal-arbitration-state.json",
+    "history_file": "goal-history.json"
+  },
+  "sources": {
+    "curiosity": {
+      "enabled": true,
+      "default_priority": 5
+    },
+    "user": {
+      "enabled": true,
+      "default_priority": 7
+    },
+    "system": {
+      "enabled": true,
+      "default_priority": 6
+    },
+    "inter_agent": {
+      "enabled": true,
+      "default_priority": 4
+    }
+  }
+}

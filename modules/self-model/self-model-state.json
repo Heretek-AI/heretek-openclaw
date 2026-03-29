@@ -1,0 +1,141 @@
+{
+  "agent": "heretek-collective",
+  "created": "2026-03-29T00:00:00.000Z",
+  "updated": "2026-03-29T00:22:58.196Z",
+  "capabilities": {
+    "available": [
+      "code-generation",
+      "reasoning",
+      "file-operations",
+      "search",
+      "tool-use"
+    ],
+    "active": [
+      "code-generation",
+      "reasoning"
+    ],
+    "learning": [],
+    "deprecated": []
+  },
+  "knowledge": {
+    "domains": [
+      "self-modeling",
+      "capability-tracking",
+      "confidence-scoring"
+    ],
+    "facts": {
+      "self-modeling:core_concept": {
+        "id": "core_concept",
+        "description": "Self-modeling enables meta-cognition",
+        "learned_at": "2026-03-29T00:00:00.000Z",
+        "confidence": 0.9
+      },
+      "capability-tracking:purpose": {
+        "id": "purpose",
+        "description": "Track what the collective can do",
+        "learned_at": "2026-03-29T00:00:00.000Z",
+        "confidence": 0.85
+      },
+      "confidence-scoring:factors": {
+        "id": "factors",
+        "description": "Evidence, consistency, reliability, recency, count",
+        "learned_at": "2026-03-29T00:00:00.000Z",
+        "confidence": 0.8
+      }
+    },
+    "by_domain": {
+      "self-modeling": 1,
+      "capability-tracking": 1,
+      "confidence-scoring": 1
+    }
+  },
+  "workingOn": {
+    "tasks": [],
+    "decisions_pending": [],
+    "reflections": [
+      {
+        "id": "ref_cap_1774743778191",
+        "type": "capability",
+        "content": "Active capabilities: 0, Available: 4, Working on: 0",
+        "insights": [
+          "No active tasks - am I idle?",
+          "Limited capabilities - should I learn more skills?"
+        ],
+        "confidence_before": 0.5,
+        "confidence_after": 0.4,
+        "timestamp": "2026-03-29T00:22:58.192Z"
+      },
+      {
+        "id": "ref_conf_1774743778192",
+        "type": "confidence",
+        "content": "Overall confidence: 65%, Trend: stable",
+        "insights": [],
+        "confidence_before": 0.65,
+        "confidence_after": 0.65,
+        "timestamp": "2026-03-29T00:22:58.194Z"
+      },
+      {
+        "id": "ref_dec_1774743778192",
+        "type": "decision",
+        "content": "Decisions: 0 made, 0 pending",
+        "insights": [],
+        "confidence_before": 0.5,
+        "confidence_after": 0.5,
+        "timestamp": "2026-03-29T00:22:58.195Z"
+      },
+      {
+        "id": "ref_bs_1774743778192",
+        "type": "blind_spot",
+        "content": "Identified blind spots: 0, Suspected: 2",
+        "insights": [
+          "Might be missing: There may be capabilities we don't know we have",
+          "Might be missing: We may have blind spots about external system state",
+          "What questions am I not asking?",
+          "What would challenge my current thinking?"
+        ],
+        "confidence_before": 0.5,
+        "confidence_after": 0.5,
+        "timestamp": "2026-03-29T00:22:58.196Z"
+      }
+    ]
+  },
+  "confidence": {
+    "overall": 0.65,
+    "by_domain": {
+      "self-modeling": 0.8,
+      "capability-tracking": 0.75,
+      "confidence-scoring": 0.7,
+      "general": 0.5
+    },
+    "recent_trend": []
+  },
+  "cognitiveState": {
+    "status": "idle",
+    "focus": null,
+    "depth": 0,
+    "last_thought": null
+  },
+  "blindSpots": {
+    "identified": [],
+    "suspected": [
+      {
+        "id": "unknown_skills",
+        "description": "There may be capabilities we don't know we have",
+        "suspected_at": "2026-03-29T00:00:00.000Z"
+      },
+      {
+        "id": "external_dependencies",
+        "description": "We may have blind spots about external system state",
+        "suspected_at": "2026-03-29T00:00:00.000Z"
+      }
+    ],
+    "ignored": []
+  },
+  "metrics": {
+    "thoughts_generated": 0,
+    "actions_taken": 0,
+    "decisions_made": 0,
+    "reflections_completed": 4,
+    "confidence_changes": 0
+  }
+}

@@ -1,0 +1,19 @@
+{
+    "cycle": 0,
+    "last_thoughts": [],
+    "active_context": {
+        "active_deliberation": false,
+        "recent_thoughts": [],
+        "goals": [],
+        "pending_actions": []
+    },
+    "last_run": null,
+    "baseline": {
+        "timestamp": null,
+        "files": {},
+        "db_hashes": {},
+        "external": {},
+        "agents": {}
+    },
+    "history": []
+}
