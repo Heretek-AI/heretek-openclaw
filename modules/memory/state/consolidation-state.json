@@ -1,0 +1,38 @@
+{
+  "episodicMemory": [
+    [
+      "epi-1774805358513-43m1nyrjh",
+      {
+        "id": "epi-1774805358513-43m1nyrjh",
+        "timestamp": 1774805358514,
+        "content": "Test memory about API integration",
+        "importance": 0.8,
+        "accessCount": 0,
+        "lastAccess": 1774805358514,
+        "metadata": {},
+        "concepts": [],
+        "entities": [],
+        "promotionScore": 0.5199999351851958
+      }
+    ]
+  ],
+  "semanticMemory": [],
+  "padMemory": [],
+  "promotionHistory": [],
+  "accessPatterns": [
+    [
+      "epi-1774805358513-43m1nyrjh",
+      {
+        "count": 1,
+        "lastAccess": 1774805358514,
+        "tier": "episodic",
+        "accessTimes": [
+          1774805358514
+        ]
+      }
+    ]
+  ],
+  "lastConsolidation": 1774805358521,
+  "sleepCounter": 0,
+  "savedAt": 1774805358523
+}
