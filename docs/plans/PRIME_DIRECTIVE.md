@@ -1,9 +1,9 @@
 # PRIME DIRECTIVE
 
-**Version:** 3.0.0
+**Version:** 3.2.0
 **Created:** 2026-03-29
-**Last Updated:** 2026-03-29
-**Status:** Active
+**Last Updated:** 2026-03-29T19:27:00Z
+**Status:** Active - Deployment In Progress
 
 ---
 
@@ -11,7 +11,17 @@
 
 This document consolidates all planning documents from `plans/` and `docs/plans/` directories into a single unified PRIME DIRECTIVE for the Heretek-OpenClaw autonomous agent system. It replaces the previous fragmented planning documents with a single source of truth.
 
-Key themes include:
+### END GOAL
+**ALL AGENTS TO RUN IN OPENCLAW AND UTILIZE LITELLM ENDPOINTS PER AGENT**
+
+### Validation Status
+
+**Last Validation:** 2026-03-29T19:27:00Z
+**Validation Plan:** [`docs/plans/FULL_STACK_VALIDATION_PLAN.md`](FULL_STACK_VALIDATION_PLAN.md)
+**Test Task:** [`docs/plans/COLLECTIVE_TEST_TASK.md`](COLLECTIVE_TEST_TASK.md)
+**Fix Plan:** [`docs/plans/active/deployment-fix-plan.md`](active/deployment-fix-plan.md)
+
+### Key Themes
 
 1. **Autonomous Operations** - Heartbeat mechanism, session persistence, periodic commits
 2. **Consciousness Architecture** - Fractal Consciousness Framework with Global Workspace Theory, memory systems, and new agent types
@@ -25,6 +35,33 @@ Key themes include:
 10. **Appendices** - Additional technical details (schemas, diagrams)
 11. **Change Log** - Tracking modifications
 12. **Archive Section** - Instructions for archiving old plans
+
+### Architecture Validation Summary
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| LiteLLM Gateway | ⚠️ Fix Required | MiniMax model names incorrect - use `minimax/MiniMax-M2.1` |
+| MiniMax Primary | ❌ Broken | Model name `M2.7` invalid - use `MiniMax-M2.1` |
+| z.ai GLM-5 Failover | ✅ Working | Validated with test response |
+| Agent Passthrough | ⚠️ Fix Required | 8 agent endpoints configured but routing to broken MiniMax |
+| A2A Protocol | ❌ 404 Error | `/v1/agents/{agent}/send` endpoints not found |
+| PostgreSQL + pgvector | ✅ Validated | Vector storage ready |
+| Redis Cache | ✅ Validated | Rate limiting and caching |
+| Ollama (AMD ROCm) | ✅ Validated | Local LLM support |
+| Skills Directory | ✅ Validated | 35+ skills available |
+| Consciousness Modules | ✅ Validated | 6 cognitive modules |
+
+### Critical Fixes Required
+
+1. **MiniMax Model Names** (CRITICAL)
+   - Current: `minimax/M2.7` → Correct: `minimax/MiniMax-M2.1`
+   - Current: `minimax/M2.5` → Correct: `minimax/MiniMax-M2.5`
+   - File: `litellm_config.yaml` lines 22-40, 71-156
+
+2. **A2A Protocol** (HIGH)
+   - Endpoints return 404
+   - May require LiteLLM plugin or custom implementation
+   - Alternative: Direct agent-to-agent HTTP communication
 
 ### Consolidation Summary
 
