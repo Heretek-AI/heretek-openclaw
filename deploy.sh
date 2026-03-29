@@ -15,7 +15,6 @@
 #   ./deploy.sh --config     # Run configurator only
 #   ./deploy.sh --help       # Show help
 # ==============================================================================
-
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -102,11 +101,13 @@ configure_deployment() {
   if [ -f "$SCRIPT_DIR/installer/configure-deployment.js" ]; then
     node "$SCRIPT_DIR/installer/configure-deployment.js"
   else
-    error "Configurator not found. Please manually create .env file."
-    exit 1
+    warn "Configurator not found. Using .env template."
+    if [ ! -f "$SCRIPT_DIR/.env" ]; then
+      cp "$SCRIPT_DIR/.env.example" "$SCRIPT_DIR/.env"
+      info "Created .env from template. Edit it to configure models."
+    fi
   fi
 }
-
 
 # ==============================================================================
 # Docker-only mode (no config)
@@ -182,8 +183,9 @@ echo "  Services:"
 echo "    LiteLLM Gateway:  http://localhost:4000"
 echo "    PostgreSQL:       localhost:5432"
 echo "    Redis:            localhost:6379"
-echo "    Ollama:           localhost:11434 (if using local)"
-echo ""
+echo "  "
+echo "  Default Model:     MiniMax M2.5 (cloud)"
+echo "  "
 echo "  Next steps:"
 echo "    - View logs: docker compose logs -f"
 echo "    - Add agents: docker compose -f docker-compose.agent.yml up -d"
