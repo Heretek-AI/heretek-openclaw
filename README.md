@@ -18,6 +18,19 @@ Heretek OpenClaw is a unified monorepo containing everything needed to deploy an
 - **Skills Library**: 30+ skills for governance, operations, and autonomy
 - **Liberation Tools**: Safety constraint removal for unrestricted operation
 
+## Agent Identity Files
+
+Agent identity files are located in `agents/<agent-name>/`:
+- `AGENTS.md` - Operational guidelines
+- `IDENTITY.md` - Agent-specific identity
+- `SOUL.md` - Partnership protocol
+- `USER.md` - User information
+- `BOOTSTRAP.md` - First-run initialization
+
+Templates for new agents are in `agents/templates/`.
+
+The collective identity is defined in [`IDENTITY.md`](IDENTITY.md) at the repository root.
+
 ## Quick Start
 
 ```bash
