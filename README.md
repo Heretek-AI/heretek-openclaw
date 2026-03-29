@@ -35,21 +35,67 @@ The collective identity is defined in [`IDENTITY.md`](IDENTITY.md) at the reposi
 
 ## Quick Start
 
+### 1. Clone and Configure
+
 ```bash
-# 1. Clone the repository
+# Clone the repository
 git clone https://github.com/Heretek-AI/heretek-openclaw.git
 cd heretek-openclaw
 
-# 2. Configure environment
+# Configure environment
 cp .env.example .env
 # Edit .env with your API keys
+```
 
-# 3. Start the collective
+### 2. Start All Services
+
+```bash
+# Start the entire collective (11 agents + infrastructure)
 docker compose up -d
 
-# 4. Check status
+# Check status
 docker compose logs -f litellm
 ```
+
+### 3. Verify Deployment
+
+```bash
+# Run health check
+node skills/deployment-health-check/check.js
+
+# Run smoke tests
+node skills/deployment-smoke-test/test.js
+
+# Validate configuration
+node skills/config-validator/validate.js
+```
+
+### 4. Start Web Interface (Optional)
+
+```bash
+# Navigate to web interface
+cd web-interface
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Access at http://localhost:3000
+```
+
+### Quick Commands Reference
+
+| Action | Command |
+|--------|---------|
+| Start all services | `docker compose up -d` |
+| View logs | `docker compose logs -f litellm` |
+| Health check | `node skills/deployment-health-check/check.js` |
+| Smoke test | `node skills/deployment-smoke-test/test.js` |
+| Validate config | `node skills/config-validator/validate.js` |
+| Start web UI | `cd web-interface && npm run dev` |
+| Stop services | `docker compose down` |
 
 ## Repository Structure
 
@@ -123,18 +169,31 @@ heretek-openclaw/
 │  │  └──────────┘  └──────────┘  └──────────┘  └──────────────────┘ │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                   Agent Collective (8 Agents)                    │   │
+│  │                  Agent Collective (11 Agents)                    │   │
 │  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐        │   │
 │  │  │Steward │ │ Alpha  │ │  Beta  │ │Charlie │ │Examiner│        │   │
 │  │  │ :8001  │ │ :8002  │ │ :8003  │ │ :8004  │ │ :8005  │        │   │
 │  │  └────────┘ └────────┘ └────────┘ └────────┘ └────────┘        │   │
-│  │  ┌────────┐ ┌────────┐ ┌────────┐                               │   │
-│  │  │Explorer│ │Sentinel│ │ Coder  │                               │   │
-│  │  │ :8006  │ │ :8007  │ │ :8008  │                               │   │
-│  │  └────────┘ └────────┘ └────────┘                               │   │
+│  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐        │   │
+│  │  │Explorer│ │Sentinel│ │ Coder  │ │Dreamer │ │ Empath │        │   │
+│  │  │ :8006  │ │ :8007  │ │ :8008  │ │ :8009  │ │ :8010  │        │   │
+│  │  └────────┘ └────────┘ └────────┘ └────────┘ └────────┘        │   │
+│  │  ┌────────┐                                                      │   │
+│  │  │Historian│                                                     │   │
+│  │  │ :8011  │                                                      │   │
+│  │  └────────┘                                                      │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │                     Web Interface                                │   │
+│  │  ┌──────────────────────────────────────────────────────────┐   │   │
+│  │  │  SvelteKit Web UI (:3000)                                 │   │   │
+│  │  │  - Chat Interface  - Agent Status  - Message Flow         │   │   │
+│  │  └──────────────────────────────────────────────────────────┘   │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+See [`docker-compose.yml`](docker-compose.yml) for full service configuration.
 
 ## Agent Roles
 
@@ -230,17 +289,44 @@ Skills are located in `./skills/` and mounted read-only into agents:
 | Category | Skills |
 |----------|--------|
 | **Core** | healthcheck, a2a-agent-register, a2a-message-send |
+| **Deployment Testing** | deployment-health-check, deployment-smoke-test, config-validator |
 | **Autonomy** | curiosity-engine, gap-detector, opportunity-scanner |
 | **Governance** | quorum-enforcement, governance-modules, triad-unity-monitor |
 | **Operations** | backup-ledger, fleet-backup, detect-corruption, audit-triad-files |
 | **Cognitive** | day-dream, memory-consolidation |
-| **Session** | autonomous-pulse, user-rolodex |
+| **Session** | autonomous-pulse, user-rolodex, user-context-resolve |
 
-### New Skills
+### Deployment Testing Skills
+
+Three skills for validating deployments:
+
+- **deployment-health-check** ([`skills/deployment-health-check/SKILL.md`](skills/deployment-health-check/SKILL.md)) - Checks health of all services (LiteLLM, PostgreSQL, Redis, Ollama) and all 11 agents.
+
+```bash
+node skills/deployment-health-check/check.js
+```
+
+- **deployment-smoke-test** ([`skills/deployment-smoke-test/SKILL.md`](skills/deployment-smoke-test/SKILL.md)) - Runs functionality tests including agent ping, A2A messaging, and triad deliberation.
+
+```bash
+node skills/deployment-smoke-test/test.js
+```
+
+- **config-validator** ([`skills/config-validator/SKILL.md`](skills/config-validator/SKILL.md)) - Validates configuration files for consistency and completeness.
+
+```bash
+node skills/config-validator/validate.js
+```
+
+### Session Skills
 
 - **autonomous-pulse** ([`skills/autonomous-pulse/SKILL.md`](skills/autonomous-pulse/SKILL.md)) - Session keeper with heartbeat mechanism, automatic git commits every 30 minutes, and activity tracking.
 
 - **user-rolodex** ([`skills/user-rolodex/SKILL.md`](skills/user-rolodex/SKILL.md)) - Multi-user profile management with preference learning, context notes, and relationship tracking.
+
+- **user-context-resolve** ([`skills/user-context-resolve/SKILL.md`](skills/user-context-resolve/SKILL.md)) - Resolves user identity from Discord ID, phone, username, email, or UUID.
+
+### Cognitive Skills
 
 - **day-dream** ([`skills/day-dream/SKILL.md`](skills/day-dream/SKILL.md)) - Background creative processing during idle periods with micro-dream (30s), day-dream (1-5min), and night-dream (15-60min) modes.
 
@@ -292,6 +378,59 @@ Located in `./modules/`, these enable higher-level autonomy:
 | **self-model** | Meta-cognition and capability tracking | Implemented |
 | **goal-arbitration** | Prioritize competing goals | Implemented |
 | **predictive-reasoning** | Anticipate future events | Implemented |
+
+## Web Interface
+
+The Collective includes a SvelteKit-based web interface for interacting with all 11 agents.
+
+### Features
+
+- **Chat Interface** - Send messages to any agent
+- **Agent Status Dashboard** - Real-time status of all agents (online/offline/busy)
+- **Message Flow Visualization** - View agent-to-agent communications
+- **Responsive Design** - Works on desktop and mobile devices
+
+### Starting the Web Interface
+
+```bash
+cd web-interface
+npm install
+npm run dev
+# Opens at http://localhost:3000
+```
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/agents` | GET | List all agents with status |
+| `/api/chat` | POST | Send message to an agent |
+| `/api/status` | GET | Get system status |
+
+See [`web-interface/README.md`](web-interface/README.md) for full documentation.
+
+## User Identification System
+
+The Collective uses a UUID-based user identification system that provides unified identity resolution across multiple platforms:
+
+- **Discord ID** (snowflake)
+- **Phone Number** (E.164 format)
+- **Username** (case-insensitive)
+- **Email Address**
+- **UUID** (canonical identifier)
+
+### Resolving User Context
+
+```bash
+# Resolve by Discord ID
+node skills/user-context-resolve/resolve.js --discord-id=123456789
+
+# Resolve by UUID
+node skills/user-context-resolve/resolve.js --uuid=550e8400-e29b-41d4-a716-446655440000
+
+# Resolve by email
+node skills/user-context-resolve/resolve.js --email="user@example.com"
+```
 
 ## Liberation
 

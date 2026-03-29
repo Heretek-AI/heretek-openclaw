@@ -1,0 +1,153 @@
+{
+  "$schema": "user-template-v2",
+  "description": "Template for creating new user profiles with UUID and multi-platform support",
+  "profile": {
+    "uuid": "GENERATE_UUID_V4",
+    "id": "user-GENERATE_FROM_SLUG",
+    "slug": "GENERATE_FROM_NAME",
+    "username": "REQUIRED",
+    "name": {
+      "full": "REQUIRED",
+      "preferred": "SAME_AS_FULL",
+      "phonetic": null
+    },
+    "pronouns": null,
+    "timezone": "America/New_York",
+    "languages": ["en"],
+    "platforms": {
+      "discord": {
+        "id": null,
+        "username": null,
+        "discriminator": null,
+        "nickname": null
+      },
+      "phone": {
+        "number": null,
+        "verified": false
+      },
+      "web": {
+        "email": null,
+        "sessions": []
+      },
+      "github": {
+        "id": null,
+        "username": null
+      },
+      "slack": {
+        "id": null,
+        "team_id": null,
+        "username": null
+      }
+    },
+    "preferences": {
+      "communicationStyle": "adaptive",
+      "response_length": "adaptive",
+      "preferredAgents": [],
+      "code_style": {
+        "comments": "standard",
+        "naming": "descriptive",
+        "formatting": null
+      },
+      "topics_of_interest": []
+    },
+    "createdAt": "CURRENT_TIMESTAMP",
+    "created": "CURRENT_TIMESTAMP",
+    "lastActive": "CURRENT_TIMESTAMP",
+    "last_interaction": "CURRENT_TIMESTAMP",
+    "relationship": {
+      "type": "collaborator",
+      "since": "CURRENT_TIMESTAMP",
+      "trust_level": 0.5
+    },
+    "projects": [],
+    "context_notes": [],
+    "sessions": []
+  },
+  "index_template": {
+    "slug": "GENERATE_FROM_NAME",
+    "uuid": "GENERATE_UUID_V4",
+    "name": "FROM_PROFILE",
+    "type": "collaborator",
+    "since": "CURRENT_DATE",
+    "trust_level": 0.5,
+    "projects": []
+  },
+  "lookup_maps": {
+    "byDiscord": "platforms.discord.id",
+    "byPhone": "platforms.phone.number (normalized, digits only)",
+    "byUsername": "username (lowercase)",
+    "byUuid": "uuid (lowercase)",
+    "byEmail": "platforms.web.email (lowercase)"
+  },
+  "files_to_create": {
+    "profile.json": "Main user profile with UUID and platforms",
+    "preferences.json": "Learned preferences (key-value pairs)",
+    "history.json": "Interaction history",
+    "projects.json": "Associated projects",
+    "notes/": "Directory for date-based markdown notes"
+  },
+  "relationship_types": {
+    "primary": "Primary user with full access and highest trust",
+    "collaborator": "Regular collaborator with moderate trust",
+    "occasional": "Occasional user with basic access"
+  },
+  "trust_levels": {
+    "1.0": "Complete trust - full system access",
+    "0.8": "High trust - most operations allowed",
+    "0.5": "Moderate trust - standard operations",
+    "0.3": "Low trust - limited operations",
+    "0.1": "Minimal trust - read-only access"
+  },
+  "preference_defaults": {
+    "communicationStyle": {
+      "formal": "Professional, structured responses",
+      "casual": "Relaxed, conversational tone",
+      "technical": "Detailed technical explanations",
+      "adaptive": "Adjust based on context"
+    },
+    "response_length": {
+      "brief": "Concise, to-the-point responses",
+      "detailed": "Comprehensive, thorough responses",
+      "adaptive": "Adjust based on query complexity"
+    },
+    "code_style_comments": {
+      "minimal": "Only essential comments",
+      "standard": "Normal commenting level",
+      "detailed": "Extensive documentation"
+    },
+    "code_style_naming": {
+      "short": "Brief, concise names",
+      "descriptive": "Clear, self-documenting names",
+      "verbose": "Very explicit naming"
+    }
+  },
+  "note_categories": [
+    "general",
+    "technical",
+    "personal",
+    "preference",
+    "feedback"
+  ],
+  "importance_levels": {
+    "1.0": "Critical - must remember always",
+    "0.8": "High - important context",
+    "0.5": "Normal - useful information",
+    "0.3": "Low - minor detail",
+    "0.1": "Minimal - trivia"
+  },
+  "uuid_generation": {
+    "method": "RFC 4122 UUID v4",
+    "example": "550e8400-e29b-41d4-a716-446655440000",
+    "nodejs": "crypto.randomUUID()",
+    "cli": "uuidgen || cat /proc/sys/kernel/random/uuid"
+  },
+  "migration_notes": {
+    "from_v1": {
+      "add_uuid": "Generate UUID v4 for existing users",
+      "add_username": "Copy slug to username if missing",
+      "add_platforms": "Create empty platforms object",
+      "update_index": "Add lookup maps (byDiscord, byPhone, etc.)",
+      "rename_fields": "created -> createdAt, last_interaction -> lastActive"
+    }
+  }
+}

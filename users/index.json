@@ -1,11 +1,12 @@
 {
-  "$schema": "user-index-v1",
-  "version": "1.0.0",
-  "updated": "2026-03-29T04:09:00Z",
-  "description": "Index of all users in the rolodex for quick lookup",
+  "$schema": "user-index-v2",
+  "version": "2.0",
+  "updated": "2026-03-29T20:40:00Z",
+  "description": "Index of all users in the rolodex with multi-platform lookup maps",
   "users": [
     {
       "slug": "derek",
+      "uuid": "550e8400-e29b-41d4-a716-446655440000",
       "name": "Derek",
       "type": "primary",
       "since": "2026-03-01",
@@ -13,6 +14,22 @@
       "projects": ["heretek-openclaw"]
     }
   ],
+  "byDiscord": {
+    "123456789": "derek"
+  },
+  "byPhone": {
+    "15551234567": "derek"
+  },
+  "byUsername": {
+    "derek": "derek",
+    "dereksmith": "derek"
+  },
+  "byUuid": {
+    "550e8400-e29b-41d4-a716-446655440000": "derek"
+  },
+  "byEmail": {
+    "derek@example.com": "derek"
+  },
   "stats": {
     "total_users": 1,
     "primary_users": 1,

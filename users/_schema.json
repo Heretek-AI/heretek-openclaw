@@ -1,20 +1,30 @@
 {
-  "$schema": "user-schema-v1",
-  "$id": "https://heretek.ai/schemas/user-schema-v1.json",
-  "title": "User Profile Schema",
-  "description": "Schema for user profiles in the Heretek OpenClaw rolodex system",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://heretek.ai/schemas/user-schema-v2.json",
+  "title": "User Profile Schema v2",
+  "description": "Schema for user profiles in the Heretek OpenClaw rolodex system with UUID and multi-platform support",
   "type": "object",
-  "required": ["id", "slug", "name"],
+  "required": ["uuid", "username", "createdAt"],
   "properties": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for the user (RFC 4122 UUID)"
+    },
     "id": {
       "type": "string",
-      "description": "Unique identifier for the user",
+      "description": "Legacy identifier for backward compatibility",
       "pattern": "^user-[a-z0-9-]+$"
     },
     "slug": {
       "type": "string",
       "description": "URL-safe identifier derived from name",
       "pattern": "^[a-z0-9-]+$"
+    },
+    "username": {
+      "type": "string",
+      "description": "Primary username for the user",
+      "minLength": 1
     },
     "name": {
       "type": "object",
@@ -54,36 +64,97 @@
       },
       "default": ["en"]
     },
-    "created": {
-      "type": "string",
-      "format": "date-time",
-      "description": "When the user profile was created"
-    },
-    "last_interaction": {
-      "type": "string",
-      "format": "date-time",
-      "description": "When the user last interacted with the collective"
-    },
-    "relationship": {
+    "platforms": {
       "type": "object",
-      "description": "Relationship metadata",
+      "description": "Platform-specific identifiers for multi-platform user resolution",
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": ["primary", "collaborator", "occasional"],
-          "description": "Type of relationship with the collective"
+        "discord": {
+          "type": "object",
+          "description": "Discord platform identifiers",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Discord user ID (snowflake)"
+            },
+            "username": {
+              "type": "string",
+              "description": "Discord username"
+            },
+            "discriminator": {
+              "type": "string",
+              "description": "Legacy Discord discriminator (4 digits)"
+            },
+            "nickname": {
+              "type": "string",
+              "description": "Server-specific nickname"
+            }
+          }
         },
-        "since": {
-          "type": "string",
-          "format": "date-time",
-          "description": "When the relationship began"
+        "phone": {
+          "type": "object",
+          "description": "Phone/SMS platform identifiers",
+          "properties": {
+            "number": {
+              "type": "string",
+              "description": "Phone number in E.164 format",
+              "pattern": "^\\+[1-9]\\d{1,14}$"
+            },
+            "verified": {
+              "type": "boolean",
+              "description": "Whether the phone number has been verified",
+              "default": false
+            }
+          }
         },
-        "trust_level": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1,
-          "default": 0.5,
-          "description": "Trust level from 0 (none) to 1 (complete)"
+        "web": {
+          "type": "object",
+          "description": "Web platform identifiers",
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email",
+              "description": "Primary email address"
+            },
+            "sessions": {
+              "type": "array",
+              "description": "Active web session IDs",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "github": {
+          "type": "object",
+          "description": "GitHub platform identifiers",
+          "properties": {
+            "id": {
+              "type": "number",
+              "description": "GitHub user ID"
+            },
+            "username": {
+              "type": "string",
+              "description": "GitHub username"
+            }
+          }
+        },
+        "slack": {
+          "type": "object",
+          "description": "Slack platform identifiers",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Slack user ID"
+            },
+            "team_id": {
+              "type": "string",
+              "description": "Slack team/workspace ID"
+            },
+            "username": {
+              "type": "string",
+              "description": "Slack username"
+            }
+          }
         }
       }
     },
@@ -91,15 +162,23 @@
       "type": "object",
       "description": "Learned user preferences",
       "properties": {
-        "communication_style": {
+        "communicationStyle": {
           "type": "string",
           "enum": ["formal", "casual", "technical", "adaptive"],
-          "default": "adaptive"
+          "default": "adaptive",
+          "description": "Preferred communication style"
         },
         "response_length": {
           "type": "string",
           "enum": ["brief", "detailed", "adaptive"],
           "default": "adaptive"
+        },
+        "preferredAgents": {
+          "type": "array",
+          "description": "Preferred agents for this user",
+          "items": {
+            "type": "string"
+          }
         },
         "code_style": {
           "type": "object",
@@ -122,6 +201,49 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user profile was created (new field name)"
+    },
+    "created": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user profile was created (legacy field name)"
+    },
+    "lastActive": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user last interacted (new field name)"
+    },
+    "last_interaction": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user last interacted with the collective (legacy field name)"
+    },
+    "relationship": {
+      "type": "object",
+      "description": "Relationship metadata",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["primary", "collaborator", "occasional"],
+          "description": "Type of relationship with the collective"
+        },
+        "since": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the relationship began"
+        },
+        "trust_level": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.5,
+          "description": "Trust level from 0 (none) to 1 (complete)"
         }
       }
     },
@@ -171,6 +293,35 @@
           "category": {
             "type": "string",
             "enum": ["general", "technical", "personal", "preference", "feedback"]
+          }
+        }
+      }
+    },
+    "sessions": {
+      "type": "array",
+      "description": "Session history with the agent collective",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Session identifier"
+          },
+          "platform": {
+            "type": "string",
+            "description": "Platform where session occurred"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Brief summary of session"
           }
         }
       }

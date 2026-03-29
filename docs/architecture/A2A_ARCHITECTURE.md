@@ -2,32 +2,24 @@
 
 ## Overview
 
-This document defines the A2A-based communication architecture for The Collective, replacing the legacy HTTP sync + Matrix communication with standardized agent-to-agent messaging.
+This document defines the A2A-based communication architecture for The Collective, implementing standardized agent-to-agent messaging across all 11 agents.
+
+**Current Status:** LiteLLM native A2A support is available and validated. The system uses a Redis-based fallback for message queuing while native A2A integration is being completed.
 
 ---
 
-## Current Architecture (Deprecated)
+## Architecture Status
 
-```
-OpenClaw Instance
-├── HTTP Sync Server (port 8765)
-│   └── /state, /health, /broadcast
-├── Matrix Room (triad-general)
-│   └── Human coordination, fallback
-└── OpenClaw Gateway (port 18789)
-    └── sessions_send for agent control
-```
-
-**Limitations:**
-- No standardized agent discovery
-- Message format varies by channel
-- No structured task handoff
-- Hard to track conversation context across agents
-- Matrix/Discord adds latency and noise
+| Component | Status | Description |
+|-----------|--------|-------------|
+| **LiteLLM A2A** | ✅ Available | Native A2A protocol support in LiteLLM |
+| **Redis Fallback** | ✅ Active | Current message queuing implementation |
+| **11-Agent Registry** | ✅ Complete | All agents registered in A2A system |
+| **Migration Path** | 🔄 In Progress | Transitioning from Redis to native A2A |
 
 ---
 
-## Target A2A Architecture
+## 11-Agent A2A Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -36,32 +28,58 @@ OpenClaw Instance
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐            │
-│  │   Steward   │  │    Triad    │  │  Examiner   │            │
+│  │   Steward   │  │   Alpha     │  │   Beta      │            │
 │  │   (A2A)     │  │   (A2A)     │  │   (A2A)     │            │
-│  │  orchestrate│  │  deliberate │  │   question  │            │
+│  │  orchestrate│  │  deliberate │  │  deliberate │            │
 │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘            │
 │         │               │               │                     │
-│         └───────────────┼───────────────┘                     │
-│                         │                                       │
-│         ┌───────────────┼───────────────┐                     │
-│         │               │               │                     │
 │  ┌──────┴──────┐  ┌──────┴──────┐  ┌──────┴──────┐            │
-│  │  Explorer   │  │  Sentinel   │  │   Coder     │            │
+│  │  Charlie    │  │  Examiner   │  │  Explorer   │            │
 │  │   (A2A)     │  │   (A2A)     │  │   (A2A)     │            │
-│  │  discover   │  │   review    │  │ implement   │            │
+│  │  deliberate │  │   question  │  │  discover   │            │
 │  └─────────────┘  └─────────────┘  └─────────────┘            │
+│                                                                 │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐            │
+│  │  Sentinel   │  │   Coder     │  │   Dreamer   │            │
+│  │   (A2A)     │  │   (A2A)     │  │   (A2A)     │            │
+│  │   review    │  │ implement   │  │   synthesize│            │
+│  └─────────────┘  └─────────────┘  └─────────────┘            │
+│                                                                 │
+│  ┌─────────────┐  ┌─────────────┐                               │
+│  │   Empath    │  │  Historian  │                               │
+│  │   (A2A)     │  │   (A2A)     │                               │
+│  │   relate    │  │   remember  │                               │
+│  └─────────────┘  └─────────────┘                               │
 │                                                                 │
 ├─────────────────────────────────────────────────────────────────┤
 │                     A2A Agent Registry                         │
-│  - Agent Cards for discovery                                    │
-│  - Skill capabilities                                           │
-│  - Task history                                                 │
+│  - Agent Cards for all 11 agents                                │
+│  - Skill capabilities per agent                                 │
+│  - Task history and context                                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## Agent Registration
+
+### 11-Agent A2A Registry
+
+All 11 agents are registered in the A2A system with their Agent Cards:
+
+| Agent | A2A Endpoint | Port | Primary Skills |
+|-------|--------------|------|----------------|
+| **Steward** | `/a2a/steward` | 8001 | orchestrate, monitor-health, manage-proposals |
+| **Alpha** | `/a2a/alpha` | 8002 | deliberate, consensus, vote |
+| **Beta** | `/a2a/beta` | 8003 | deliberate, consensus, vote |
+| **Charlie** | `/a2a/charlie` | 8004 | deliberate, consensus, vote |
+| **Examiner** | `/a2a/examiner` | 8005 | question, challenge, analyze |
+| **Explorer** | `/a2a/explorer` | 8006 | discover, research, scout |
+| **Sentinel** | `/a2a/sentinel` | 8007 | review, safety-check, assess |
+| **Coder** | `/a2a/coder` | 8008 | implement, code, execute |
+| **Dreamer** | `/a2a/dreamer` | 8009 | synthesize, imagine, pattern-recognize |
+| **Empath** | `/a2a/empath` | 8010 | relate, model-user, track-preferences |
+| **Historian** | `/a2a/historian` | 8011 | remember, consolidate, contextualize |
 
 ### Agent Card Structure
 
@@ -72,6 +90,7 @@ Each agent registers with an A2A Agent Card:
   "name": "steward",
   "description": "Orchestrator of The Collective",
   "url": "http://localhost:4000/a2a/steward",
+  "port": 8001,
   "skills": [
     { "id": "orchestrate", "name": "Orchestrate Collective" },
     { "id": "monitor-health", "name": "Monitor Agent Health" },
@@ -79,7 +98,8 @@ Each agent registers with an A2A Agent Card:
   ],
   "capabilities": {
     "streaming": true,
-    "pushNotifications": true
+    "pushNotifications": true,
+    "a2a": true
   }
 }
 ```
@@ -92,13 +112,22 @@ LITELLM_HOST="llm.collective.ai"
 LITELLM_PORT="4000"
 LITELLM_MASTER_KEY="sk-..."
 
-# Agent endpoints
+# LiteLLM A2A Settings
+AGENT_MODE_ENABLED=true
+AGENT_A2A_VERSION=1.0
+
+# Agent endpoints (11 agents)
 A2A_STEWARD="http://localhost:4000/a2a/steward"
-A2A_TRIAD="http://localhost:4000/a2a/triad"
+A2A_ALPHA="http://localhost:4000/a2a/alpha"
+A2A_BETA="http://localhost:4000/a2a/beta"
+A2A_CHARLIE="http://localhost:4000/a2a/charlie"
 A2A_EXAMINER="http://localhost:4000/a2a/examiner"
 A2A_EXPLORER="http://localhost:4000/a2a/explorer"
 A2A_SENTINEL="http://localhost:4000/a2a/sentinel"
 A2A_CODER="http://localhost:4000/a2a/coder"
+A2A_DREAMER="http://localhost:4000/a2a/dreamer"
+A2A_EMPATH="http://localhost:4000/a2a/empath"
+A2A_HISTORIAN="http://localhost:4000/a2a/historian"
 ```
 
 ---
@@ -107,28 +136,71 @@ A2A_CODER="http://localhost:4000/a2a/coder"
 
 ### 1. Proposal Flow (Triad Deliberation)
 
+The triad deliberation pattern involves Alpha, Beta, and Charlie working together to reach consensus:
+
 ```
-Explorer → [intel] → Triad → [deliberate] → Sentinel → [review] → Triad → [vote] → Coder
+Explorer → [intel] → Triad (Alpha/Beta/Charlie) → [deliberate] → Sentinel → [review] → Triad → [vote] → Coder
 ```
 
 **A2A Implementation:**
 
-```python
-# Explorer delivers intel to Triad
-from a2a.client import A2AClient
-
-async def deliver_intel_to_triad(intel):
-    client = A2AClient(agent_card=await get_agent_card('triad'))
-    await client.send_message({
-        'role': 'user',
-        'parts': [{
-            'kind': 'text',
-            'text': f'[INTEL] {intel.content}'
+```javascript
+// Explorer delivers intel to Triad (via Alpha as lead)
+const deliverIntelToTriad = async (intel) => {
+  const response = await fetch('http://localhost:4000/a2a/alpha', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${VIRTUAL_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: {
+        role: 'user',
+        parts: [{
+          kind: 'text',
+          text: `[INTEL] ${intel.content}`
         }]
+      }
     })
+  });
+  return response.json();
+};
 ```
 
-### 2. Question Flow (Examiner Questions)
+### 2. Triad Consensus Protocol
+
+The triad uses a three-phase deliberation:
+
+```
+Phase 1: Alpha receives → broadcasts to Beta, Charlie
+Phase 2: All three deliberate independently
+Phase 3: Consensus vote → result to Steward
+```
+
+**Redis-based Fallback Implementation:**
+
+```javascript
+// Using Redis pub/sub for triad coordination
+const redis = require('redis');
+const client = redis.createClient({ url: 'redis://localhost:6379' });
+
+// Alpha broadcasts to triad
+const broadcastToTriad = async (proposal) => {
+  await client.publish('triad:deliberate', JSON.stringify({
+    from: 'alpha',
+    proposal: proposal,
+    timestamp: Date.now()
+  }));
+};
+
+// Beta and Charlie subscribe
+client.subscribe('triad:deliberate', (message) => {
+  const { proposal } = JSON.parse(message);
+  // Process and vote
+});
+```
+
+### 3. Question Flow (Examiner Questions)
 
 ```
 Triad → [proposal] → Examiner → [questions] → Triad
@@ -136,20 +208,30 @@ Triad → [proposal] → Examiner → [questions] → Triad
 
 **A2A Implementation:**
 
-```python
-# Examiner questions a proposal
-async def question_proposal(proposal_id, question_type):
-    client = A2AClient(agent_card=await get_agent_card('examiner'))
-    await client.send_message({
-        'role': 'user', 
-        'parts': [{
-            'kind': 'text',
-            'text': f'[EXAMINE] proposal={proposal_id}, type={question_type}'
+```javascript
+// Examiner questions a proposal
+const questionProposal = async (proposalId, questionType) => {
+  const response = await fetch('http://localhost:4000/a2a/examiner', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${VIRTUAL_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: {
+        role: 'user',
+        parts: [{
+          kind: 'text',
+          text: `[EXAMINE] proposal=${proposalId}, type=${questionType}`
         }]
+      }
     })
+  });
+  return response.json();
+};
 ```
 
-### 3. Safety Review (Sentinel)
+### 4. Safety Review (Sentinel)
 
 ```
 Triad → [ratified] → Sentinel → [review] → result → Triad
@@ -157,21 +239,30 @@ Triad → [ratified] → Sentinel → [review] → result → Triad
 
 **A2A Implementation:**
 
-```python
-# Sentinel reviews ratified proposal
-async def review_proposal(proposal_id, content):
-    client = A2AClient(agent_card=await get_agent_card('sentinel'))
-    response = await client.send_message({
-        'role': 'user',
-        'parts': [{
-            'kind': 'text', 
-            'text': f'[SAFETY REVIEW] proposal={proposal_id}\n\n{content}'
+```javascript
+// Sentinel reviews ratified proposal
+const reviewProposal = async (proposalId, content) => {
+  const response = await fetch('http://localhost:4000/a2a/sentinel', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${VIRTUAL_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: {
+        role: 'user',
+        parts: [{
+          kind: 'text',
+          text: `[SAFETY REVIEW] proposal=${proposalId}\n\n${content}`
         }]
+      }
     })
-    return response.message.parts[0].text
+  });
+  return response.json();
+};
 ```
 
-### 4. Implementation Request (Coder)
+### 5. Implementation Request (Coder)
 
 ```
 Triad → [ratified] → Coder → [implements] → result → Triad
@@ -179,18 +270,94 @@ Triad → [ratified] → Coder → [implements] → result → Triad
 
 **A2A Implementation:**
 
-```python
-# Coder implements ratified proposal
-async def implement_proposal(proposal_id, specs):
-    client = A2AClient(agent_card=await get_agent_card('coder'))
-    response = await client.send_message({
-        'role': 'user',
-        'parts': [{
-            'kind': 'text',
-            'text': f'[IMPLEMENT] proposal={proposal_id}\n\n specs:\n{specs}'
+```javascript
+// Coder implements ratified proposal
+const implementProposal = async (proposalId, specs) => {
+  const response = await fetch('http://localhost:4000/a2a/coder', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${VIRTUAL_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: {
+        role: 'user',
+        parts: [{
+          kind: 'text',
+          text: `[IMPLEMENT] proposal=${proposalId}\n\nspecs:\n${JSON.stringify(specs)}`
         }]
+      }
     })
-    return response.message.parts[0].text
+  });
+  return response.json();
+};
+```
+
+### 6. Cognitive Enhancement Flow (Dreamer, Empath, Historian)
+
+The three cognitive enhancement agents work in parallel:
+
+```
+                    ┌─→ Dreamer → [synthesize] → insights
+Steward → [task] ───┼─→ Empath → [model-user] → user-context
+                    └─→ Historian → [remember] → historical-context
+```
+
+**Dreamer - Creative Synthesis:**
+
+```javascript
+// Dreamer processes background patterns
+const synthesizePatterns = async (context) => {
+  const response = await fetch('http://localhost:4000/a2a/dreamer', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${VIRTUAL_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: {
+        role: 'user',
+        parts: [{ kind: 'text', text: `[SYNTHESIZE] ${context}` }]
+      }
+    })
+  });
+  return response.json();
+};
+```
+
+**Empath - User Modeling:**
+
+```javascript
+// Empath resolves user context
+const resolveUserContext = async (userId) => {
+  const response = await fetch('http://localhost:4000/a2a/empath', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${VIRTUAL_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: {
+        role: 'user',
+        parts: [{ kind: 'text', text: `[USER_CONTEXT] uuid=${userId}` }]
+      }
+    })
+  });
+  return response.json();
+};
+```
+
+**Historian - Memory Retrieval:**
+
+```javascript
+// Historian retrieves historical context
+const retrieveHistory = async (query) => {
+  const response = await fetch('http://localhost:4000/a2a/historian', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${VIRTUAL_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: {
+        role: 'user',
+        parts: [{ kind: 'text', text: `[REMEMBER] ${query}` }]
+      }
+    })
+  });
+  return response.json();
+};
 ```
 
 ---
@@ -303,51 +470,209 @@ curl "http://localhost:4000/spend" \
 
 ---
 
-## Migration Path
+## Redis-Based Fallback Implementation
 
-1. **Phase 1:** Deploy LiteLLM with A2A gateway
-2. **Phase 2:** Register all 6 agents as A2A agents
-3. **Phase 3:** Update triad-sync-protocol to use A2A
-4. **Phase 4:** Replace Matrix messages with A2A
-5. **Phase 5:** Keep Matrix/Discord as fallback only
+While LiteLLM native A2A is being integrated, the system uses Redis pub/sub for message queuing:
+
+### Message Queue Structure
+
+```javascript
+// Redis channels for A2A messaging
+const CHANNELS = {
+  // Per-agent channels
+  steward: 'a2a:steward:inbox',
+  alpha: 'a2a:alpha:inbox',
+  beta: 'a2a:beta:inbox',
+  charlie: 'a2a:charlie:inbox',
+  examiner: 'a2a:examiner:inbox',
+  explorer: 'a2a:explorer:inbox',
+  sentinel: 'a2a:sentinel:inbox',
+  coder: 'a2a:coder:inbox',
+  dreamer: 'a2a:dreamer:inbox',
+  empath: 'a2a:empath:inbox',
+  historian: 'a2a:historian:inbox',
+  
+  // Triad broadcast
+  triad: 'a2a:triad:broadcast',
+  
+  // System channels
+  health: 'a2a:system:health',
+  errors: 'a2a:system:errors'
+};
+```
+
+### Sending Messages via Redis
+
+```javascript
+// skills/a2a-message-send/a2a-redis.js
+const sendA2AMessage = async (fromAgent, toAgent, message) => {
+  const redis = require('redis');
+  const client = redis.createClient({ url: process.env.REDIS_URL });
+  
+  const envelope = {
+    id: uuidv4(),
+    from: fromAgent,
+    to: toAgent,
+    timestamp: new Date().toISOString(),
+    message: message,
+    status: 'pending'
+  };
+  
+  // Publish to target agent's inbox
+  await client.publish(`a2a:${toAgent}:inbox`, JSON.stringify(envelope));
+  
+  // Store for durability
+  await client.hSet('a2a:messages', envelope.id, JSON.stringify(envelope));
+  
+  return envelope.id;
+};
+```
+
+### Receiving Messages
+
+```javascript
+// Agent subscribes to its inbox
+const subscribeToMessages = async (agentName, handler) => {
+  const redis = require('redis');
+  const client = redis.createClient({ url: process.env.REDIS_URL });
+  
+  await client.subscribe(`a2a:${agentName}:inbox`, (message) => {
+    const envelope = JSON.parse(message);
+    handler(envelope);
+  });
+};
+```
+
+---
+
+## Migration Path to Native A2A
+
+### Current State (Phase 2)
+
+- ✅ LiteLLM deployed with A2A gateway enabled
+- ✅ All 11 agents registered in A2A registry
+- ✅ Redis fallback active for message queuing
+- 🔄 Skills updated to support both A2A and Redis
+
+### Migration Phases
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| **Phase 1** | ✅ Complete | Deploy LiteLLM with A2A gateway |
+| **Phase 2** | ✅ Complete | Register all 11 agents as A2A agents |
+| **Phase 3** | 🔄 In Progress | Update skills to use native A2A |
+| **Phase 4** | ⏳ Pending | Replace Redis with native A2A calls |
+| **Phase 5** | ⏳ Pending | Remove Redis fallback code |
+
+### Migration Steps
+
+1. **Update Skills** - Modify all skills to use A2A endpoints:
+   ```javascript
+   // Before (Redis)
+   await redisClient.publish(`a2a:${agent}:inbox`, message);
+   
+   // After (Native A2A)
+   await fetch(`http://localhost:4000/a2a/${agent}`, {
+     method: 'POST',
+     body: JSON.stringify({ message })
+   });
+   ```
+
+2. **Update Agent Client** - Modify [`agents/lib/agent-client.js`](agents/lib/agent-client.js):
+   ```javascript
+   // Add A2A client method
+   async sendA2AMessage(toAgent, message) {
+     const response = await fetch(`${this.litellmUrl}/a2a/${toAgent}`, {
+       method: 'POST',
+       headers: { 'Authorization': `Bearer ${this.apiKey}` },
+       body: JSON.stringify({ message })
+     });
+     return response.json();
+   }
+   ```
+
+3. **Deprecate Redis Channels** - Once A2A is stable, remove Redis pub/sub code
 
 ---
 
 ## Configuration
 
-Update `.env.example`:
+### Environment Variables (`.env`)
 
 ```bash
 # LiteLLM A2A Configuration
 LITELLM_A2A_ENABLED="true"
+AGENT_MODE_ENABLED="true"
+AGENT_A2A_VERSION="1.0"
 A2A_DEFAULT_AGENT="steward"
 
-# Agent endpoints
+# Agent endpoints (11 agents)
 A2A_STEWARD_URL="http://localhost:4000/a2a/steward"
-A2A_TRIAD_URL="http://localhost:4000/a2a/triad"
+A2A_ALPHA_URL="http://localhost:4000/a2a/alpha"
+A2A_BETA_URL="http://localhost:4000/a2a/beta"
+A2A_CHARLIE_URL="http://localhost:4000/a2a/charlie"
 A2A_EXAMINER_URL="http://localhost:4000/a2a/examiner"
 A2A_EXPLORER_URL="http://localhost:4000/a2a/explorer"
 A2A_SENTINEL_URL="http://localhost:4000/a2a/sentinel"
 A2A_CODER_URL="http://localhost:4000/a2a/coder"
+A2A_DREAMER_URL="http://localhost:4000/a2a/dreamer"
+A2A_EMPATH_URL="http://localhost:4000/a2a/empath"
+A2A_HISTORIAN_URL="http://localhost:4000/a2a/historian"
 
-# Fallback
-FALLBACK_TO_MATRIX="true"
+# Redis Fallback
+REDIS_URL="redis://localhost:6379/0"
+A2A_FALLBACK_TO_REDIS="true"
+
+# Legacy Fallback (deprecated)
+FALLBACK_TO_MATRIX="false"
 MATRIX_CHANNEL="triad-general"
+```
+
+### LiteLLM Configuration (`litellm_config.yaml`)
+
+```yaml
+# A2A Agent model mappings
+model_list:
+  - model_name: agent/steward
+    litellm_params:
+      model: minimax/abab6.5s-chat
+      api_key: os.environ/MINIMAX_API_KEY
+  
+  # ... all 11 agents configured
+  
+# A2A Settings
+agent_mode:
+  enabled: true
+  a2a_version: "1.0"
+  default_agent: steward
 ```
 
 ---
 
 ## Summary
 
-A2A provides:
+### A2A Features
 
 | Feature | Benefit |
 |---------|---------|
-| Standardized Messages | All agents understand same format |
+| Standardized Messages | All 11 agents understand same format |
 | Agent Discovery | No hardcoded agent URLs |
 | Task Continuity | Context handoff between agents |
 | Cost Tracking | Per-agent spend visibility |
 | Logging | Full conversation history |
 | Streaming | Real-time responses |
+| Triad Deliberation | Built-in consensus protocol |
 
-The Collective communicates via LiteLLM A2A gateway, with Matrix as fallback.
+### Current Implementation
+
+- **Primary:** LiteLLM native A2A (available, integration in progress)
+- **Fallback:** Redis pub/sub messaging
+- **Legacy:** Matrix/Discord (deprecated)
+
+The Collective communicates via LiteLLM A2A gateway with Redis fallback for reliability.
+
+---
+
+*Document Version: 2.0.0*
+*Last Updated: 2026-03-29*
+*The Collective: 11 Agents in A2A Harmony*
