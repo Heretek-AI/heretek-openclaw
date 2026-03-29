@@ -1,0 +1,89 @@
+name: Build & Publish
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    name: Build Patch & Publish
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'))
+    outputs:
+      patch_version: ${{ steps.version.outputs.latest }}
+      patch_exists: ${{ steps.check_patch.outputs.exists }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Get latest openclaw version
+        id: version
+        run: |
+          VERSION=$(npm view openclaw version)
+          echo "latest=$VERSION" >> $GITHUB_OUTPUT
+          echo "Latest openclaw version: $VERSION"
+
+      - name: Check if patch exists for version
+        id: check_patch
+        run: |
+          if [ -f "patches/openclaw+${{ steps.version.outputs.latest }}.patch" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Patch already exists for ${{ steps.version.outputs.latest }}"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Need to generate patch for ${{ steps.version.outputs.latest }}"
+          fi
+
+      - name: Generate patch if needed
+        if: steps.check_patch.outputs.exists == 'false'
+        run: |
+          echo "Generating patch for openclaw@${{ steps.version.outputs.latest }}..."
+          node scripts/generate-patch.js ${{ steps.version.outputs.latest }}
+
+      - name: Commit new patch
+        if: steps.check_patch.outputs.exists == 'false'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add patches/
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Add patch for openclaw@${{ steps.version.outputs.latest }}" || echo "Commit skipped"
+            echo "Patch created: patches/openclaw+${{ steps.version.outputs.latest }}.patch"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install openclaw
+        run: npm install openclaw@${{ steps.version.outputs.latest }}
+
+      - name: Install liberation patch
+        run: npm install
+
+      - name: Verify liberation
+        run: |
+          npm run verify || exit 1
+        env:
+          NODE_PATH: ${{ github.workspace }}/node_modules
+
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
