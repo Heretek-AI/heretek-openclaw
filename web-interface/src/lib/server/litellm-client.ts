@@ -1,23 +1,29 @@
 import type { ChatRequest, ChatResponse, A2AMessage } from '../types';
 
 // LiteLLM Gateway configuration
-const LITELLM_BASE_URL = process.env.LITELLM_URL || 'http://localhost:4000';
+const LITELLM_BASE_URL = process.env.LITELLM_HOST || process.env.LITELLM_URL || 'http://localhost:4000';
 
-// Send a chat message to an agent via LiteLLM A2A endpoint
+// Send a chat message to an agent via LiteLLM chat completion endpoint
 export async function sendChatToAgent(request: ChatRequest): Promise<ChatResponse> {
 	const { agent, message, conversationId } = request;
 	
 	try {
-		// Use the A2A endpoint for agent communication
-		const response = await fetch(`${LITELLM_BASE_URL}/a2a/${agent}`, {
+		// Use the chat completion endpoint with agent model
+		const response = await fetch(`${LITELLM_BASE_URL}/v1/chat/completions`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${process.env.LITELLM_API_KEY || ''}`
 			},
 			body: JSON.stringify({
-				message,
-				conversation_id: conversationId,
-				timestamp: new Date().toISOString()
+				model: `agent/${agent}`,
+				messages: [
+					{
+						role: 'user',
+						content: message
+					}
+				],
+				stream: false
 			})
 		});
 
@@ -32,10 +38,11 @@ export async function sendChatToAgent(request: ChatRequest): Promise<ChatRespons
 		}
 
 		const data = await response.json();
+		const assistantMessage = data.choices?.[0]?.message?.content || JSON.stringify(data);
 		
 		return {
 			success: true,
-			response: data.response || data.message || JSON.stringify(data),
+			response: assistantMessage,
 			agent,
 			timestamp: new Date()
 		};

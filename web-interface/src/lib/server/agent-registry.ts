@@ -102,9 +102,21 @@ export function getAgentByPort(port: number): Agent | undefined {
 	return AGENTS.find(agent => agent.port === port);
 }
 
+// Get the base URL for agent communication (Docker network or localhost)
+function getAgentBaseUrl(agent: Agent): string {
+	// In Docker, use container names; in development, use localhost with mapped ports
+	const host = process.env.DOCKER_ENV === 'true'
+		? `heretek-${agent.id}` // Docker container name
+		: 'localhost';
+	const port = process.env.DOCKER_ENV === 'true'
+		? 8000// Internal container port
+		: agent.port; // Mapped host port
+	return `http://${host}:${port}`;
+}
+
 // Get health check URL for agent
 export function getAgentHealthUrl(agent: Agent): string {
-	return `http://localhost:${agent.port}/health`;
+	return `${getAgentBaseUrl(agent)}/health`;
 }
 
 // Check health of a single agent
