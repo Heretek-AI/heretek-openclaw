@@ -2,7 +2,7 @@
   "name": "@heretek-ai/heretek-openclaw-installer",
   "version": "1.0.0",
   "description": "Heretek OpenClaw - Liberated Fork Installer",
-  "type": "module",
+  "type": "commonjs",
   "main": "cli.js",
   "bin": {
     "heretek-openclaw": "./cli.js"
