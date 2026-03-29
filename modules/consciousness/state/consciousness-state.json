@@ -1,0 +1,13 @@
+{
+  "phi": 0,
+  "consciousContent": null,
+  "driveLevels": {
+    "curiosity": 0.5,
+    "competence": 0.5,
+    "autonomy": 0.5,
+    "relatedness": 0.5
+  },
+  "lastReport": null,
+  "isRunning": false,
+  "config": {}
+}

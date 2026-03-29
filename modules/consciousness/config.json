@@ -1,0 +1,57 @@
+{
+  "module": "consciousness",
+  "version": "1.0.0",
+  "description": "Unified consciousness module integrating GWT, IIT, FEP, and AST",
+  "components": {
+    "globalWorkspace": {
+      "enabled": true,
+      "broadcastInterval": 5000,
+      "ignitionThreshold": 0.7,
+      "maxWorkspaceSize": 7,
+      "competitionCycle": 1000
+    },
+    "phiEstimator": {
+      "enabled": true,
+      "sampleInterval": 10000,
+      "historySize": 1000,
+      "components": {
+        "integration": true,
+        "causality": true,
+        "coverage": true
+      }
+    },
+    "activeInference": {
+      "enabled": true,
+      "learningRate": 0.1,
+      "precision": 1.0,
+      "maxIterations": 100,
+      "errorThreshold": 0.01
+    },
+    "attentionSchema": {
+      "enabled": true,
+      "modelInterval": 1000,
+      "historySize": 100,
+      "shiftThreshold": 0.3
+    },
+    "intrinsicMotivation": {
+      "enabled": true,
+      "drives": {
+        "curiosity": { "weight": 0.3, "baseline": 0.5 },
+        "competence": { "weight": 0.25, "baseline": 0.5 },
+        "autonomy": { "weight": 0.25, "baseline": 0.5 },
+        "relatedness": { "weight": 0.2, "baseline": 0.5 }
+      }
+    }
+  },
+  "integration": {
+    "thoughtLoop": true,
+    "selfModel": true,
+    "goalArbitration": true,
+    "predictiveReasoning": true
+  },
+  "output": {
+    "consciousnessReportInterval": 30000,
+    "phiLogInterval": 60000,
+    "broadcastLogInterval": 10000
+  }
+}
