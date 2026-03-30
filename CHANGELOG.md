@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2026-03-30
+
+### Added
+- **Bidirectional WebSocket Communication**
+  - [`web-interface/src/lib/server/websocket-client.ts`](web-interface/src/lib/server/websocket-client.ts) - Enhanced with send, queue, ack
+  - [`web-interface/src/lib/components/MessageFlow.svelte`](web-interface/src/lib/components/MessageFlow.svelte) - Added sendMessage capability
+  - [`modules/communication/redis-websocket-bridge.js`](modules/communication/redis-websocket-bridge.js) - Receive client messages
+
+### Changed
+- **WebSocket Flow**: UI → WebSocket → Redis → LiteLLM → Agent → Response → WebSocket → UI
+  - Full bidirectional message flow
+  - Message queue for offline handling
+  - Acknowledgment system
+  - Typing indicators support
+  - Message status tracking
+
 ## [1.2.0] - 2026-03-30
 
 ### Added

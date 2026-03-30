@@ -28,6 +28,7 @@ export interface WebSocketConfig {
     onConnect?: () => void;
     onDisconnect?: () => void;
     onError?: (error: Event) => void;
+    onAck?: (messageId: string, success: boolean) => void;
 }
 
 export interface WebSocketMessage {
@@ -45,10 +46,15 @@ class WebSocketClient {
     private reconnectTimer: NodeJS.Timeout | null = null;
     private isManualDisconnect: boolean = false;
     
+    // Message queue for offline handling
+    private messageQueue: Array<{ message: any; messageId: string }> = [];
+    private pendingAcks: Map<string, { resolve: Function; reject: Function; timer: NodeJS.Timeout }> = new Map();
+    
     public onMessage?: (message: any) => void;
     public onConnect?: () => void;
     public onDisconnect?: () => void;
     public onError?: (error: Event) => void;
+    public onAck?: (messageId: string, success: boolean) => void;
     
     constructor(config: WebSocketConfig = {}) {
         this.url = config.url || 'ws://localhost:3001';
@@ -60,6 +66,7 @@ class WebSocketClient {
         this.onConnect = config.onConnect;
         this.onDisconnect = config.onDisconnect;
         this.onError = config.onError;
+        this.onAck = config.onAck;
     }
 
     /**
@@ -89,21 +96,115 @@ class WebSocketClient {
     }
 
     /**
-     * Send message through WebSocket
+     * Generate unique message ID
      */
-    send(message: any): boolean {
+    private generateMessageId(): string {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    /**
+     * Send message through WebSocket with optional acknowledgment
+     */
+    send(message: any, waitForAck: boolean = true, ackTimeout: number = 10000): Promise<boolean> {
+        // If not connected, queue the message
         if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-            console.warn('[WebSocketClient] Not connected');
-            return false;
+            console.warn('[WebSocketClient] Not connected, queuing message');
+            const messageId = this.generateMessageId();
+            this.messageQueue.push({ message, messageId });
+            return Promise.resolve(false);
         }
 
         try {
-            const payload = typeof message === 'string' ? message : JSON.stringify(message);
+            // Add message ID for tracking
+            const messageWithId = typeof message === 'string' 
+                ? JSON.parse(message) 
+                : { ...message };
+            
+            if (!messageWithId.messageId) {
+                messageWithId.messageId = this.generateMessageId();
+            }
+            
+            const payload = JSON.stringify(messageWithId);
             this.ws.send(payload);
-            return true;
+            
+            // If waiting for acknowledgment, set up promise
+            if (waitForAck) {
+                return new Promise((resolve, reject) => {
+                    const timer = setTimeout(() => {
+                        this.pendingAcks.delete(messageWithId.messageId);
+                        resolve(false); // Timeout, but message was sent
+                    }, ackTimeout);
+                    
+                    this.pendingAcks.set(messageWithId.messageId, { resolve, reject, timer });
+                });
+            }
+            
+            return Promise.resolve(true);
         } catch (error) {
             console.error('[WebSocketClient] Send error:', error);
-            return false;
+            return Promise.resolve(false);
+        }
+    }
+
+    /**
+     * Send A2A message to an agent
+     */
+    sendToAgent(agent: string, content: string, from: string = 'user'): Promise<boolean> {
+        return this.send({
+            type: 'a2a',
+            action: 'send',
+            from,
+            to: agent,
+            content,
+            timestamp: new Date().toISOString()
+        }, true, 15000);
+    }
+
+    /**
+     * Get queued messages count
+     */
+    getQueueLength(): number {
+        return this.messageQueue.length;
+    }
+
+    /**
+     * Clear message queue
+     */
+    clearQueue(): void {
+        this.messageQueue = [];
+    }
+
+    /**
+     * Flush queued messages
+     */
+    flushQueue(): void {
+        if (!this.isConnected()) {
+            console.warn('[WebSocketClient] Cannot flush queue - not connected');
+            return;
+        }
+        
+        while (this.messageQueue.length > 0) {
+            const item = this.messageQueue.shift();
+            if (item) {
+                this.send(item.message, false);
+            }
+        }
+    }
+
+    /**
+     * Handle acknowledgment from server
+     */
+    private handleAck(ack: { messageId: string; success: boolean; error?: string }): void {
+        const pending = this.pendingAcks.get(ack.messageId);
+        if (pending) {
+            clearTimeout(pending.timer);
+            this.pendingAcks.delete(ack.messageId);
+            pending.resolve(ack.success);
+            this.onAck?.(ack.messageId, ack.success);
         }
     }
 
@@ -136,12 +237,24 @@ class WebSocketClient {
                 console.log('[WebSocketClient] Connected');
                 this.reconnectAttempts = 0;
                 this.onConnect?.();
+                
+                // Flush queued messages on reconnection
+                if (this.messageQueue.length > 0) {
+                    console.log(`[WebSocketClient] Flushing ${this.messageQueue.length} queued messages`);
+                    this.flushQueue();
+                }
             };
             
             this.ws.onmessage = (event) => {
                 try {
                     const message = JSON.parse(event.data);
-                    this.onMessage?.(message);
+                    
+                    // Handle acknowledgment messages
+                    if (message.type === 'ack') {
+                        this.handleAck(message);
+                    } else {
+                        this.onMessage?.(message);
+                    }
                 } catch (error) {
                     // Handle non-JSON messages
                     this.onMessage?.(event.data);

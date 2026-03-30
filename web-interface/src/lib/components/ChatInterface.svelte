@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Agent, Message } from '../types';
+	import { onDestroy } from 'svelte';
 	import MessageList from './MessageList.svelte';
 	import AgentSelector from './AgentSelector.svelte';
 
@@ -9,6 +10,9 @@
 	export let isLoading = false;
 
 	let inputMessage = '';
+	let ws: WebSocket | null = null;
+	let isConnected = false;
+	let pendingMessages: Map<string, { resolve: Function; reject: Function }> = new Map();
 
 	// Generate UUID compatible with non-secure contexts (HTTP)
 	function generateUUID(): string {
@@ -23,8 +27,66 @@
 		});
 	}
 
+	function connectWebSocket() {
+		if (ws?.readyState === WebSocket.OPEN) return;
+		
+		const wsUrl = typeof window !== 'undefined' 
+			? (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + (window.location.hostname || 'localhost') + ':3001'
+			: 'ws://localhost:3001';
+		
+		ws = new WebSocket(wsUrl);
+
+		ws.onopen = () => {
+			console.log('[ChatInterface] WebSocket connected');
+			isConnected = true;
+		};
+
+		ws.onmessage = (event) => {
+			try {
+				const data = JSON.parse(event.data);
+				
+				if (data.type === 'a2a' && data.data) {
+					// Agent response received via WebSocket
+					const agentMessage: Message = {
+						id: data.messageId || generateUUID(),
+						from: data.data.from || selectedAgent?.id || 'agent',
+						to: 'user',
+						content: data.data.content || data.data.message,
+						timestamp: new Date(data.timestamp || data.data.timestamp),
+						type: 'agent'
+					};
+					messages = [...messages, agentMessage];
+					isLoading = false;
+				} else if (data.type === 'ack') {
+					// Handle acknowledgment for sent message
+					const pending = pendingMessages.get(data.messageId);
+					if (pending) {
+						pending.resolve(data.success);
+						pendingMessages.delete(data.messageId);
+					}
+				}
+			} catch (error) {
+				console.warn('[ChatInterface] Non-JSON message:', error);
+			}
+		};
+
+		ws.onclose = (event) => {
+			console.log('[ChatInterface] WebSocket disconnected');
+			isConnected = false;
+			// Fallback to HTTP
+		};
+
+		ws.onerror = (error) => {
+			console.error('[ChatInterface] WebSocket error:', error);
+		};
+	}
+
 	function handleAgentSelect(agent: Agent) {
 		selectedAgent = agent;
+		// Reconnect WebSocket when agent is selected
+		if (!ws || ws.readyState !== WebSocket.OPEN) {
+			connectWebSocket();
+		}
 	}
 
 	async function sendMessage() {
@@ -45,6 +107,36 @@
 		messages = [...messages, userMessage];
 		isLoading = true;
 
+		// Try WebSocket first, fall back to HTTP
+		if (ws && ws.readyState === WebSocket.OPEN) {
+			const messageId = generateUUID();
+			
+			// Send via WebSocket
+			ws.send(JSON.stringify({
+				type: 'a2a',
+				action: 'send',
+				messageId,
+				from: 'user',
+				to: selectedAgent.id,
+				content: messageText,
+				timestamp: new Date().toISOString()
+			}));
+
+			// Wait for response with timeout
+			try {
+				const response = await new Promise<boolean>((resolve, reject) => {
+					const timer = setTimeout(() => reject(new Error('Timeout')), 30000);
+					pendingMessages.set(messageId, { resolve: (success: boolean) => { clearTimeout(timer); resolve(success); }, reject });
+				});
+				
+				// Response will come via onmessage handler
+				return;
+			} catch (error) {
+				console.warn('[ChatInterface] WebSocket failed, falling back to HTTP');
+			}
+		}
+
+		// Fallback to HTTP
 		try {
 			const response = await fetch('/api/chat', {
 				method: 'POST',
@@ -101,6 +193,14 @@
 			sendMessage();
 		}
 	}
+
+	// Cleanup on destroy
+	onDestroy(() => {
+		if (ws) {
+			ws.close();
+			ws = null;
+		}
+	});
 </script>
 
 <div class="flex flex-col h-full bg-collective-dark rounded-lg shadow-xl">
@@ -108,8 +208,12 @@
 	<div class="flex items-center justify-between p-4 border-b border-collective-primary/30">
 		<h2 class="text-xl font-bold text-white">Chat with The Collective</h2>
 		{#if selectedAgent}
-			<div class="flex items-center gap-2">
-				<span class="w-2 h-2 rounded-full bg-green-500"></span>
+			<div class="flex items-center gap-3">
+				<!-- Connection status -->
+				<span class="flex items-center gap-1">
+					<span class="w-2 h-2 rounded-full {isConnected ? 'bg-green-500' : 'bg-gray-500'}"></span>
+					<span class="text-xs text-gray-400">{isConnected ? 'WS' : 'HTTP'}</span>
+				</span>
 				<span class="text-sm text-gray-300">Talking to {selectedAgent.name}</span>
 			</div>
 		{/if}

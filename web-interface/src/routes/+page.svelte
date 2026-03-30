@@ -119,7 +119,7 @@
 
 				<!-- Right Sidebar - Message Flow -->
 				<div class="lg:col-span-1 order-3">
-					<MessageFlow {a2aMessages} />
+					<MessageFlow messages={a2aMessages} />
 				</div>
 			</div>
 		{/if}

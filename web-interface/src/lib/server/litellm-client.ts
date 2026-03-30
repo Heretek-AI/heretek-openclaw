@@ -3,6 +3,10 @@ import type { ChatRequest, ChatResponse, A2AMessage } from '../types';
 // LiteLLM Gateway configuration
 const LITELLM_BASE_URL = process.env.LITELLM_HOST || process.env.LITELLM_URL || 'http://localhost:4000';
 
+// Redis configuration for WebSocket broadcast
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+const MESSAGEFLOW_CHANNEL = 'a2a:system:messageflow';
+
 // Send a chat message to an agent via LiteLLM chat completion endpoint
 export async function sendChatToAgent(request: ChatRequest): Promise<ChatResponse> {
 	const { agent, message, conversationId } = request;
@@ -39,6 +43,15 @@ export async function sendChatToAgent(request: ChatRequest): Promise<ChatRespons
 
 		const data = await response.json();
 		const assistantMessage = data.choices?.[0]?.message?.content || JSON.stringify(data);
+		
+		// Broadcast to WebSocket clients
+		const broadcastMessage: A2AMessage = {
+			from: agent,
+			to: 'user',
+			content: assistantMessage,
+			timestamp: new Date()
+		};
+		broadcastToWebSocket(broadcastMessage);
 		
 		return {
 			success: true,
@@ -126,6 +139,43 @@ export async function getLiteLLMHealth(): Promise<boolean> {
 		});
 		return response.ok;
 	} catch {
+		return false;
+	}
+}
+
+// Redis client for WebSocket broadcast (lazy initialized)
+let redis: any = null;
+
+async function getRedisClient() {
+	if (!redis) {
+		const Redis = require('ioredis');
+		redis = new Redis(REDIS_URL);
+	}
+	return redis;
+}
+
+/**
+ * Broadcast agent response to connected WebSocket clients via Redis
+ */
+export async function broadcastToWebSocket(message: A2AMessage): Promise<boolean> {
+	try {
+		const client = await getRedisClient();
+		const payload = {
+			type: 'a2a',
+			data: {
+				from: message.from,
+				to: message.to,
+				content: message.content,
+				timestamp: message.timestamp.toISOString()
+			},
+			timestamp: new Date().toISOString()
+		};
+		
+		await client.publish(MESSAGEFLOW_CHANNEL, JSON.stringify(payload));
+		console.log(`[LitellmClient] Broadcast to WebSocket: ${message.from} -> ${message.to}`);
+		return true;
+	} catch (error) {
+		console.error('[LitellmClient] WebSocket broadcast failed:', error);
 		return false;
 	}
 }

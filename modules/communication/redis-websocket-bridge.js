@@ -110,6 +110,10 @@ class RedisToWebSocketBridge {
             console.log('[RedisToWebSocketBridge] Client connected');
             this.clients.add(ws);
             
+            ws.on('message', (data) => {
+                this.handleClientMessage(ws, data.toString());
+            });
+            
             ws.on('close', () => {
                 console.log('[RedisToWebSocketBridge] Client disconnected');
                 this.clients.delete(ws);
@@ -194,6 +198,63 @@ class RedisToWebSocketBridge {
                 client.send(payload);
             }
         });
+    }
+
+    /**
+     * Handle incoming WebSocket client messages
+     * Supports sending A2A messages to agents via Redis
+     */
+    async handleClientMessage(ws, data) {
+        try {
+            const message = JSON.parse(data);
+            
+            // Handle different message types
+            if (message.type === 'a2a' || message.action === 'send') {
+                // Publish to the target agent's inbox
+                const targetAgent = message.to || message.agent;
+                const channel = `a2a:${targetAgent}:inbox`;
+                
+                const a2aMessage = {
+                    from: message.from || 'user',
+                    to: targetAgent,
+                    content: message.content || message.message,
+                    timestamp: new Date().toISOString()
+                };
+                
+                await this.publish(channel, a2aMessage);
+                
+                // Also broadcast to messageflow for UI updates
+                await this.publish(CHANNELS.messageflow, a2aMessage);
+                
+                // Send acknowledgment back to sender
+                ws.send(JSON.stringify({
+                    type: 'ack',
+                    success: true,
+                    messageId: message.messageId,
+                    timestamp: new Date().toISOString()
+                }));
+                
+                console.log(`[RedisToWebSocketBridge] Published A2A from ${a2aMessage.from} to ${targetAgent}`);
+            } else if (message.type === 'ping') {
+                // Handle ping/pong for keepalive
+                ws.send(JSON.stringify({
+                    type: 'pong',
+                    timestamp: new Date().toISOString()
+                }));
+            } else {
+                console.warn('[RedisToWebSocketBridge] Unknown message type:', message.type);
+            }
+        } catch (error) {
+            console.error('[RedisToWebSocketBridge] Failed to handle client message:', error);
+            
+            // Send error acknowledgment
+            ws.send(JSON.stringify({
+                type: 'ack',
+                success: false,
+                error: error.message,
+                timestamp: new Date().toISOString()
+            }));
+        }
     }
 
     /**

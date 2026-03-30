@@ -1,9 +1,11 @@
 <script lang="ts">
 	import type { A2AMessage } from '../types';
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, createEventDispatcher } from 'svelte';
 
 	export let messages: A2AMessage[] = [];
 
+	const dispatch = createEventDispatcher();
+	
 	// WebSocket configuration
 	let ws: WebSocket | null = null;
 	let reconnectTimer: NodeJS.Timeout | null = null;
@@ -14,6 +16,12 @@
 	// Connection status
 	let isConnected = false;
 	let connectionStatus: 'connected' | 'connecting' | 'disconnected' = 'disconnected';
+	
+	// Message status tracking
+	let messageStatuses: Map<string, 'sending' | 'sent' | 'delivered' | 'read'> = new Map();
+	
+	// Typing indicators
+	let typingAgents: Set<string> = new Set();
 
 	onMount(() => {
 		connectWebSocket();
@@ -66,6 +74,27 @@
 						// Limit to 100 messages
 						if (messages.length > 100) {
 							messages = messages.slice(0, 100);
+						}
+						
+						// Dispatch message event for external handlers
+						dispatch('message', newMessage);
+					} else if (data.type === 'ack') {
+						// Handle acknowledgment
+						if (data.success) {
+							messageStatuses.set(data.messageId, 'delivered');
+							messageStatuses = messageStatuses; // Trigger reactivity
+						}
+						dispatch('ack', { messageId: data.messageId, success: data.success });
+					} else if (data.type === 'typing') {
+						// Handle typing indicator
+						if (data.agent) {
+							if (data.isTyping) {
+								typingAgents.add(data.agent);
+							} else {
+								typingAgents.delete(data.agent);
+							}
+							typingAgents = typingAgents; // Trigger reactivity
+							dispatch('typing', { agent: data.agent, isTyping: data.isTyping });
 						}
 					} else if (data.type === 'connected') {
 						console.log('[MessageFlow] Received connection confirmation');
@@ -129,6 +158,82 @@
 			clearTimeout(reconnectTimer);
 			reconnectTimer = null;
 		}
+	}
+
+	/**
+	 * Send a message through WebSocket to an agent
+	 */
+	export function sendMessage(toAgent: string, content: string, fromAgent: string = 'user'): string | null {
+		if (!ws || ws.readyState !== WebSocket.OPEN) {
+			console.warn('[MessageFlow] Cannot send - not connected');
+			return null;
+		}
+
+		const messageId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+			const r = Math.random() * 16 | 0;
+			const v = c === 'x' ? r : (r & 0x3 | 0x8);
+			return v.toString(16);
+		});
+
+		const message = {
+			type: 'a2a',
+			action: 'send',
+			messageId,
+			from: fromAgent,
+			to: toAgent,
+			content,
+			timestamp: new Date().toISOString()
+		};
+
+		try {
+			ws.send(JSON.stringify(message));
+			messageStatuses.set(messageId, 'sending');
+			messageStatuses = messageStatuses;
+			console.log(`[MessageFlow] Sent message to ${toAgent}`);
+			return messageId;
+		} catch (error) {
+			console.error('[MessageFlow] Failed to send message:', error);
+			return null;
+		}
+	}
+
+	/**
+	 * Send typing indicator
+	 */
+	export function sendTyping(isTyping: boolean): void {
+		if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+		const message = {
+			type: 'typing',
+			isTyping
+		};
+
+		try {
+			ws.send(JSON.stringify(message));
+		} catch (error) {
+			console.warn('[MessageFlow] Failed to send typing indicator');
+		}
+	}
+
+	/**
+	 * Get message status
+	 */
+	export function getMessageStatus(messageId: string): 'sending' | 'sent' | 'delivered' | 'read' | undefined {
+		return messageStatuses.get(messageId);
+	}
+
+	/**
+	 * Check if any agent is typing
+	 */
+	export function isAnyAgentTyping(): boolean {
+		return typingAgents.size > 0;
+	}
+
+	/**
+	 * Get typing agents
+	 */
+	export function getTypingAgents(): string[] {
+		return Array.from(typingAgents);
 	}
 
 	function formatTime(date: Date): string {
