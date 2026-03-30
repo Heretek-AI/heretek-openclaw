@@ -60,20 +60,27 @@ export async function sendChatToAgent(request: ChatRequest): Promise<ChatRespons
 // Send an A2A (agent-to-agent) message
 export async function sendA2AMessage(message: A2AMessage): Promise<boolean> {
 	try {
-		const response = await fetch(`${LITELLM_BASE_URL}/a2a/${message.to}`, {
+		const response = await fetch(`${LITELLM_BASE_URL}/v1/agents/${message.to}/send`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${process.env.LITELLM_API_KEY || ''}`
 			},
 			body: JSON.stringify({
 				from: message.from,
+				to: message.to,
 				message: message.content,
 				timestamp: message.timestamp.toISOString()
 			})
 		});
 
-		return response.ok;
-	} catch {
+		if (!response.ok) {
+			console.error(`A2A send failed to ${message.to}: ${response.status} ${response.statusText}`);
+			return false;
+		}
+		return true;
+	} catch (error) {
+		console.error(`A2A send error to ${message.to}:`, error instanceof Error ? error.message : 'Unknown error');
 		return false;
 	}
 }
@@ -85,22 +92,27 @@ export async function queryAgentStatus(agentName: string): Promise<{
 	busy?: boolean;
 }> {
 	try {
-		const response = await fetch(`${LITELLM_BASE_URL}/a2a/${agentName}/status`, {
+		const response = await fetch(`${LITELLM_BASE_URL}/v1/agents/${agentName}/heartbeat`, {
 			method: 'GET',
+			headers: {
+				'Authorization': `Bearer ${process.env.LITELLM_API_KEY || ''}`,
+				'Content-Type': 'application/json'
+			},
 			signal: AbortSignal.timeout(2000)
 		});
 
 		if (response.ok) {
-			const data = await response.json();
+			const data = await response.json().catch(() => ({}));
 			return {
 				online: true,
 				lastSeen: new Date(),
-				busy: data.busy || false
+				busy: data.status === 'busy' || data.busy === true
 			};
 		}
 		
 		return { online: false };
-	} catch {
+	} catch (error) {
+		console.error(`Agent status check failed for ${agentName}:`, error instanceof Error ? error.message : 'Unknown error');
 		return { online: false };
 	}
 }
