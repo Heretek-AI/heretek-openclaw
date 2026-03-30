@@ -8,6 +8,11 @@
 	export let messages: Message[] = [];
 	export let isLoading = false;
 
+	// Debug: log when agents are received
+	$: if (agents.length > 0) {
+		console.log('[ChatInterface] Received agents:', agents.length);
+	}
+
 	let inputMessage = '';
 
 	function handleAgentSelect(agent: Agent) {

@@ -24,11 +24,13 @@
 	// WebSocket for channel events
 	let channelWs: WebSocket | null = null;
 
-	// Fetch agents on mount
+	// Fetch agents and channels on mount
 	onMount(async () => {
-		await fetchAgents();
+		await Promise.all([fetchAgents(), fetchChannels()]);
 		// Set up periodic refresh
-		const interval = setInterval(fetchAgents, 30000); // Refresh every 30 seconds
+		const interval = setInterval(async () => {
+			await Promise.all([fetchAgents(), fetchChannels()]);
+		}, 30000); // Refresh every 30 seconds
 		
 		// Connect to channel WS for multi-agent thread updates
 		connectChannelWS();
@@ -55,6 +57,19 @@
 			console.error('Failed to fetch agents:', e);
 		} finally {
 			isLoading = false;
+		}
+	}
+
+	async function fetchChannels() {
+		try {
+			const response = await fetch('/api/channels');
+			const data = await response.json();
+			
+			if (data.success) {
+				channels = data.channels;
+			}
+		} catch (e) {
+			console.error('Failed to fetch channels:', e);
 		}
 	}
 

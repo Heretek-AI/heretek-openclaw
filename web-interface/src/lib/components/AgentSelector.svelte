@@ -5,6 +5,11 @@
 	export let selectedAgent: Agent | null = null;
 	export let onSelect: (agent: Agent) => void = () => {};
 
+	// Debug: log when agents arrive
+	$: if (agents.length > 0) {
+		console.log('[AgentSelector] Received agents:', agents.map(a => `${a.name} (${a.status})`).join(', '));
+	}
+
 	function getStatusColor(status: string): string {
 		switch (status) {
 			case 'online':

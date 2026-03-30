@@ -21,10 +21,21 @@
 	}
 
 	// Connect to channel WebSocket - disabled since no WS server
-	function connectChannelWS() {
-		console.log('[ChannelSelector] WebSocket disabled - use REST API for channel list');
-		isConnected = false;
-		// Static channel list for now
+	// Now fetches from /api/channels REST API instead
+	async function connectChannelWS() {
+		try {
+			// Fetch channels from REST API
+			const response = await fetch('/api/channels');
+			const data = await response.json();
+			if (data.success && data.channels) {
+				channels = data.channels;
+				isConnected = true;
+				console.log('[ChannelSelector] Loaded channels:', channels.length);
+			}
+		} catch (e) {
+			console.log('[ChannelSelector] WebSocket disabled - using REST API for channel list');
+			isConnected = false;
+		}
 	}
 
 	// Handle channel events
