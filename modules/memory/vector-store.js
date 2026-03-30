@@ -32,7 +32,14 @@
 
 const fs = require('fs');
 const path = require('path');
-const { Pool } = require('pg');
+
+// Optional PostgreSQL dependency
+let Pool = null;
+try {
+  Pool = require('pg');
+} catch (error) {
+  console.warn('[VectorStore] pg module not available, using hot-tier only');
+}
 
 // Configuration defaults
 const DEFAULT_CONFIG = {
@@ -110,6 +117,12 @@ class VectorStore {
    * @returns {Promise<void>}
    */
   async initializeColdTier() {
+    if (!Pool) {
+      console.warn('[VectorStore] pg module not available, cold tier disabled');
+      this.config.coldTier.enabled = false;
+      return;
+    }
+
     try {
       this.coldPool = new Pool({
         host: this.config.coldTier.host,
