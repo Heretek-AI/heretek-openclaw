@@ -1,0 +1,119 @@
+[
+  {
+    "id": "pattern_coordination_broadcast",
+    "name": "Agent Broadcast",
+    "description": "Broadcast message or request to multiple agents simultaneously",
+    "category": "coordination",
+    "tags": ["coordination", "broadcast", "communication", "multi-agent"],
+    "version": "1.0.0",
+    "trigger": {
+      "event": "broadcast_request",
+      "conditions": {
+        "targetCount": { "$gte": 2 }
+      }
+    },
+    "context": {
+      "requiredCapabilities": ["communication"],
+      "requiredState": {
+        "hasTargets": true
+      }
+    },
+    "actions": [
+      { "type": "format_message", "params": {} },
+      { "type": "broadcast", "params": { "targets": "{{targets}}" } },
+      { "type": "collect_responses", "params": {} },
+      { "type": "aggregate", "params": {} },
+      { "type": "respond", "params": {} }
+    ],
+    "parameters": {
+      "timeout": 60000,
+      "requireAll": false,
+      "aggregation": "majority"
+    },
+    "output": {
+      "format": "broadcast_result",
+      "includes": ["message", "responses", "aggregated"]
+    },
+    "linkedCapabilities": ["communication", "collaboration"],
+    "fitness": 0.85,
+    "successRate": 0.8
+  },
+  {
+    "id": "pattern_coordination_delegation",
+    "name": "Task Delegation",
+    "description": "Delegate tasks to appropriate agents based on capabilities",
+    "category": "coordination",
+    "tags": ["delegation", "task", "coordination", "assignment"],
+    "version": "1.0.0",
+    "trigger": {
+      "event": "delegation_request",
+      "conditions": {
+        "taskComplexity": { "$gte": 0.5 }
+      }
+    },
+    "context": {
+      "requiredCapabilities": ["delegation", "capability_matching"],
+      "requiredState": {
+        "hasAgents": true
+      }
+    },
+    "actions": [
+      { "type": "analyze_task", "params": {} },
+      { "type": "match_capabilities", "params": {} },
+      { "type": "assign", "params": {} },
+      { "type": "monitor", "params": {} },
+      { "type": "collect_result", "params": {} }
+    ],
+    "parameters": {
+      "matchingStrategy": "best_fit",
+      "fallbackEnabled": true,
+      "monitorInterval": 30000
+    },
+    "output": {
+      "format": "delegation_result",
+      "includes": ["task", "assigned", "status", "result"]
+    },
+    "linkedCapabilities": ["delegation", "capability_matching", "collaboration"],
+    "fitness": 0.75,
+    "successRate": 0.7
+  },
+  {
+    "id": "pattern_coordination_synchronization",
+    "name": "State Synchronization",
+    "description": "Synchronize state across multiple agents",
+    "category": "coordination",
+    "tags": ["synchronization", "state", "coordination", "consistency"],
+    "version": "1.0.0",
+    "trigger": {
+      "event": "sync_request",
+      "conditions": {
+        "syncType": { "$in": ["full", "incremental"] }
+      }
+    },
+    "context": {
+      "requiredCapabilities": ["synchronization"],
+      "requiredState": {
+        "hasState": true
+      }
+    },
+    "actions": [
+      { "type": "capture_state", "params": {} },
+      { "type": "serialize", "params": {} },
+      { "type": "broadcast", "params": {} },
+      { "type": "verify", "params": {} },
+      { "type": "reconcile", "params": {} }
+    ],
+    "parameters": {
+      "syncStrategy": "eventual",
+      "conflictResolution": "last_write_wins",
+      "verifyConsistency": true
+    },
+    "output": {
+      "format": "sync_result",
+      "includes": ["state", "synced", "conflicts", "resolved"]
+    },
+    "linkedCapabilities": ["synchronization", "consistency"],
+    "fitness": 0.8,
+    "successRate": 0.75
+  }
+]

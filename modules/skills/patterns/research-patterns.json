@@ -1,0 +1,323 @@
+[
+  {
+    "id": "pattern_research_comprehensive",
+    "name": "Comprehensive Research",
+    "description": "Complete research workflow with hypothesis generation, literature search, and knowledge integration",
+    "category": "research",
+    "tags": ["research", "comprehensive", "hypothesis", "knowledge"],
+    "version": "1.0.0",
+    "trigger": {
+      "event": "research_request",
+      "conditions": {
+        "complexity": { "$gte": 0.7 }
+      }
+    },
+    "context": {
+      "requiredCapabilities": ["research", "knowledge_retrieval", "reasoning"],
+      "requiredState": {
+        "hasMemory": true
+      }
+    },
+    "actions": [
+      { "type": "plan", "params": { "objective": "{{objective}}" } },
+      { "type": "generate_hypotheses", "params": {} },
+      { "type": "search", "params": { "scope": "comprehensive" } },
+      { "type": "experiment", "params": {} },
+      { "type": "integrate", "params": {} },
+      { "type": "report", "params": {} }
+    ],
+    "parameters": {
+      "maxHypotheses": 5,
+      "searchDepth": "deep",
+      "integrationStrategy": "incremental"
+    },
+    "output": {
+      "format": "structured",
+      "includes": ["hypotheses", "findings", "conclusions", "confidence"]
+    },
+    "linkedCapabilities": ["research", "knowledge_management", "reasoning"],
+    "fitness": 0.75,
+    "successRate": 0.8
+  },
+  {
+    "id": "pattern_capability_evolution",
+    "name": "Capability Evolution",
+    "description": "Evolve agent capabilities based on performance feedback using genetic algorithms",
+    "category": "evolution",
+    "tags": ["evolution", "capability", "genetic", "adaptation"],
+    "version": "1.0.0",
+    "trigger": {
+      "event": "evolution_cycle",
+      "conditions": {
+        "performance": { "$lt": 0.8 }
+      }
+    },
+    "context": {
+      "requiredCapabilities": ["evolution", "fitness_evaluation"],
+      "requiredState": {
+        "hasPopulation": true
+      }
+    },
+    "actions": [
+      { "type": "evaluate", "params": { "focus": "fitness" } },
+      { "type": "select", "params": { "method": "tournament" } },
+      { "type": "crossover", "params": {} },
+      { "type": "mutate", "params": { "rate": 0.15 } },
+      { "type": "apply", "params": {} },
+      { "type": "validate", "params": {} }
+    ],
+    "parameters": {
+      "populationSize": 50,
+      "mutationRate": 0.15,
+      "elitismRate": 0.1,
+      "generations": 10
+    },
+    "output": {
+      "format": "capability_genome",
+      "includes": ["genome", "fitness", "generation"]
+    },
+    "linkedCapabilities": ["self_improvement", "adaptation", "genetics"],
+    "fitness": 0.85,
+    "successRate": 0.75
+  },
+  {
+    "id": "pattern_gap_detection",
+    "name": "Gap Detection and Resolution",
+    "description": "Detect capability gaps and recommend or generate solutions",
+    "category": "analysis",
+    "tags": ["gap", "detection", "capability", "resolution"],
+    "version": "1.0.0",
+    "trigger": {
+      "event": "gap_scan",
+      "conditions": {
+        "scanType": { "$in": ["periodic", "triggered"] }
+      }
+    },
+    "context": {
+      "requiredCapabilities": ["capability_mapping", "scanning"],
+      "requiredState": {
+        "hasCapabilities": true
+      }
+    },
+    "actions": [
+      { "type": "scan_capabilities", "params": {} },
+      { "type": "identify_gaps", "params": {} },
+      { "type": "analyze_impact", "params": {} },
+      { "type": "generate_solutions", "params": {} },
+      { "type": "prioritize", "params": {} },
+      { "type": "recommend", "params": {} }
+    ],
+    "parameters": {
+      "scanDepth": "complete",
+      "minPriority": 0.3,
+      "maxGaps": 20
+    },
+    "output": {
+      "format": "gap_report",
+      "includes": ["gaps", "impact", "solutions", "priorities"]
+    },
+    "linkedCapabilities": ["capability_analysis", "gap_detection", "scanning"],
+    "fitness": 0.9,
+    "successRate": 0.85
+  },
+  {
+    "id": "pattern_multi_agent_deliberation",
+    "name": "Multi-Agent Deliberation",
+    "description": "Coordinate deliberation across multiple agents with consensus building",
+    "category": "coordination",
+    "tags": ["deliberation", "multi-agent", "consensus", "coordination"],
+    "version": "1.0.0",
+    "trigger": {
+      "event": "deliberation_request",
+      "conditions": {
+        "agentCount": { "$gte": 2 }
+      }
+    },
+    "context": {
+      "requiredCapabilities": ["communication", "deliberation"],
+      "requiredState": {
+        "hasQuorum": true
+      }
+    },
+    "actions": [
+      { "type": "broadcast_proposal", "params": {} },
+      { "type": "collect_opinions", "params": {} },
+      { "type": "analyze_positions", "params": {} },
+      { "type": "facilitate_discussion", "params": {} },
+      { "type": "build_consensus", "params": {} },
+      { "type": "document_decision", "params": {} }
+    ],
+    "parameters": {
+      "timeout": 300000,
+      "consensusThreshold": 0.7,
+      "maxRounds": 5
+    },
+    "output": {
+      "format": "deliberation_result",
+      "includes": ["decision", "consensus", "positions", "votes"]
+    },
+    "linkedCapabilities": ["collaboration", "communication", "deliberation"],
+    "fitness": 0.8,
+    "successRate": 0.7
+  },
+  {
+    "id": "pattern_self_modeling",
+    "name": "Self-Modeling and Reflection",
+    "description": "Update agent self-model based on experiences and reflections",
+    "category": "self_model",
+    "tags": ["self_model", "reflection", "metacognition", "update"],
+    "version": "1.0.0",
+    "trigger": {
+      "event": "reflection_trigger",
+      "conditions": {
+        "experienceCount": { "$gte": 10 }
+      }
+    },
+    "context": {
+      "requiredCapabilities": ["reflection", "self_modeling"],
+      "requiredState": {
+        "hasExperience": true
+      }
+    },
+    "actions": [
+      { "type": "collect_experiences", "params": {} },
+      { "type": "analyze_performance", "params": {} },
+      { "type": "identify_patterns", "params": {} },
+      { "type": "update_model", "params": {} },
+      { "type": "validate", "params": {} },
+      { "type": "plan_improvement", "params": {} }
+    ],
+    "parameters": {
+      "analysisDepth": "comprehensive",
+      "minConfidence": 0.6,
+      "updateFrequency": "on_threshold"
+    },
+    "output": {
+      "format": "self_model_update",
+      "includes": ["updatedCapabilities", "confidence", "recommendations"]
+    },
+    "linkedCapabilities": ["self_modeling", "reflection", "metacognition"],
+    "fitness": 0.85,
+    "successRate": 0.8
+  },
+  {
+    "id": "pattern_opportunity_scanning",
+    "name": "Opportunity Scanning",
+    "description": "Scan environment for opportunities for improvement or collaboration",
+    "category": "detection",
+    "tags": ["opportunity", "scanning", "detection", "improvement"],
+    "version": "1.0.0",
+    "trigger": {
+      "event": "scan_request",
+      "conditions": {
+        "scanType": { "$in": ["periodic", "opportunity"] }
+      }
+    },
+    "context": {
+      "requiredCapabilities": ["scanning", "analysis"],
+      "requiredState": {
+        "hasEnvironment": true
+      }
+    },
+    "actions": [
+      { "type": "scan_environment", "params": {} },
+      { "type": "identify_opportunities", "params": {} },
+      { "type": "evaluate_potential", "params": {} },
+      { "type": "prioritize", "params": {} },
+      { "type": "generate_actions", "params": {} },
+      { "type": "report", "params": {} }
+    ],
+    "parameters": {
+      "scanDepth": "wide",
+      "minPotential": 0.4,
+      "maxOpportunities": 15
+    },
+    "output": {
+      "format": "opportunity_report",
+      "includes": ["opportunities", "potential", "actions", "priorities"]
+    },
+    "linkedCapabilities": ["opportunity_detection", "scanning", "analysis"],
+    "fitness": 0.7,
+    "successRate": 0.65
+  },
+  {
+    "id": "pattern_knowledge_integration",
+    "name": "Knowledge Integration",
+    "description": "Integrate new knowledge into memory with validation and structure",
+    "category": "knowledge",
+    "tags": ["knowledge", "integration", "memory", "validation"],
+    "version": "1.0.0",
+    "trigger": {
+      "event": "knowledge_discovered",
+      "conditions": {
+        "knowledgeType": { "$in": ["fact", "insight", "relationship"] }
+      }
+    },
+    "context": {
+      "requiredCapabilities": ["knowledge_management", "memory"],
+      "requiredState": {
+        "hasKnowledge": true
+      }
+    },
+    "actions": [
+      { "type": "validate_knowledge", "params": {} },
+      { "type": "structure_data", "params": {} },
+      { "type": "find_relationships", "params": {} },
+      { "type": "integrate", "params": {} },
+      { "type": "index_content", "params": {} },
+      { "type": "update_metadata", "params": {} }
+    ],
+    "parameters": {
+      "validationLevel": "strict",
+      "mergeSimilar": true,
+      "preserveHistory": true
+    },
+    "output": {
+      "format": "knowledge_entry",
+      "includes": ["entity", "relationships", "metadata", "confidence"]
+    },
+    "linkedCapabilities": ["knowledge_management", "memory", "reasoning"],
+    "fitness": 0.9,
+    "successRate": 0.85
+  },
+  {
+    "id": "pattern_root_cause_analysis",
+    "name": "Root Cause Analysis",
+    "description": "Systematically identify root cause of issues using evidence gathering and analysis",
+    "category": "analysis",
+    "tags": ["analysis", "root_cause", "debugging", "diagnosis"],
+    "version": "1.0.0",
+    "trigger": {
+      "event": "issue_detected",
+      "conditions": {
+        "severity": { "$gte": 0.5 }
+      }
+    },
+    "context": {
+      "requiredCapabilities": ["analysis", "diagnosis"],
+      "requiredState": {
+        "hasEvidence": true
+      }
+    },
+    "actions": [
+      { "type": "gather_evidence", "params": {} },
+      { "type": "identify_factors", "params": {} },
+      { "type": "analyze_relationships", "params": {} },
+      { "type": "determine_root_cause", "params": {} },
+      { "type": "recommend_solution", "params": {} },
+      { "type": "document", "params": {} }
+    ],
+    "parameters": {
+      "analysisMethod": "systematic",
+      "evidenceThreshold": 5,
+      "maxDepth": 5
+    },
+    "output": {
+      "format": "rca_report",
+      "includes": ["rootCause", "evidence", "factors", "solution", "confidence"]
+    },
+    "linkedCapabilities": ["diagnosis", "reasoning", "analysis"],
+    "fitness": 0.8,
+    "successRate": 0.75
+  }
+]
