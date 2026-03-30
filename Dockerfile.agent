@@ -61,11 +61,16 @@ RUN echo '{ \
     "start": "bash /app/entrypoint.sh", \
     "health": "bash /app/healthcheck.sh" \
   }, \
-  "dependencies": {}, \
+  "dependencies": { \
+    "ioredis": "^5.3.2" \
+  }, \
   "engines": { \
     "node": ">=20.0.0" \
   } \
 }' > /app/package.json
+
+# Install Node.js dependencies
+RUN npm install --production
 
 # Set environment variables
 ENV NODE_ENV=production
