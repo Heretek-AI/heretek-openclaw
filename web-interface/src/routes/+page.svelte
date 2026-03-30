@@ -204,7 +204,6 @@
 							{agents}
 							{selectedAgent}
 							{messages}
-							bind:isLoading
 							{selectedChannel}
 						/>
 					</div>

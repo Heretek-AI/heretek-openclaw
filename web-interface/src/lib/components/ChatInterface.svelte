@@ -7,10 +7,18 @@
 	export let selectedAgent: Agent | null = null;
 	export let messages: Message[] = [];
 	export let isLoading = false;
+	export let selectedChannel: string | null = null;
 
 	// Debug: log when agents are received
 	$: if (agents.length > 0) {
 		console.log('[ChatInterface] Received agents:', agents.length);
+	}
+	
+	// Debug: log message send status
+	$: {
+		if (isLoading) {
+			console.log('[ChatInterface] Loading agent response...');
+		}
 	}
 
 	let inputMessage = '';
@@ -51,6 +59,8 @@
 		isLoading = true;
 
 		try {
+			console.log('[ChatInterface] Sending message to agent:', selectedAgent.id);
+			
 			const response = await fetch('/api/chat', {
 				method: 'POST',
 				headers: {
@@ -58,13 +68,18 @@
 				},
 				body: JSON.stringify({
 					agent: selectedAgent.id,
-					message: messageText
+					message: messageText,
+					fromUser: 'user'
 				})
 			});
 
+			console.log('[ChatInterface] Response status:', response.status);
+			
 			const data = await response.json();
+			console.log('[ChatInterface] Response data:', data);
 
 			if (data.success) {
+				console.log('[ChatInterface] Agent response received:', data.response?.substring(0, 50));
 				const agentMessage: Message = {
 					id: generateUUID(),
 					from: selectedAgent.id,
@@ -75,6 +90,7 @@
 				};
 				messages = [...messages, agentMessage];
 			} else {
+				console.warn('[ChatInterface] Agent returned error:', data.error);
 				const errorMessage: Message = {
 					id: generateUUID(),
 					from: 'system',
@@ -86,6 +102,7 @@
 				messages = [...messages, errorMessage];
 			}
 		} catch (error) {
+			console.error('[ChatInterface] Failed to send message:', error);
 			const errorMessage: Message = {
 				id: generateUUID(),
 				from: 'system',
@@ -96,6 +113,7 @@
 			};
 			messages = [...messages, errorMessage];
 		} finally {
+			console.log('[ChatInterface] Loading complete');
 			isLoading = false;
 		}
 	}

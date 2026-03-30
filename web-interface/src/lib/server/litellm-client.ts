@@ -222,6 +222,9 @@ export async function getLiteLLMHealth(): Promise<boolean> {
 	try {
 		const response = await fetch(`${LITELLM_BASE_URL}/health`, {
 			method: 'GET',
+			headers: {
+				'Authorization': `Bearer ${process.env.LITELLM_API_KEY || ''}`
+			},
 			signal: AbortSignal.timeout(2000)
 		});
 		return response.ok;

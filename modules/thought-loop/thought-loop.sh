@@ -26,15 +26,15 @@ set -euo pipefail
 # Configuration with environment variable overrides
 LOOP_INTERVAL="${THOUGHT_LOOP_INTERVAL:-30}"
 THINK_TIME_BUDGET="${THINK_TIME_BUDGET:-10}"
-LOG_FILE="${LOG_FILE:-/var/log/thought-loop.log}"
+LOG_FILE="${LOG_FILE:-/tmp/thought-loop.log}"
 AGENT_NAME="${AGENT_NAME:-steward}"
 BROADCAST_THOUGHTS="${BROADCAST_THOUGHTS:-false}"
 CONFIG_PATH="${CONFIG_PATH:-./config.json}"
 
 # Determine script directory and set paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-STATE_FILE="${STATE_FILE:-$SCRIPT_DIR/thought-state.json}"
-DELTA_STATE_FILE="/tmp/delta-detector-state.json"
+STATE_FILE="${STATE_FILE:-/tmp/thought-state.json}"
+DELTA_STATE_FILE="${DELTA_STATE_FILE:-/tmp/delta-detector-state.json}"
 
 # Logging function
 log() {
@@ -358,7 +358,8 @@ usage() {
 case "${1:-}" in
     --once)
         log "Running single cycle..."
-        check_dependencies
+        check_dependencies || true
+        load_config
         run_once
         ;;
     --help|-h|--usage)
@@ -366,7 +367,8 @@ case "${1:-}" in
         exit 0
         ;;
     *)
-        check_dependencies
+        # Daemon mode - be resilient to errors
+        check_dependencies || true
         load_config
         run_loop
         ;;
