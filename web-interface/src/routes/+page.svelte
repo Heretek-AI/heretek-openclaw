@@ -58,31 +58,10 @@
 		}
 	}
 
-	// Connect to channel WebSocket
+	// Connect to channel WebSocket - disabled since no WS server
 	function connectChannelWS() {
-		const wsUrl = typeof window !== 'undefined'
-			? (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + (window.location.hostname || 'localhost') + ':3002/channels'
-			: 'ws://localhost:3002/channels';
-		
-		try {
-			channelWs = new WebSocket(wsUrl);
-			channelWs.onopen = () => {
-				console.log('[Main] Channel WS connected');
-			};
-			channelWs.onmessage = (event) => {
-				try {
-					const data = JSON.parse(event.data);
-					handleChannelMessage(data);
-				} catch (e) {
-					// Ignore non-JSON
-				}
-			};
-			channelWs.onclose = () => {
-				setTimeout(connectChannelWS, 5000);
-			};
-		} catch (e) {
-			console.warn('[Main] Channel WS connection failed');
-		}
+		console.log('[Main] WebSocket disabled - using REST API');
+		// WebSocket disabled - use REST API for channel operations
 	}
 
 	// Handle channel messages for multi-agent thread
