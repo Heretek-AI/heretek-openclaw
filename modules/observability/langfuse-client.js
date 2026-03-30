@@ -31,7 +31,7 @@ const config = {
     publicKey: process.env.LANGFUSE_PUBLIC_KEY || '',
     secretKey: process.env.LANGFUSE_SECRET_KEY || '',
     host: process.env.LANGFUSE_HOST || 'https://cloud.langfuse.com',
-    enabled: process.env.LANGFUSE_ENABLED !== 'false',
+    enabled: process.env.LANGFUSE_ENABLED === 'true',
     agentName: process.env.AGENT_NAME || 'unknown',
     stateDir: process.env.STATE_DIR || '/app/state'
 };
@@ -130,9 +130,75 @@ class LangfuseTrace {
     }
     
     _sendToLangfuse(data) {
-        // In production, implement actual LangFuse API call
-        // POST to {host}/api/public/traces
-        log('DEBUG', `Would send trace to LangFuse: ${JSON.stringify(data).substring(0, 100)}...`);
+        // Send trace to LangFuse API
+        if (!config.publicKey || !config.secretKey) {
+            log('WARN', 'LangFuse credentials not provided, storing locally only');
+            return;
+        }
+        
+        const url = `${config.host}/api/public/traces`;
+        const payload = {
+            id: data.id,
+            name: data.name,
+            metadata: data.metadata,
+            timestamp: new Date(data.startTime).toISOString(),
+            tags: [config.agentName]
+        };
+        
+        log('DEBUG', `Sending trace to LangFuse: ${url}`);
+        
+        // Use fetch API if available (Node 18+), otherwise use https module
+        if (typeof fetch !== 'undefined') {
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Basic ${Buffer.from(`${config.publicKey}:${config.secretKey}`).toString('base64')}`
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (response.ok) {
+                    log('INFO', `Trace sent successfully to LangFuse: ${data.id}`);
+                } else {
+                    log('ERROR', `Failed to send trace: ${response.status} ${response.statusText}`);
+                }
+            })
+            .catch(err => {
+                log('ERROR', `Error sending trace to LangFuse: ${err.message}`);
+            });
+        } else {
+            // Fallback for older Node versions using https module
+            const https = require('https');
+            const urlObj = new URL(url);
+            
+            const options = {
+                hostname: urlObj.hostname,
+                port: urlObj.port || 443,
+                path: urlObj.pathname,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(JSON.stringify(payload)),
+                    'Authorization': `Basic ${Buffer.from(`${config.publicKey}:${config.secretKey}`).toString('base64')}`
+                }
+            };
+            
+            const req = https.request(options, (res) => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    log('INFO', `Trace sent successfully to LangFuse: ${data.id}`);
+                } else {
+                    log('ERROR', `Failed to send trace: ${res.statusCode} ${res.statusMessage}`);
+                }
+            });
+            
+            req.on('error', (err) => {
+                log('ERROR', `Error sending trace to LangFuse: ${err.message}`);
+            });
+            
+            req.write(JSON.stringify(payload));
+            req.end();
+        }
     }
 }
 
