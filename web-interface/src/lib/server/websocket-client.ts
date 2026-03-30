@@ -57,7 +57,11 @@ class WebSocketClient {
     public onAck?: (messageId: string, success: boolean) => void;
     
     constructor(config: WebSocketConfig = {}) {
-        this.url = config.url || 'ws://localhost:3001';
+        // Use environment variable if available, otherwise use config or default
+        const defaultUrl = typeof process !== 'undefined' && process.env?.VITE_WS_URL
+            ? process.env.VITE_WS_URL
+            : 'ws://localhost:3002';
+        this.url = config.url || defaultUrl;
         this.reconnectInterval = config.reconnectInterval || 5000;
         this.maxReconnectAttempts = config.maxReconnectAttempts || 10;
         this.reconnectAttempts = 0;

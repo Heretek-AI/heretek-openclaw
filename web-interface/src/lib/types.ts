@@ -58,10 +58,11 @@ export interface SessionMessage {
 }
 
 // WebSocket message types
-export type WSMessage = 
+export type WSMessage =
 	| { type: 'status'; data: AgentStatusUpdate }
 	| { type: 'message'; data: Message }
-	| { type: 'a2a'; data: A2AMessage };
+	| { type: 'a2a'; data: A2AMessage }
+	| { type: 'channel_activity'; data: any };
 
 // Connection status for UI
 export interface ConnectionStatus {

@@ -1,13 +1,26 @@
 import { WebSocketServer, WebSocket } from 'ws';
-import { createClient } from 'redis';
+import Redis from 'ioredis';
 import type { AgentStatusUpdate, Message, WSMessage, A2AMessage } from '../types';
 
 // WebSocket server for real-time updates
 let wss: WebSocketServer | null = null;
 const clients: Set<WebSocket> = new Set();
 
+/**
+ * Internal broadcast that accepts any message type
+ */
+function broadcastAny(message: any): void {
+	const data = JSON.stringify(message);
+	
+	clients.forEach((client) => {
+		if (client.readyState === WebSocket.OPEN) {
+			client.send(data);
+		}
+	});
+}
+
 // Redis client for pub/sub
-let redisSubscriber: ReturnType<typeof createClient> | null = null;
+let redisSubscriber: Redis | null = null;
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
 // Redis channels to subscribe to
@@ -21,9 +34,18 @@ async function initRedisSubscriber(): Promise<void> {
 		return;
 	}
 
-	redisSubscriber = createClient({ url: redisUrl });
+	redisSubscriber = new Redis(redisUrl, {
+		retryStrategy: (times) => {
+			if (times > 10) {
+				console.error('[WebSocket] Redis max retries reached');
+				return null;
+			}
+			const delay = Math.min(times * 200, 10000);
+			return delay;
+		}
+	});
 
-	redisSubscriber.on('error', (err) => {
+	redisSubscriber.on('error', (err: Error) => {
 		console.error('[WebSocket] Redis Subscriber Error:', err);
 	});
 
@@ -31,21 +53,33 @@ async function initRedisSubscriber(): Promise<void> {
 		console.log('[WebSocket] Redis subscriber connected');
 	});
 
-	redisSubscriber.on('disconnect', () => {
-		console.log('[WebSocket] Redis subscriber disconnected');
+	redisSubscriber.on('close', () => {
+		console.log('[WebSocket] Redis subscriber connection closed');
 	});
 
 	try {
-		await redisSubscriber.connect();
+		// Wait for connection
+		await new Promise<void>((resolve, reject) => {
+			if (redisSubscriber?.status === 'ready') {
+				resolve();
+			} else {
+				redisSubscriber?.on('ready', resolve);
+				setTimeout(() => reject(new Error('Redis connection timeout')), 5000);
+			}
+		});
+
 		console.log('[WebSocket] Redis subscriber initialized');
 
 		// Subscribe to agent channels
 		for (const channel of REDIS_CHANNELS) {
-			await redisSubscriber.subscribe(channel, (message) => {
-				handleRedisMessage(channel, message);
-			});
+			redisSubscriber.subscribe(channel);
 			console.log(`[WebSocket] Subscribed to Redis channel: ${channel}`);
 		}
+
+		// Handle incoming messages from subscribed channels
+		redisSubscriber.on('message', (channel: string, message: string) => {
+			handleRedisMessage(channel, message);
+		});
 	} catch (error) {
 		console.error('[WebSocket] Failed to connect to Redis:', error);
 	}
@@ -77,7 +111,7 @@ function handleRedisMessage(channel: string, message: string): void {
 
 			case 'agent:activity':
 				// General activity event
-				broadcast({ type: 'channel_activity', data });
+				broadcastAny({ type: 'channel_activity', data });
 				break;
 
 			default:
