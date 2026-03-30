@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Agent, Message, ConnectionStatus } from '../types';
+	import type { Agent, Message, ConnectionStatus, Channel } from '../types';
 	import { onDestroy, onMount } from 'svelte';
 	import MessageList from './MessageList.svelte';
 	import AgentSelector from './AgentSelector.svelte';
@@ -8,6 +8,8 @@
 	export let selectedAgent: Agent | null = null;
 	export let messages: Message[] = [];
 	export let isLoading = false;
+	export let selectedChannel: string | null = null;
+	export let onChannelChange: (channel: string | null) => void = () => {};
 
 	// Connection state
 	let inputMessage = '';
@@ -26,7 +28,6 @@
 		if (typeof crypto !== 'undefined' && crypto.randomUUID) {
 			return crypto.randomUUID();
 		}
-		// Fallback for non-secure contexts
 		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
 			const r = Math.random() * 16 | 0;
 			const v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -178,12 +179,13 @@
 		if (ws && ws.readyState === WebSocket.OPEN) {
 			const messageId = generateUUID();
 			
-			// Send via WebSocket
+			// Send via WebSocket with channel info
 			if (ws) { ws.send(JSON.stringify({
 				type: 'a2a',
 				action: 'send',
 				messageId,
 				conversationId,
+				channel: selectedChannel,
 				from: 'user',
 				to: selectedAgent.id,
 				content: messageText,
@@ -222,6 +224,7 @@
 					agent: selectedAgent.id,
 					message: messageText,
 					conversationId,
+					channel: selectedChannel,
 					fromUser: 'user'
 				})
 			});
@@ -321,6 +324,11 @@
 					<span class="text-xs text-gray-400 uppercase">{connectionMethod}</span>
 				</span>
 				<span class="text-sm text-gray-300">Talking to {selectedAgent.name}</span>
+				{#if selectedChannel}
+					<span class="px-2 py-0.5 text-xs bg-collective-primary/20 text-collective-primary rounded">
+						{selectedChannel}
+					</span>
+				{/if}
 				
 				<!-- Clear conversation -->
 				<button 
@@ -349,6 +357,9 @@
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
 				</svg>
 				<p>Select an agent and start a conversation</p>
+				{#if selectedChannel}
+					<p class="text-sm mt-2 text-collective-primary">Channel: {selectedChannel}</p>
+				{/if}
 			</div>
 		{:else}
 			<MessageList {messages} />
@@ -373,7 +384,7 @@
 			<textarea
 				bind:value={inputMessage}
 				on:keydown={handleKeydown}
-				placeholder={selectedAgent ? `Message ${selectedAgent.name}...` : 'Select an agent first...'}
+				placeholder={selectedAgent ? `Message ${selectedAgent.name}${selectedChannel ? ` on ${selectedChannel}` : ''}...` : 'Select an agent first...'}
 				disabled={!selectedAgent || isLoading}
 				rows="1"
 				class="flex-1 bg-collective-dark/50 border border-collective-primary/30 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-collective-primary resize-none disabled:opacity-50"
@@ -398,6 +409,9 @@
 		</div>
 		<div class="text-xs text-gray-500 mt-2">
 			Press Enter to send, Shift+Enter for new line
+			{#if selectedChannel}
+				<span class="ml-2 text-collective-primary">• Channel: {selectedChannel}</span>
+			{/if}
 		</div>
 	</div>
 </div>

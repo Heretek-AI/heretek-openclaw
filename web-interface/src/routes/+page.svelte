@@ -3,21 +3,40 @@
 	import ChatInterface from '$lib/components/ChatInterface.svelte';
 	import AgentStatus from '$lib/components/AgentStatus.svelte';
 	import MessageFlow from '$lib/components/MessageFlow.svelte';
-	import type { Agent, Message, A2AMessage } from '$lib/types';
+	import ChannelSelector from '$lib/components/ChannelSelector.svelte';
+	import ChannelEventFeed from '$lib/components/ChannelEventFeed.svelte';
+	import MultiAgentThread from '$lib/components/MultiAgentThread.svelte';
+	import type { Agent, Message, A2AMessage, Channel, ThreadMessage } from '$lib/types';
 
 	let agents: Agent[] = [];
 	let messages: Message[] = [];
 	let a2aMessages: A2AMessage[] = [];
+	let channels: Channel[] = [];
 	let selectedAgent: Agent | null = null;
+	let selectedChannel: string | null = null;
 	let isLoading = true;
 	let error = '';
+	
+	// Multi-agent thread state
+	let threadMessages: ThreadMessage[] = [];
+	let threadParticipants: Agent[] = [];
+	
+	// WebSocket for channel events
+	let channelWs: WebSocket | null = null;
 
 	// Fetch agents on mount
 	onMount(async () => {
 		await fetchAgents();
 		// Set up periodic refresh
 		const interval = setInterval(fetchAgents, 30000); // Refresh every 30 seconds
-		return () => clearInterval(interval);
+		
+		// Connect to channel WS for multi-agent thread updates
+		connectChannelWS();
+		
+		return () => {
+			clearInterval(interval);
+			if (channelWs) channelWs.close();
+		};
 	});
 
 	async function fetchAgents() {
@@ -39,8 +58,73 @@
 		}
 	}
 
+	// Connect to channel WebSocket
+	function connectChannelWS() {
+		const wsUrl = typeof window !== 'undefined'
+			? (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + (window.location.hostname || 'localhost') + ':3002/channels'
+			: 'ws://localhost:3002/channels';
+		
+		try {
+			channelWs = new WebSocket(wsUrl);
+			channelWs.onopen = () => {
+				console.log('[Main] Channel WS connected');
+			};
+			channelWs.onmessage = (event) => {
+				try {
+					const data = JSON.parse(event.data);
+					handleChannelMessage(data);
+				} catch (e) {
+					// Ignore non-JSON
+				}
+			};
+			channelWs.onclose = () => {
+				setTimeout(connectChannelWS, 5000);
+			};
+		} catch (e) {
+			console.warn('[Main] Channel WS connection failed');
+		}
+	}
+
+	// Handle channel messages for multi-agent thread
+	function handleChannelMessage(data: any) {
+		if (data.type === 'channel_message' && data.message) {
+			const threadMsg: ThreadMessage = {
+				id: data.message.messageId || `msg_${Date.now()}`,
+				from: data.message.from,
+				to: data.message.to,
+				content: data.message.content,
+				timestamp: new Date(data.message.timestamp || Date.now()),
+				type: data.message.type === 'direct' ? 'response' : 'message'
+			};
+			threadMessages = [...threadMessages, threadMsg];
+			
+			// Update thread participants
+			const participantIds = new Set(threadMessages.map(m => m.from));
+			threadParticipants = agents.filter(a => participantIds.has(a.id));
+		} else if (data.type === 'connected') {
+			channels = data.channels || [];
+		} else if (data.type === 'channel_list') {
+			channels = data.channels;
+		}
+	}
+
 	function handleAgentSelect(agent: Agent) {
 		selectedAgent = agent;
+	}
+
+	function handleChannelSelect(channel: string) {
+		selectedChannel = channel;
+		// Clear thread when channel changes
+		threadMessages = [];
+		threadParticipants = [];
+	}
+
+	function handleThreadAgentSelect(agentId: string) {
+		// Filter thread by agent
+		const agent = agents.find(a => a.id === agentId);
+		if (agent) {
+			selectedAgent = agent;
+		}
 	}
 </script>
 
@@ -62,11 +146,16 @@
 					</div>
 					<div>
 						<h1 class="text-xl font-bold text-white">The Collective</h1>
-						<p class="text-xs text-gray-400">Agent Interface</p>
+						<p class="text-xs text-gray-400">Multi-Agent Channel Interface</p>
 					</div>
 				</div>
 				
 				<div class="flex items-center gap-4">
+					{#if selectedChannel}
+						<span class="px-3 py-1 bg-collective-primary/20 text-collective-primary rounded-lg text-sm">
+							Channel: {selectedChannel}
+						</span>
+					{/if}
 					{#if error}
 						<span class="text-red-400 text-sm">{error}</span>
 					{/if}
@@ -99,27 +188,49 @@
 				</div>
 			</div>
 		{:else}
-			<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-				<!-- Left Sidebar - Agent Status -->
-				<div class="lg:col-span-1 order-2 lg:order-1">
-					<AgentStatus {agents} onSelect={handleAgentSelect} />
+			<!-- Left Column: Channel Selector -->
+			<div class="grid grid-cols-12 gap-6">
+				<!-- Left Sidebar: Channels + Agent Status -->
+				<div class="col-span-12 lg:col-span-3 space-y-4">
+					<ChannelSelector 
+						{channels} 
+						selectedChannel={selectedChannel}
+						onSelect={handleChannelSelect}
+					/>
+					<AgentStatus 
+						{agents} 
+						onSelect={handleAgentSelect}
+					/>
 				</div>
 
-				<!-- Center - Chat Interface -->
-				<div class="lg:col-span-2 order-1 lg:order-2">
-					<div class="h-[600px]">
+				<!-- Center: Chat + Multi-Agent Thread -->
+				<div class="col-span-12 lg:col-span-6 space-y-4">
+					<div class="h-[500px]">
 						<ChatInterface
 							{agents}
 							{selectedAgent}
 							{messages}
 							bind:isLoading
+							{selectedChannel}
 						/>
 					</div>
+					
+					<!-- Multi-Agent Thread Visualization -->
+					<MultiAgentThread
+						threadId={selectedChannel || 'default'}
+						participants={threadParticipants.length > 0 ? threadParticipants : agents.slice(0, 3)}
+						messages={threadMessages}
+						selectedAgent={selectedAgent?.id || null}
+						onAgentSelect={handleThreadAgentSelect}
+					/>
 				</div>
 
-				<!-- Right Sidebar - Message Flow -->
-				<div class="lg:col-span-1 order-3">
+				<!-- Right Sidebar: Message Flow + Event Feed -->
+				<div class="col-span-12 lg:col-span-3 space-y-4">
 					<MessageFlow messages={a2aMessages} />
+					<ChannelEventFeed 
+						{selectedChannel}
+					/>
 				</div>
 			</div>
 		{/if}
@@ -129,8 +240,8 @@
 	<footer class="border-t border-collective-primary/30 mt-8">
 		<div class="container mx-auto px-4 py-4">
 			<div class="flex items-center justify-between text-sm text-gray-500">
-				<span>The Collective Web Interface v0.1.0</span>
-				<span>LiteLLM Gateway: http://localhost:4000</span>
+				<span>The Collective Web Interface v0.2.0 - Channel-Based Multi-Agent UI</span>
+				<span>LiteLLM Gateway: http://localhost:4000 | Channel WS: ws://localhost:3002</span>
 			</div>
 		</div>
 	</footer>
