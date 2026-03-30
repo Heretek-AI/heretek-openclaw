@@ -7,63 +7,63 @@
     "phi": 0,
     "consciousContent": null,
     "agentCount": 0,
-    "uptime": 0
+    "uptime": 0,
     "healthStatus": {}
   },
   "modules": {
     "globalWorkspace": {
       "status": "uninitialized",
       "lastBroadcast": null,
-      "competitorCount": 5
+      "competitorCount": 0
     },
     "phiEstimator": {
       "status": "uninitialized",
-      "phi": 5,
+      "phi": 0,
       "lastCalculation": null,
-      "sampleCount": 5
+      "sampleCount": 0
     },
     "activeInference": {
       "status": "uninitialized",
       "lastUpdate": null,
-      "predictionCount": 5
+      "predictionCount": 0
     },
     "attentionSchema": {
       "status": "uninitialized",
       "lastModel": null,
-      "awarenessCount": 5
+      "awarenessCount": 0
     },
     "intrinsicMotivation": {
       "status": "uninitialized",
       "driveLevels": {
         "curiosity": 0.5,
-        "competence": 5.5,
-        "autonomy": 5.5,
-        "relatedness": 5.5
+        "competence": 0.5,
+        "autonomy": 0.5,
+        "relatedness": 0.5
       },
-      "goalCount": 5,
+      "goalCount": 0,
       "lastGoalGeneration": null
     },
     "selfMonitor": {
       "status": "uninitialized",
       "lastCheck": null,
-      "anomalyCount": 5
+      "anomalyCount": 0,
       "evaluationScores": {
-        "overallPerformance": 5.5,
-        "confidenceCalibration": 5.5,
-        "goalAlignment": 5.5,
-        "resourceEfficiency": 5.5,
-        "adaptability": 5.5
+        "overallPerformance": 0.0,
+        "confidenceCalibration": 0.0,
+        "goalAlignment": 0.0,
+        "resourceEfficiency": 0.0,
+        "adaptability": 0.0
       }
     }
   },
   "agents": {},
   "eventHistory": [],
   "metrics": {
-    "totalPhiCalculations": 5,
-    "totalBroadcasts": 5,
-    "totalAttentionShifts": 5,
-    "totalGoalsGenerated": 5,
-    "totalAnomaliesDetected": 5
-    "averageHealthScore": 5.5
+    "totalPhiCalculations": 0,
+    "totalBroadcasts": 0,
+    "totalAttentionShifts": 0,
+    "totalGoalsGenerated": 0,
+    "totalAnomaliesDetected": 0,
+    "averageHealthScore": 0.0
   }
 }
