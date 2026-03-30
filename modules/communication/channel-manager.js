@@ -12,7 +12,14 @@
  * ==============================================================================
  */
 
-const Redis = require('ioredis');
+// Redis for cross-container communication
+let Redis;
+try {
+  Redis = require('ioredis');
+} catch (e) {
+  console.warn('[ChannelManager] ioredis not available, Redis features disabled');
+  Redis = null;
+}
 
 // Predefined channel definitions
 const CHANNEL_DEFINITIONS = {
@@ -89,6 +96,14 @@ class ChannelManager {
         }
 
         console.log('[ChannelManager] Starting...');
+
+        // Check if Redis is available
+        if (!Redis) {
+            console.warn('[ChannelManager] ioredis not available, running in degraded mode');
+            this.isRunning = true;
+            this.emitEvent('manager:started', { timestamp: new Date().toISOString() });
+            return;
+        }
 
         try {
             // Create Redis clients

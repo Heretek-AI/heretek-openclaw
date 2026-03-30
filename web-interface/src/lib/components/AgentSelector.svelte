@@ -43,7 +43,7 @@
 </script>
 
 <div class="w-full">
-	<label class="block text-sm font-medium text-gray-300 mb-2">Select Agent</label>
+	<span class="block text-sm font-medium text-gray-300 mb-2">Select Agent</span>
 	<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
 		{#each agents as agent (agent.id)}
 			<button

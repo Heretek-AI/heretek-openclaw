@@ -49,6 +49,7 @@ declare module '$env/static/private' {
 	export const BROWSER: string;
 	export const npm_config_noproxy: string;
 	export const HOME: string;
+	export const OLDPWD: string;
 	export const VSCODE_RECONNECTION_GRACE_TIME: string;
 	export const VSCODE_IPC_HOOK_CLI: string;
 	export const npm_package_json: string;
@@ -197,6 +198,7 @@ declare module '$env/dynamic/private' {
 		BROWSER: string;
 		npm_config_noproxy: string;
 		HOME: string;
+		OLDPWD: string;
 		VSCODE_RECONNECTION_GRACE_TIME: string;
 		VSCODE_IPC_HOOK_CLI: string;
 		npm_package_json: string;

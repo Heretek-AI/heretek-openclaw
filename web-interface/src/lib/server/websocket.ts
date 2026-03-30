@@ -6,7 +6,7 @@ let wss: WebSocketServer | null = null;
 const clients: Set<WebSocket> = new Set();
 
 // Initialize WebSocket server
-export function initWebSocketServer(port: number = 3001): WebSocketServer {
+export function initWebSocketServer(port: number = 3002): WebSocketServer {
 	if (wss) {
 		return wss;
 	}
