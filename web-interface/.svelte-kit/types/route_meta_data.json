@@ -3,6 +3,9 @@
 	"/api/agents": [
 		"src/routes/api/agents/+server.ts"
 	],
+	"/api/channels": [
+		"src/routes/api/channels/+server.ts"
+	],
 	"/api/chat": [
 		"src/routes/api/chat/+server.ts"
 	],

@@ -1,5 +1,6 @@
 import type { ChatRequest, ChatResponse, A2AMessage, SessionMessage } from '../types';
 import { randomUUID } from 'crypto';
+import Redis from 'ioredis';
 
 // LiteLLM Gateway configuration
 const LITELLM_BASE_URL = process.env.LITELLM_HOST || process.env.LITELLM_URL || 'http://localhost:4000';
@@ -230,11 +231,10 @@ export async function getLiteLLMHealth(): Promise<boolean> {
 }
 
 // Redis client for WebSocket broadcast (lazy initialized)
-let redis: any = null;
+let redis: Redis | null = null;
 
 async function getRedisClient() {
 	if (!redis) {
-		const Redis = require('ioredis');
 		redis = new Redis(REDIS_URL);
 	}
 	return redis;
