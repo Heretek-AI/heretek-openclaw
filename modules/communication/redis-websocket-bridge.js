@@ -339,3 +339,28 @@ async function stopBridge() {
 
 module.exports.getBridge = getBridge;
 module.exports.stopBridge = stopBridge;
+
+// Main entry point - start the bridge when run directly
+(async function main() {
+    try {
+        console.log('[RedisToWebSocketBridge] Starting as standalone process...');
+        const bridge = await getBridge();
+        console.log('[RedisToWebSocketBridge] Bridge started successfully');
+        
+        // Handle graceful shutdown
+        process.on('SIGINT', async () => {
+            console.log('[RedisToWebSocketBridge] Received SIGINT, shutting down...');
+            await stopBridge();
+            process.exit(0);
+        });
+        
+        process.on('SIGTERM', async () => {
+            console.log('[RedisToWebSocketBridge] Received SIGTERM, shutting down...');
+            await stopBridge();
+            process.exit(0);
+        });
+    } catch (error) {
+        console.error('[RedisToWebSocketBridge] Failed to start:', error);
+        process.exit(1);
+    }
+})();
