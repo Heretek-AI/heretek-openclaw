@@ -1,0 +1,43 @@
+{
+  "memory": {
+    "vectorStore": {
+      "hotTier": {
+        "enabled": true,
+        "provider": "deeplake",
+        "host": "http://localhost:8082",
+        "dimension": 1536,
+        "description": "Multi-modal embeddings for images/audio"
+      },
+      "coldTier": {
+        "enabled": true,
+        "provider": "pgvector",
+        "dimension": 768,
+        "indexType": "ivfflat",
+        "lists": 100
+      },
+      "tiering": {
+        "hotToColdAgeHours": 24,
+        "coldToHotAccessThreshold": 3,
+        "accessWindowDays": 7
+      }
+    },
+    "consolidation": {
+      "episodicMaxAgeHours": 6,
+      "semanticMaxAgeDays": 7,
+      "padMaxAgeMinutes": 60,
+      "replayThreshold": 0.1,
+      "consolidationIntervalMinutes": 5,
+      "sleepDurationMinutes": 4.8,
+      "decayRate": 0.001,
+      "promotionThreshold": 0.7,
+      "maxEpisodicMemories": 1000,
+      "maxSemanticMemories": 5000,
+      "maxPadMemories": 100
+    }
+  },
+  "migration": {
+    "batchSize": 100,
+    "hotThresholdHours": 24,
+    "verifyAfterMigration": true
+  }
+}

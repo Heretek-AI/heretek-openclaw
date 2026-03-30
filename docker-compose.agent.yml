@@ -88,6 +88,8 @@ services:
         condition: service_healthy
       ollama:
         condition: service_healthy
+      deeplake:
+        condition: service_healthy
 
   # ==============================================================================
   # Individual Agent Services (extends base agent)
@@ -156,9 +158,35 @@ services:
       - AGENT_NAME=coder
       - AGENT_ROLE=artisan
 
+  # ==============================================================================
+  # DeepLake Vector Storage Service
+  # ==============================================================================
+  deeplake:
+    image: activeloop/deeplake-server:latest
+    container_name: heretek-deeplake
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      - DEEPLAKE_TOKEN=${DEEPLAKE_TOKEN:-}
+      - DEEPLAKE_LOCAL=True
+      - DEEPLAKE_PATH=/data/deeplake
+      - VECTOR_DIM=1536
+    volumes:
+      - deeplake_data:/data
+    networks:
+      - heretek-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 # ==============================================================================
 # Volumes
 # ==============================================================================
 volumes:
   agent_workspace:
+    driver: local
+  deeplake_data:
     driver: local
