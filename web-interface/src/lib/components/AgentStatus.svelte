@@ -1,13 +1,10 @@
 <script lang="ts">
 	import type { Agent, AgentActivity } from '../types';
 	import { onMount, onDestroy } from 'svelte';
-	import { HealthCheckService } from '../server/health-check-service';
 
 	export let agents: Agent[] = [];
 	export let onSelect: (agent: Agent) => void = () => {};
 
-	// Health check service for live status updates
-	const healthService = new HealthCheckService();
 	let pollInterval: NodeJS.Timeout;
 	
 	// Real-time activity tracking
@@ -16,7 +13,7 @@
 	let isConnected = false;
 	
 	onMount(async () => {
-		// Initial load of agent status from LiteLLM
+		// Initial load of agent status from API
 		await refreshStatus();
 		// Poll every 30 seconds
 		pollInterval = setInterval(refreshStatus, 30000);
@@ -32,8 +29,11 @@
 	
 	async function refreshStatus() {
 		try {
-			const statusAgents = await healthService.getAgentsWithStatus();
-			agents = statusAgents;
+			const response = await fetch('/api/agents');
+			if (response.ok) {
+				const data = await response.json();
+				agents = data.agents || data;
+			}
 		} catch (error) {
 			console.error('Failed to refresh agent status:', error);
 		}

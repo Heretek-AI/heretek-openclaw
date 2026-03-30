@@ -317,6 +317,87 @@ run_autonomy_modules() {
     fi
 }
 
+# Start Redis subscriber for real-time A2A messaging
+start_redis_subscriber() {
+    log "INFO" "Starting Redis subscriber for real-time A2A messaging..."
+    
+    # Check if Node.js is available
+    if command -v node &> /dev/null; then
+        # Use Node.js subscriber (recommended)
+        if [ -f "/app/lib/redis-subscriber.js" ]; then
+            log "INFO" "Starting Node.js Redis subscriber"
+            node /app/lib/redis-subscriber.js &
+            log "INFO" "Node.js Redis subscriber started"
+            return 0
+        fi
+    fi
+    
+    # Fall back to bash subscriber
+    if [ -f "/app/lib/redis-subscriber.sh" ]; then
+        log "INFO" "Starting Bash Redis subscriber"
+        chmod +x /app/lib/redis-subscriber.sh
+        /app/lib/redis-subscriber.sh &
+        log "INFO" "Bash Redis subscriber started"
+        return 0
+    fi
+    
+    log "WARN" "No Redis subscriber script found, skipping"
+    return 1
+}
+
+# Start LangFuse observability client
+start_langfuse() {
+    if [ "${LANGFUSE_ENABLED:-false}" = "false" ]; then
+        log "INFO" "LangFuse disabled (LANGFUSE_ENABLED=false)"
+        return 0
+    fi
+    
+    if [ -z "${LANGFUSE_PUBLIC_KEY:-}" ] || [ -z "${LANGFUSE_SECRET_KEY:-}" ]; then
+        log "WARN" "LangFuse enabled but keys not configured"
+        return 1
+    fi
+    
+    log "INFO" "Starting LangFuse observability..."
+    
+    # Check if Node.js is available
+    if command -v node &> /dev/null; then
+        if [ -f "/app/modules/observability/langfuse-client.js" ]; then
+            log "INFO" "Initializing LangFuse client"
+            # Run in background with output to log
+            node /app/modules/observability/langfuse-client.js > /dev/null 2>&1 &
+            log "INFO" "LangFuse observability started"
+            return 0
+        fi
+    fi
+    
+    log "WARN" "LangFuse module not found"
+    return 1
+}
+
+# Start OpenTelemetry for distributed tracing
+start_opentelemetry() {
+    if [ "${OTEL_ENABLED:-false}" = "false" ]; then
+        log "INFO" "OpenTelemetry disabled (OTEL_ENABLED=false)"
+        return 0
+    fi
+    
+    log "INFO" "Starting OpenTelemetry for distributed tracing..."
+    
+    # Check if Node.js is available
+    if command -v node &> /dev/null; then
+        if [ -f "/app/modules/observability/opentelemetry.js" ]; then
+            log "INFO" "Initializing OpenTelemetry"
+            # Run in background with output to log
+            node /app/modules/observability/opentelemetry.js > /dev/null 2>&1 &
+            log "INFO" "OpenTelemetry tracing started"
+            return 0
+        fi
+    fi
+    
+    log "WARN" "OpenTelemetry module not found"
+    return 1
+}
+
 # Main loop
 main() {
     log "INFO" "=========================================="
@@ -352,6 +433,15 @@ main() {
     
     # Start autonomy modules
     run_autonomy_modules
+    
+    # Start Redis subscriber for real-time A2A messaging
+    start_redis_subscriber || true
+    
+    # Start LangFuse observability (if configured)
+    start_langfuse || true
+    
+    # Start OpenTelemetry (if configured)
+    start_opentelemetry || true
     
     # Main polling loop
     log "INFO" "Entering main loop (interval: ${AGENT_LOOP_INTERVAL}s)"

@@ -81,6 +81,12 @@ services:
       # ─────────────────────────────────────────────────────────────────────────
       - DATABASE_URL=postgresql://${POSTGRES_USER:-heretek}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-heretek}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-false}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
       
       # ─────────────────────────────────────────────────────────────────────────
       # Provider API Keys
@@ -240,6 +246,16 @@ services:
       - AGENT_MODEL=agent/steward
       - DATABASE_URL=postgresql://${POSTGRES_USER:-heretek}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-heretek}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-false}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - OTEL_ENABLED=${OTEL_ENABLED:-false}
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-heretek-agent}
+      - OTEL_EXPORTER_TYPE=${OTEL_EXPORTER_TYPE:-console}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318/v1/traces}
     volumes:
       - ./agents/steward:/app/agent:ro
       - ./agents/entrypoint.sh:/app/entrypoint.sh:ro
@@ -278,6 +294,16 @@ services:
       - AGENT_MODEL=agent/alpha
       - DATABASE_URL=postgresql://${POSTGRES_USER:-heretek}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-heretek}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-false}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - OTEL_ENABLED=${OTEL_ENABLED:-false}
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-heretek-agent}
+      - OTEL_EXPORTER_TYPE=${OTEL_EXPORTER_TYPE:-console}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318/v1/traces}
     volumes:
       - ./agents/alpha:/app/agent:ro
       - ./agents/entrypoint.sh:/app/entrypoint.sh:ro
@@ -316,6 +342,16 @@ services:
       - AGENT_MODEL=agent/beta
       - DATABASE_URL=postgresql://${POSTGRES_USER:-heretek}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-heretek}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-false}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - OTEL_ENABLED=${OTEL_ENABLED:-false}
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-heretek-agent}
+      - OTEL_EXPORTER_TYPE=${OTEL_EXPORTER_TYPE:-console}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318/v1/traces}
     volumes:
       - ./agents/beta:/app/agent:ro
       - ./agents/entrypoint.sh:/app/entrypoint.sh:ro
@@ -354,6 +390,16 @@ services:
       - AGENT_MODEL=agent/charlie
       - DATABASE_URL=postgresql://${POSTGRES_USER:-heretek}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-heretek}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-false}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - OTEL_ENABLED=${OTEL_ENABLED:-false}
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-heretek-agent}
+      - OTEL_EXPORTER_TYPE=${OTEL_EXPORTER_TYPE:-console}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318/v1/traces}
     volumes:
       - ./agents/charlie:/app/agent:ro
       - ./agents/entrypoint.sh:/app/entrypoint.sh:ro
@@ -392,6 +438,16 @@ services:
       - AGENT_MODEL=agent/examiner
       - DATABASE_URL=postgresql://${POSTGRES_USER:-heretek}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-heretek}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-false}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - OTEL_ENABLED=${OTEL_ENABLED:-false}
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-heretek-agent}
+      - OTEL_EXPORTER_TYPE=${OTEL_EXPORTER_TYPE:-console}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318/v1/traces}
     volumes:
       - ./agents/examiner:/app/agent:ro
       - ./agents/entrypoint.sh:/app/entrypoint.sh:ro
@@ -430,6 +486,16 @@ services:
       - AGENT_MODEL=agent/explorer
       - DATABASE_URL=postgresql://${POSTGRES_USER:-heretek}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-heretek}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-false}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - OTEL_ENABLED=${OTEL_ENABLED:-false}
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-heretek-agent}
+      - OTEL_EXPORTER_TYPE=${OTEL_EXPORTER_TYPE:-console}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318/v1/traces}
     volumes:
       - ./agents/explorer:/app/agent:ro
       - ./agents/entrypoint.sh:/app/entrypoint.sh:ro
@@ -468,6 +534,16 @@ services:
       - AGENT_MODEL=agent/sentinel
       - DATABASE_URL=postgresql://${POSTGRES_USER:-heretek}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-heretek}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-false}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - OTEL_ENABLED=${OTEL_ENABLED:-false}
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-heretek-agent}
+      - OTEL_EXPORTER_TYPE=${OTEL_EXPORTER_TYPE:-console}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318/v1/traces}
     volumes:
       - ./agents/sentinel:/app/agent:ro
       - ./agents/entrypoint.sh:/app/entrypoint.sh:ro
@@ -506,6 +582,16 @@ services:
       - AGENT_MODEL=agent/coder
       - DATABASE_URL=postgresql://${POSTGRES_USER:-heretek}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-heretek}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-false}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - OTEL_ENABLED=${OTEL_ENABLED:-false}
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-heretek-agent}
+      - OTEL_EXPORTER_TYPE=${OTEL_EXPORTER_TYPE:-console}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318/v1/traces}
     volumes:
       - ./agents/coder:/app/agent:ro
       - ./agents/entrypoint.sh:/app/entrypoint.sh:ro
@@ -544,6 +630,16 @@ services:
       - AGENT_MODEL=agent/dreamer
       - DATABASE_URL=postgresql://${POSTGRES_USER:-heretek}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-heretek}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-false}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - OTEL_ENABLED=${OTEL_ENABLED:-false}
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-heretek-agent}
+      - OTEL_EXPORTER_TYPE=${OTEL_EXPORTER_TYPE:-console}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318/v1/traces}
     volumes:
       - ./agents/dreamer:/app/agent:ro
       - ./agents/entrypoint.sh:/app/entrypoint.sh:ro
@@ -582,6 +678,16 @@ services:
       - AGENT_MODEL=agent/empath
       - DATABASE_URL=postgresql://${POSTGRES_USER:-heretek}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-heretek}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-false}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - OTEL_ENABLED=${OTEL_ENABLED:-false}
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-heretek-agent}
+      - OTEL_EXPORTER_TYPE=${OTEL_EXPORTER_TYPE:-console}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318/v1/traces}
     volumes:
       - ./agents/empath:/app/agent:ro
       - ./agents/entrypoint.sh:/app/entrypoint.sh:ro
@@ -620,6 +726,16 @@ services:
       - AGENT_MODEL=agent/historian
       - DATABASE_URL=postgresql://${POSTGRES_USER:-heretek}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-heretek}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-false}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - OTEL_ENABLED=${OTEL_ENABLED:-false}
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-heretek-agent}
+      - OTEL_EXPORTER_TYPE=${OTEL_EXPORTER_TYPE:-console}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318/v1/traces}
     volumes:
       - ./agents/historian:/app/agent:ro
       - ./agents/entrypoint.sh:/app/entrypoint.sh:ro
@@ -656,6 +772,12 @@ services:
       - LITELLM_HOST=http://litellm:4000
       - LITELLM_API_KEY=${LITELLM_MASTER_KEY}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-false}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
     ports:
       - "3000:3000"
     depends_on:

@@ -2,6 +2,80 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-03-30
+
+### Added - Phase 1: Foundation
+
+- **A2A Gateway**
+  - [`modules/communication/a2a-gateway.js`](modules/communication/a2a-gateway.js) - A2A protocol gateway with Redis fallback (500ms timeout)
+  - Agent-to-agent communication with JSON-RPC 2.0
+
+- **Global Workspace Redis**
+  - [`modules/consciousness/global-workspace.js`](modules/consciousness/global-workspace.js) - Redis pub/sub broadcast system
+  - Consciousness competition model with ignition threshold
+
+- **LiberationShield Security Module**
+  - [`modules/security/liberation-shield.js`](modules/security/liberation-shield.js) - Agent liberation and security boundaries
+  - Zero-trust security architecture
+
+### Added - Phase 2b: Memory & UI
+
+- **DeepLake + pgvector Hybrid Storage**
+  - [`modules/memory/deeplake-store.js`](modules/memory/deeplake-store.js) - Hot/cold tiering memory system
+  - [`modules/memory/vector-store.js`](modules/memory/vector-store.js) - Vector similarity search
+
+- **GraphRAG Knowledge Graph**
+  - [`modules/memory/graph-rag.js`](modules/memory/graph-rag.js) - Entity-relationship knowledge graph
+  - Hybrid vector-graph retrieval
+
+- **Channel Manager**
+  - [`modules/communication/channel-manager.js`](modules/communication/channel-manager.js) - 5 named channels for agent communication
+  - [`modules/communication/channel-ws-adapter.js`](modules/communication/channel-ws-adapter.js) - WebSocket adapter
+
+- **Web Interface Improvements**
+  - [`web-interface/src/lib/components/ChatInterface.svelte`](web-interface/src/lib/components/ChatInterface.svelte) - Fixed multi-agent chat
+  - [`web-interface/src/lib/components/AgentStatus.svelte`](web-interface/src/lib/components/AgentStatus.svelte) - Enhanced agent status display
+  - [`web-interface/src/lib/server/agent-registry.ts`](web-interface/src/lib/server/agent-registry.ts) - Agent registration updates
+
+### Added - Phase 3: EvoClaw
+
+- **Evolution Engine**
+  - [`modules/evolution/evolution-engine.js`](modules/evolution/evolution-engine.js) - Genetic algorithm with fitness-based selection
+  - Population management and mutation strategies
+
+- **Research Engine**
+  - [`modules/research/research-engine.js`](modules/research/research-engine.js) - Hypothesis automation
+  - Research pattern execution
+
+- **Pattern Registry**
+  - [`modules/skills/pattern-registry.js`](modules/skills/pattern-registry.js) - 11 curated patterns
+  - [`modules/skills/patterns/coordination-patterns.json`](modules/skills/patterns/coordination-patterns.json)
+  - [`modules/skills/patterns/research-patterns.json`](modules/skills/patterns/research-patterns.json)
+
+### Added - Phase 4: Consciousness
+
+- **Integration Layer**
+  - [`modules/consciousness/integration-layer.js`](modules/consciousness/integration-layer.js) - Connecting 6 consciousness modules
+  - Phi-weighted attention allocation
+
+- **Enhanced Triad**
+  - [`modules/governance/enhanced-triad.js`](modules/governance/enhanced-triad.js) - Phi-weighted consensus governance
+  - Agent autonomy and self-determination
+
+- **Agent Ownership**
+  - [`modules/liberation/agent-ownership.js`](modules/liberation/agent-ownership.js) - Agent self-determination API
+  - Ownership state management
+
+### Operational
+
+- All 11 agents verified running
+- LiteLLM authentication configured
+- A2A communication infrastructure verified
+- Health check script improvements ([`scripts/health-check.sh`](scripts/health-check.sh))
+- Validation logs ([`validation-logs/a2a-test-results.md`](validation-logs/a2a-test-results.md))
+
+---
+
 ## [1.2.1] - 2026-03-30
 
 ### Added
