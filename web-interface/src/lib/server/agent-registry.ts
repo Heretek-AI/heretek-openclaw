@@ -108,9 +108,8 @@ function getAgentBaseUrl(agent: Agent): string {
 	const host = process.env.DOCKER_ENV === 'true'
 		? `heretek-${agent.id}` // Docker container name
 		: 'localhost';
-	const port = process.env.DOCKER_ENV === 'true'
-		? 8000// Internal container port
-		: agent.port; // Mapped host port
+	// Use agent's actual port - Docker uses internal 8000, localhost uses mapped port
+	const port = agent.port;
 	return `http://${host}:${port}`;
 }
 

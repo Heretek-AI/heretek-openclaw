@@ -1,13 +1,15 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { checkAllAgentsHealth } from '$lib/server/agent-registry';
+import { HealthCheckService } from '$lib/server/health-check-service';
 import { getLiteLLMHealth } from '$lib/server/litellm-client';
+
+const healthService = new HealthCheckService();
 
 // GET /api/status - Get system status
 export const GET: RequestHandler = async () => {
 	try {
 		const [agents, litellmOnline] = await Promise.all([
-			checkAllAgentsHealth(),
+			healthService.getAgentsWithStatus(),
 			getLiteLLMHealth()
 		]);
 
