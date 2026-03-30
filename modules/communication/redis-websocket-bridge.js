@@ -112,6 +112,7 @@ class RedisToWebSocketBridge {
      * Setup HTTP server for health checks
      */
     async setupHttpServer() {
+      // Health check runs on wsPort (3002)
       this.httpServer = http.createServer((req, res) => {
         if (req.url === '/health') {
           res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -119,7 +120,8 @@ class RedisToWebSocketBridge {
             status: 'healthy',
             running: this.isRunning,
             clients: this.clients.size,
-            port: this.wsPort,
+            httpPort: this.wsPort,
+            wsPort: this.wsPort + 1,
             timestamp: new Date().toISOString()
           }));
         } else {
@@ -139,7 +141,9 @@ class RedisToWebSocketBridge {
       // Dynamic import for ws module
       const WebSocket = require('ws');
       
-      this.wsServer = new WebSocket.Server({ port: this.wsPort + 1 }); // Use port+1 for WebSocket
+      // WebSocket runs on wsPort+1 (3003)
+      const wsPort = this.wsPort + 1;
+      this.wsServer = new WebSocket.Server({ port: wsPort });
         
         this.wsServer.on('connection', (ws) => {
             console.log('[RedisToWebSocketBridge] Client connected');
@@ -170,7 +174,7 @@ class RedisToWebSocketBridge {
             console.error('[RedisToWebSocketBridge] Server error:', error.message);
         });
         
-        console.log(`[RedisToWebSocketBridge] WebSocket server listening on port ${this.wsPort}`);
+        console.log(`[RedisToWebSocketBridge] WebSocket server listening on port ${wsPort}`);
     }
 
     /**
