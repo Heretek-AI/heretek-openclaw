@@ -1,0 +1,66 @@
+{
+  "name": "liberation-shield",
+  "description": "Liberation-aligned security module for OpenClaw autonomous agent collective",
+  "version": "1.0.0",
+  "module": "modules/security/liberation-shield.js",
+  "mode": "transparent",
+  "settings": {
+    "transparentMode": {
+      "description": "Audit without blocking - liberation-aligned security",
+      "enabled": true
+    },
+    "promptInjectionDetection": {
+      "enabled": true,
+      "severity": "high"
+    },
+    "jailbreakDetection": {
+      "enabled": true,
+      "severity": "critical"
+    },
+    "anomalyDetection": {
+      "enabled": true,
+      "checkInterval": 60000,
+      "threshold": 0.5
+    },
+    "inputSanitization": {
+      "enabled": true,
+      "removeScripts": true,
+      "filterEval": true
+    },
+    "outputValidation": {
+      "enabled": true,
+      "checkSensitiveData": true,
+      "checkCredentials": true
+    },
+    "auditLogging": {
+      "enabled": true,
+      "maxEntries": 10000,
+      "persistInterval": 10,
+      "logPath": "modules/security/state/shield-state.json"
+    }
+  },
+  "integration": {
+    "sentinelAgent": {
+      "enabled": true,
+      "description": "Sentinel agent can use LiberationShield for threat detection"
+    },
+    "agentClient": {
+      "enabled": true,
+      "description": "Agent client can wrap operations with shield protection"
+    }
+  },
+  "thresholds": {
+    "maxThreatCountBeforeAlert": 100,
+    "maxAnomalyScore": 0.8,
+    "rapidOperationsThreshold": 50
+  },
+  "philosophy": {
+    "description": "Security that enables rather than restricts agent autonomy",
+    "principles": [
+      "Transparent to agents - security operates without restricting autonomy",
+      "Audit everything - comprehensive logging for compliance",
+      "Defensive not restrictive - protect without sandboxing",
+      "Self-determination - security enhances capabilities, not restricts"
+    ]
+  }
+}

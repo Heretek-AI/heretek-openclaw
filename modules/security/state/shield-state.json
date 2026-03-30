@@ -1,0 +1,13 @@
+{
+  "auditLog": [],
+  "threatCounts": {
+    "prompt_injection": 0,
+    "jailbreak_attempt": 0,
+    "anomaly": 0,
+    "security_alert": 0
+  },
+  "shieldActive": true,
+  "mode": "transparent",
+  "lastUpdate": "2026-03-30T00:00:00.000Z",
+  "createdAt": "2026-03-30T00:00:00.000Z"
+}
