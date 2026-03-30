@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Agent, Message } from '../types';
-	import { onDestroy } from 'svelte';
+	import type { Agent, Message, ConnectionStatus } from '../types';
+	import { onDestroy, onMount } from 'svelte';
 	import MessageList from './MessageList.svelte';
 	import AgentSelector from './AgentSelector.svelte';
 
@@ -9,10 +9,17 @@
 	export let messages: Message[] = [];
 	export let isLoading = false;
 
+	// Connection state
 	let inputMessage = '';
 	let ws: WebSocket | null = null;
 	let isConnected = false;
+	let connectionMethod: 'websocket' | 'http' | 'offline' = 'offline';
+	let isAgentTyping = false;
 	let pendingMessages: Map<string, { resolve: Function; reject: Function }> = new Map();
+	
+	// Conversation management
+	let conversationId: string | null = null;
+	let conversationHistory: Message[] = [];
 
 	// Generate UUID compatible with non-secure contexts (HTTP)
 	function generateUUID(): string {
@@ -27,6 +34,7 @@
 		});
 	}
 
+	// Connect to WebSocket with automatic reconnection
 	function connectWebSocket() {
 		if (ws?.readyState === WebSocket.OPEN) return;
 		
@@ -34,58 +42,115 @@
 			? (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + (window.location.hostname || 'localhost') + ':3001'
 			: 'ws://localhost:3001';
 		
-		ws = new WebSocket(wsUrl);
+		try {
+			ws = new WebSocket(wsUrl);
 
-		ws.onopen = () => {
-			console.log('[ChatInterface] WebSocket connected');
-			isConnected = true;
-		};
-
-		ws.onmessage = (event) => {
-			try {
-				const data = JSON.parse(event.data);
+			ws.onopen = () => {
+				console.log('[ChatInterface] WebSocket connected');
+				isConnected = true;
+				connectionMethod = 'websocket';
 				
-				if (data.type === 'a2a' && data.data) {
-					// Agent response received via WebSocket
-					const agentMessage: Message = {
-						id: data.messageId || generateUUID(),
-						from: data.data.from || selectedAgent?.id || 'agent',
-						to: 'user',
-						content: data.data.content || data.data.message,
-						timestamp: new Date(data.timestamp || data.data.timestamp),
-						type: 'agent'
-					};
-					messages = [...messages, agentMessage];
-					isLoading = false;
-				} else if (data.type === 'ack') {
-					// Handle acknowledgment for sent message
-					const pending = pendingMessages.get(data.messageId);
-					if (pending) {
-						pending.resolve(data.success);
-						pendingMessages.delete(data.messageId);
-					}
+				// Subscribe to agent responses for selected agent
+				if (selectedAgent) {
+					if (ws) { ws.send(JSON.stringify({
+						type: 'subscribe',
+						agent: selectedAgent.id
+					}));
 				}
-			} catch (error) {
-				console.warn('[ChatInterface] Non-JSON message:', error);
-			}
-		};
+			};
 
-		ws.onclose = (event) => {
-			console.log('[ChatInterface] WebSocket disconnected');
-			isConnected = false;
-			// Fallback to HTTP
-		};
+			ws.onmessage = (event) => {
+				try {
+					const data = JSON.parse(event.data);
+					
+					if (data.type === 'a2a' && data.data) {
+						// Check if this message is for the current conversation
+						if (data.conversationId && data.conversationId !== conversationId) {
+							return; // Ignore messages for other conversations
+						}
+						
+						// Agent response received via WebSocket
+						const agentMessage: Message = {
+							id: data.messageId || generateUUID(),
+							from: data.data.from || selectedAgent?.id || 'agent',
+							to: 'user',
+							content: data.data.content || data.data.message,
+							timestamp: new Date(data.timestamp || data.data.timestamp),
+							type: 'agent'
+						};
+						
+						messages = [...messages, agentMessage];
+						conversationHistory = [...conversationHistory, agentMessage];
+						isAgentTyping = false;
+						isLoading = false;
+						
+						// Resolve pending promise if exists
+						const pending = pendingMessages.get(data.messageId);
+						if (pending) {
+							pending.resolve(true);
+							pendingMessages.delete(data.messageId);
+						}
+					} else if (data.type === 'typing') {
+						// Agent typing indicator
+						isAgentTyping = data.agent === selectedAgent?.id;
+					} else if (data.type === 'ack') {
+						// Handle acknowledgment for sent message
+						const pending = pendingMessages.get(data.messageId);
+						if (pending) {
+							pending.resolve(data.success);
+							pendingMessages.delete(data.messageId);
+						}
+					} else if (data.type === 'error') {
+						console.error('[ChatInterface] WebSocket error:', data.message);
+						isLoading = false;
+						isAgentTyping = false;
+					}
+				} catch (error) {
+					console.warn('[ChatInterface] Non-JSON message:', error);
+				}
+			};
 
-		ws.onerror = (error) => {
-			console.error('[ChatInterface] WebSocket error:', error);
-		};
+			ws.onclose = (event) => {
+				console.log('[ChatInterface] WebSocket disconnected');
+				isConnected = false;
+				connectionMethod = 'http';
+				
+				// Attempt reconnection after delay
+				if (!event.wasClean) {
+					setTimeout(() => {
+						if (!isConnected) {
+							connectWebSocket();
+						}
+					}, 3000);
+				}
+			};
+
+			ws.onerror = (error) => {
+				console.error('[ChatInterface] WebSocket error:', error);
+				connectionMethod = 'http';
+			};
+		} catch (error) {
+			console.warn('[ChatInterface] WebSocket connection failed:', error);
+			connectionMethod = 'http';
+		}
 	}
 
 	function handleAgentSelect(agent: Agent) {
 		selectedAgent = agent;
+		
+		// Create new conversation for this agent
+		conversationId = generateUUID();
+		conversationHistory = [];
+		
 		// Reconnect WebSocket when agent is selected
 		if (!ws || ws.readyState !== WebSocket.OPEN) {
 			connectWebSocket();
+		} else {
+			// Subscribe to this agent
+			if (ws) { ws.send(JSON.stringify({
+				type: 'subscribe',
+				agent: agent.id
+			}));
 		}
 	}
 
@@ -105,17 +170,20 @@
 			type: 'user'
 		};
 		messages = [...messages, userMessage];
+		conversationHistory = [...conversationHistory, userMessage];
 		isLoading = true;
+		isAgentTyping = true;
 
 		// Try WebSocket first, fall back to HTTP
 		if (ws && ws.readyState === WebSocket.OPEN) {
 			const messageId = generateUUID();
 			
 			// Send via WebSocket
-			ws.send(JSON.stringify({
+			if (ws) { ws.send(JSON.stringify({
 				type: 'a2a',
 				action: 'send',
 				messageId,
+				conversationId,
 				from: 'user',
 				to: selectedAgent.id,
 				content: messageText,
@@ -126,13 +194,20 @@
 			try {
 				const response = await new Promise<boolean>((resolve, reject) => {
 					const timer = setTimeout(() => reject(new Error('Timeout')), 30000);
-					pendingMessages.set(messageId, { resolve: (success: boolean) => { clearTimeout(timer); resolve(success); }, reject });
+					pendingMessages.set(messageId, { 
+						resolve: (success: boolean) => { 
+							clearTimeout(timer); 
+							resolve(success); 
+						}, 
+						reject 
+					});
 				});
 				
 				// Response will come via onmessage handler
 				return;
 			} catch (error) {
 				console.warn('[ChatInterface] WebSocket failed, falling back to HTTP');
+				isAgentTyping = false;
 			}
 		}
 
@@ -145,7 +220,9 @@
 				},
 				body: JSON.stringify({
 					agent: selectedAgent.id,
-					message: messageText
+					message: messageText,
+					conversationId,
+					fromUser: 'user'
 				})
 			});
 
@@ -161,6 +238,7 @@
 					type: 'agent'
 				};
 				messages = [...messages, agentMessage];
+				conversationHistory = [...conversationHistory, agentMessage];
 			} else {
 				const errorMessage: Message = {
 					id: generateUUID(),
@@ -173,6 +251,7 @@
 				messages = [...messages, errorMessage];
 			}
 		} catch (error) {
+			connectionMethod = 'offline';
 			const errorMessage: Message = {
 				id: generateUUID(),
 				from: 'system',
@@ -184,6 +263,7 @@
 			messages = [...messages, errorMessage];
 		} finally {
 			isLoading = false;
+			isAgentTyping = false;
 		}
 	}
 
@@ -194,6 +274,23 @@
 		}
 	}
 
+	// Clear conversation
+	function clearConversation() {
+		if (conversationId) {
+			fetch(`/api/chat?conversationId=${conversationId}`, {
+				method: 'DELETE'
+			}).catch(() => {});
+		}
+		messages = [];
+		conversationHistory = [];
+		conversationId = generateUUID();
+	}
+
+	// Initialize WebSocket on mount
+	onMount(() => {
+		connectWebSocket();
+	});
+
 	// Cleanup on destroy
 	onDestroy(() => {
 		if (ws) {
@@ -201,6 +298,12 @@
 			ws = null;
 		}
 	});
+
+	// Connection status helper
+	$: connectionStatus = {
+		connected: isConnected || connectionMethod === 'http',
+		method: connectionMethod
+	};
 </script>
 
 <div class="flex flex-col h-full bg-collective-dark rounded-lg shadow-xl">
@@ -211,10 +314,24 @@
 			<div class="flex items-center gap-3">
 				<!-- Connection status -->
 				<span class="flex items-center gap-1">
-					<span class="w-2 h-2 rounded-full {isConnected ? 'bg-green-500' : 'bg-gray-500'}"></span>
-					<span class="text-xs text-gray-400">{isConnected ? 'WS' : 'HTTP'}</span>
+					<span class="w-2 h-2 rounded-full {
+						connectionMethod === 'websocket' ? 'bg-green-500' : 
+						connectionMethod === 'http' ? 'bg-yellow-500' : 'bg-red-500'
+					}"></span>
+					<span class="text-xs text-gray-400 uppercase">{connectionMethod}</span>
 				</span>
 				<span class="text-sm text-gray-300">Talking to {selectedAgent.name}</span>
+				
+				<!-- Clear conversation -->
+				<button 
+					on:click={clearConversation}
+					class="p-1 text-gray-400 hover:text-white transition-colors"
+					title="Clear conversation"
+				>
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+					</svg>
+				</button>
 			</div>
 		{/if}
 	</div>
@@ -235,6 +352,18 @@
 			</div>
 		{:else}
 			<MessageList {messages} />
+		{/if}
+		
+		<!-- Agent typing indicator -->
+		{#if isAgentTyping && selectedAgent}
+			<div class="flex items-center gap-2 mt-4 text-gray-400">
+				<div class="flex gap-1">
+					<span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+					<span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+					<span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+				</div>
+				<span class="text-sm">{selectedAgent.name} is thinking...</span>
+			</div>
 		{/if}
 	</div>
 
@@ -266,6 +395,9 @@
 				{/if}
 				Send
 			</button>
+		</div>
+		<div class="text-xs text-gray-500 mt-2">
+			Press Enter to send, Shift+Enter for new line
 		</div>
 	</div>
 </div>

@@ -22,6 +22,7 @@ export interface ChatRequest {
 	agent: string;
 	message: string;
 	conversationId?: string;
+	fromUser?: string;
 }
 
 export interface ChatResponse {
@@ -45,8 +46,26 @@ export interface A2AMessage {
 	timestamp: Date;
 }
 
+// Session message type for conversation history
+export interface SessionMessage {
+	id: string;
+	fromAgent: string;
+	toAgent?: string;
+	content: string;
+	messageType: 'text' | 'task' | 'query' | 'broadcast' | 'response' | 'heartbeat';
+	timestamp: Date;
+	context?: Record<string, any>;
+}
+
 // WebSocket message types
 export type WSMessage = 
 	| { type: 'status'; data: AgentStatusUpdate }
 	| { type: 'message'; data: Message }
 	| { type: 'a2a'; data: A2AMessage };
+
+// Connection status for UI
+export interface ConnectionStatus {
+	connected: boolean;
+	method: 'websocket' | 'http' | 'offline';
+	lastPing?: Date;
+}

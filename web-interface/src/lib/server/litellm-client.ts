@@ -1,4 +1,4 @@
-import type { ChatRequest, ChatResponse, A2AMessage } from '../types';
+import type { ChatRequest, ChatResponse, A2AMessage, SessionMessage } from '../types';
 
 // LiteLLM Gateway configuration
 const LITELLM_BASE_URL = process.env.LITELLM_HOST || process.env.LITELLM_URL || 'http://localhost:4000';
@@ -7,11 +7,70 @@ const LITELLM_BASE_URL = process.env.LITELLM_HOST || process.env.LITELLM_URL || 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 const MESSAGEFLOW_CHANNEL = 'a2a:system:messageflow';
 
-// Send a chat message to an agent via LiteLLM chat completion endpoint
+// Cache for recent conversation context (in-memory, lightweight)
+const conversationCache = new Map<string, SessionMessage[]>();
+const MAX_CACHED_MESSAGES = 20;
+
+/**
+ * Get cached conversation history for an agent
+ */
+function getCachedHistory(conversationId: string): SessionMessage[] {
+	return conversationCache.get(conversationId) || [];
+}
+
+/**
+ * Update cached conversation history
+ */
+function updateCachedHistory(conversationId: string, messages: SessionMessage[]): void {
+	if (messages.length > MAX_CACHED_MESSAGES) {
+		messages = messages.slice(-MAX_CACHED_MESSAGES);
+	}
+	conversationCache.set(conversationId, messages);
+}
+
+/**
+ * Convert Message[] to OpenAI-style messages for LiteLLM
+ */
+function formatMessagesForLiteLLM(messages: SessionMessage[], currentMessage: string, from: string): any[] {
+	const formattedMessages: any[] = [];
+	
+	// Add system context
+	formattedMessages.push({
+		role: 'system',
+		content: 'You are an agent in The Collective. Respond as the agent you represent. Be helpful, concise, and thoughtful.'
+	});
+	
+	// Add conversation history
+	for (const msg of messages) {
+		formattedMessages.push({
+			role: msg.fromAgent === from ? 'assistant' : 'user',
+			content: msg.content
+		});
+	}
+	
+	// Add current message
+	formattedMessages.push({
+		role: 'user',
+		content: currentMessage
+	});
+	
+	return formattedMessages;
+}
+
+/**
+ * Send a chat message to an agent via LiteLLM chat completion endpoint
+ */
 export async function sendChatToAgent(request: ChatRequest): Promise<ChatResponse> {
 	const { agent, message, conversationId } = request;
+	const fromUser = request.fromUser || 'user';
 	
 	try {
+		// Get conversation history for context
+		const history = conversationId ? getCachedHistory(conversationId) : [];
+		
+		// Format messages with history context
+		const formattedMessages = formatMessagesForLiteLLM(history, message, fromUser);
+		
 		// Use the chat completion endpoint with agent model
 		const response = await fetch(`${LITELLM_BASE_URL}/v1/chat/completions`, {
 			method: 'POST',
@@ -21,13 +80,12 @@ export async function sendChatToAgent(request: ChatRequest): Promise<ChatRespons
 			},
 			body: JSON.stringify({
 				model: `agent/${agent}`,
-				messages: [
-					{
-						role: 'user',
-						content: message
-					}
-				],
-				stream: false
+				messages: formattedMessages,
+				stream: false,
+				metadata: {
+					conversationId: conversationId || null,
+					fromUser: fromUser
+				}
 			})
 		});
 
@@ -44,10 +102,31 @@ export async function sendChatToAgent(request: ChatRequest): Promise<ChatRespons
 		const data = await response.json();
 		const assistantMessage = data.choices?.[0]?.message?.content || JSON.stringify(data);
 		
+		// Update conversation cache
+		if (conversationId) {
+			const newMessage: SessionMessage = {
+				id: crypto.randomUUID(),
+				fromAgent: fromUser,
+				toAgent: agent,
+				content: message,
+				timestamp: new Date(),
+				messageType: 'text'
+			};
+			const responseMessage: SessionMessage = {
+				id: crypto.randomUUID(),
+				fromAgent: agent,
+				toAgent: fromUser,
+				content: assistantMessage,
+				timestamp: new Date(),
+				messageType: 'response'
+			};
+			updateCachedHistory(conversationId, [...history, newMessage, responseMessage]);
+		}
+		
 		// Broadcast to WebSocket clients
 		const broadcastMessage: A2AMessage = {
 			from: agent,
-			to: 'user',
+			to: fromUser,
 			content: assistantMessage,
 			timestamp: new Date()
 		};
@@ -70,7 +149,9 @@ export async function sendChatToAgent(request: ChatRequest): Promise<ChatRespons
 	}
 }
 
-// Send an A2A (agent-to-agent) message
+/**
+ * Send an A2A (agent-to-agent) message
+ */
 export async function sendA2AMessage(message: A2AMessage): Promise<boolean> {
 	try {
 		const response = await fetch(`${LITELLM_BASE_URL}/v1/agents/${message.to}/send`, {
@@ -98,7 +179,9 @@ export async function sendA2AMessage(message: A2AMessage): Promise<boolean> {
 	}
 }
 
-// Query agent status via LiteLLM
+/**
+ * Query agent status via LiteLLM
+ */
 export async function queryAgentStatus(agentName: string): Promise<{
 	online: boolean;
 	lastSeen?: Date;
@@ -130,7 +213,9 @@ export async function queryAgentStatus(agentName: string): Promise<{
 	}
 }
 
-// Get LiteLLM gateway health
+/**
+ * Get LiteLLM gateway health
+ */
 export async function getLiteLLMHealth(): Promise<boolean> {
 	try {
 		const response = await fetch(`${LITELLM_BASE_URL}/health`, {
@@ -178,4 +263,18 @@ export async function broadcastToWebSocket(message: A2AMessage): Promise<boolean
 		console.error('[LitellmClient] WebSocket broadcast failed:', error);
 		return false;
 	}
+}
+
+/**
+ * Clear conversation cache for a session
+ */
+export function clearConversationCache(conversationId: string): void {
+	conversationCache.delete(conversationId);
+}
+
+/**
+ * Get conversation history for a session
+ */
+export function getConversationHistory(conversationId: string): SessionMessage[] {
+	return getCachedHistory(conversationId);
 }
