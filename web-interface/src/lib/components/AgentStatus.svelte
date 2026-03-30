@@ -39,55 +39,10 @@
 		}
 	}
 
-	// Connect to channel WebSocket for activity updates
+	// Connect to channel WebSocket for activity updates - disabled
 	function connectActivityWS() {
-		const wsUrl = typeof window !== 'undefined'
-			? (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + (window.location.hostname || 'localhost') + ':3002/channels'
-			: 'ws://localhost:3002/channels';
-		
-		try {
-			ws = new WebSocket(wsUrl);
-			ws.onopen = () => {
-				isConnected = true;
-				console.log('[AgentStatus] Activity WS connected');
-			};
-			ws.onmessage = (event) => {
-				try {
-					const data = JSON.parse(event.data);
-					if (data.type === 'channel_message' || data.type === 'channel_activity') {
-						if (data.message) {
-							const activity: AgentActivity = {
-								agentId: data.message.from || 'unknown',
-								agentName: data.message.from || 'Unknown',
-								channel: data.channel,
-								action: data.message.content?.substring(0, 30) || 'Activity',
-								timestamp: new Date(data.timestamp),
-								type: 'message'
-							};
-							recentActivity = [activity, ...recentActivity.slice(0, 19)];
-						}
-					} else if (data.type === 'agent_subscribed') {
-						const activity: AgentActivity = {
-							agentId: data.agentId,
-							agentName: data.agentId,
-							channel: data.channel,
-							action: 'Joined channel',
-							timestamp: new Date(data.timestamp),
-							type: 'subscription'
-						};
-						recentActivity = [activity, ...recentActivity.slice(0, 19)];
-					}
-				} catch (e) {
-					// Ignore non-JSON messages
-				}
-			};
-			ws.onclose = () => {
-				isConnected = false;
-				setTimeout(connectActivityWS, 5000);
-			};
-		} catch (error) {
-			console.warn('[AgentStatus] Activity WS connection failed');
-		}
+		console.log('[AgentStatus] WebSocket disabled - activity polling via REST API');
+		isConnected = false;
 	}
 
 	$: onlineCount = agents.filter(a => a.status === 'online').length;

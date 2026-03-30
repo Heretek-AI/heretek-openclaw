@@ -37,90 +37,15 @@
 		}
 
 		connectionStatus = 'connecting';
-		console.log('[MessageFlow] Connecting to WebSocket...');
-
-		try {
-			// Use environment variable for WebSocket URL, fallback to localhost:3001
-			const wsUrl = typeof window !== 'undefined' 
-				? (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + (window.location.hostname || 'localhost') + ':3001'
-				: 'ws://localhost:3001';
-			
-			ws = new WebSocket(wsUrl);
-
-			ws.onopen = () => {
-				console.log('[MessageFlow] WebSocket connected');
-				isConnected = true;
-				connectionStatus = 'connected';
-				reconnectAttempts = 0;
-			};
-
-			ws.onmessage = (event) => {
-				try {
-					const data = JSON.parse(event.data);
-					
-					// Handle different message types
-					if (data.type === 'a2a' && data.data) {
-						// Add new A2A message to the list
-						const newMessage: A2AMessage = {
-							from: data.data.from || data.data.fromAgent,
-							to: data.data.to || data.data.toAgent,
-							content: data.data.content || data.data.message,
-							timestamp: new Date(data.timestamp || data.data.timestamp)
-						};
-						
-						// Add to beginning of array (newest first)
-						messages = [newMessage, ...messages];
-						
-						// Limit to 100 messages
-						if (messages.length > 100) {
-							messages = messages.slice(0, 100);
-						}
-						
-						// Dispatch message event for external handlers
-						dispatch('message', newMessage);
-					} else if (data.type === 'ack') {
-						// Handle acknowledgment
-						if (data.success) {
-							messageStatuses.set(data.messageId, 'delivered');
-							messageStatuses = messageStatuses; // Trigger reactivity
-						}
-						dispatch('ack', { messageId: data.messageId, success: data.success });
-					} else if (data.type === 'typing') {
-						// Handle typing indicator
-						if (data.agent) {
-							if (data.isTyping) {
-								typingAgents.add(data.agent);
-							} else {
-								typingAgents.delete(data.agent);
-							}
-							typingAgents = typingAgents; // Trigger reactivity
-							dispatch('typing', { agent: data.agent, isTyping: data.isTyping });
-						}
-					} else if (data.type === 'connected') {
-						console.log('[MessageFlow] Received connection confirmation');
-					}
-				} catch (error) {
-					// Non-JSON message, ignore
-					console.warn('[MessageFlow] Non-JSON message received');
-				}
-			};
-
-			ws.onclose = (event) => {
-				console.log(`[MessageFlow] WebSocket disconnected (code: ${event.code})`);
-				isConnected = false;
-				connectionStatus = 'disconnected';
-				scheduleReconnect();
-			};
-
-			ws.onerror = (error) => {
-				console.error('[MessageFlow] WebSocket error:', error);
-				isConnected = false;
-				connectionStatus = 'disconnected';
-			};
-		} catch (error) {
-			console.error('[MessageFlow] Failed to create WebSocket:', error);
-			scheduleReconnect();
-		}
+		console.log('[MessageFlow] WebSocket feature disabled (use REST API for chat)');
+		
+		// WebSocket is optional - the chat interface uses REST API
+		// Set status to disconnected gracefully
+		connectionStatus = 'disconnected';
+		isConnected = false;
+		
+		// Don't attempt reconnection since we don't have a WS server
+		console.log('[MessageFlow] Real-time messaging unavailable - use /api/chat for communication');
 	}
 
 	function disconnectWebSocket() {

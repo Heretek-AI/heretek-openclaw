@@ -20,40 +20,11 @@
 		return 'ws://localhost:3002/channels';
 	}
 
-	// Connect to channel WebSocket
+	// Connect to channel WebSocket - disabled since no WS server
 	function connectChannelWS() {
-		if (ws?.readyState === WebSocket.OPEN) return;
-
-		try {
-			ws = new WebSocket(getWsUrl());
-
-			ws.onopen = () => {
-				console.log('[ChannelSelector] WebSocket connected');
-				isConnected = true;
-				ws?.send(JSON.stringify({ action: 'list_channels' }));
-			};
-
-			ws.onmessage = (event) => {
-				try {
-					const data = JSON.parse(event.data);
-					handleChannelEvent(data);
-				} catch (error) {
-					console.warn('[ChannelSelector] Non-JSON message:', error);
-				}
-			};
-
-			ws.onclose = () => {
-				isConnected = false;
-				setTimeout(connectChannelWS, 5000);
-			};
-
-			ws.onerror = (error) => {
-				console.error('[ChannelSelector] WebSocket error:', error);
-				isConnected = false;
-			};
-		} catch (error) {
-			console.warn('[ChannelSelector] WebSocket connection failed:', error);
-		}
+		console.log('[ChannelSelector] WebSocket disabled - use REST API for channel list');
+		isConnected = false;
+		// Static channel list for now
 	}
 
 	// Handle channel events
