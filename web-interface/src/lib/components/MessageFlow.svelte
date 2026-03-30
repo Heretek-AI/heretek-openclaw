@@ -40,7 +40,8 @@
 		console.log('[MessageFlow] Connecting to WebSocket bridge...');
 
 		// Determine WebSocket URL - try environment variable or default to localhost
-		const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3002';
+		// WebSocket runs on port 3003, health check on 3002
+		const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3003';
 		
 		try {
 			ws = new WebSocket(wsUrl);

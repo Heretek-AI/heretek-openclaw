@@ -1,0 +1,17 @@
+{
+  "name": "heretek-openclaw-communication",
+  "version": "1.0.0",
+  "description": "Communication modules for Heretek OpenClaw agent collective",
+  "main": "redis-websocket-bridge.js",
+  "scripts": {
+    "start": "node redis-websocket-bridge.js",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "dependencies": {
+    "ws": "^8.18.0",
+    "ioredis": "^5.4.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

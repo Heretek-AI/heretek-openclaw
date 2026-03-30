@@ -2,13 +2,14 @@
  * Heretek OpenClaw — Redis to WebSocket Bridge
  * ==============================================================================
  * Bridges Redis Pub/Sub messages to WebSocket for real-time UI updates.
- * 
+ *
  * Usage:
  *   const bridge = new RedisToWebSocketBridge({ wsPort: 3001 });
  *   await bridge.start();
  * ==============================================================================
  */
 
+const http = require('http');
 const Redis = require('ioredis');
 
 // Redis channel constants
@@ -54,57 +55,91 @@ class RedisToWebSocketBridge {
      * Start the bridge - connect to Redis and start WebSocket server
      */
     async start() {
-        if (this.isRunning) {
-            console.log('[RedisToWebSocketBridge] Already running');
-            return;
-        }
-
-        console.log('[RedisToWebSocketBridge] Starting bridge...');
+      if (this.isRunning) {
+        console.log('[RedisToWebSocketBridge] Already running');
+        return;
+      }
+  
+      console.log('[RedisToWebSocketBridge] Starting bridge...');
+      
+      try {
+        // Connect to Redis
+        await this.redis.ping();
+        console.log('[RedisToWebSocketBridge] Redis connected');
         
-        try {
-            // Connect to Redis
-            await this.redis.ping();
-            console.log('[RedisToWebSocketBridge] Redis connected');
-            
-            // Setup WebSocket server
-            await this.setupWebSocketServer();
-            
-            // Subscribe to messageflow channel
-            await this.subscribeToChannels();
-            
-            this.isRunning = true;
-            console.log(`[RedisToWebSocketBridge] Bridge running on port ${this.wsPort}`);
-        } catch (error) {
-            console.error('[RedisToWebSocketBridge] Failed to start:', error);
-            throw error;
-        }
+        // Setup HTTP server for health checks
+        await this.setupHttpServer();
+        
+        // Setup WebSocket server
+        await this.setupWebSocketServer();
+        
+        // Subscribe to messageflow channel
+        await this.subscribeToChannels();
+        
+        this.isRunning = true;
+        console.log(`[RedisToWebSocketBridge] Bridge running on port ${this.wsPort}`);
+      } catch (error) {
+        console.error('[RedisToWebSocketBridge] Failed to start:', error);
+        throw error;
+      }
     }
 
     /**
      * Stop the bridge gracefully
      */
     async stop() {
-        if (!this.isRunning) return;
-
-        console.log('[RedisToWebSocketBridge] Stopping bridge...');
-        
-        await this.subscriber.quit();
-        await this.redis.quit();
-        this.clients.forEach(client => client.close());
-        this.clients.clear();
-        
-        this.isRunning = false;
-        console.log('[RedisToWebSocketBridge] Bridge stopped');
+      if (!this.isRunning) return;
+  
+      console.log('[RedisToWebSocketBridge] Stopping bridge...');
+      
+      await this.subscriber.quit();
+      await this.redis.quit();
+      this.clients.forEach(client => client.close());
+      this.clients.clear();
+      
+      if (this.httpServer) {
+        this.httpServer.close();
+      }
+      if (this.wsServer) {
+        this.wsServer.close();
+      }
+      
+      this.isRunning = false;
+      console.log('[RedisToWebSocketBridge] Bridge stopped');
     }
 
+    /**
+     * Setup HTTP server for health checks
+     */
+    async setupHttpServer() {
+      this.httpServer = http.createServer((req, res) => {
+        if (req.url === '/health') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            status: 'healthy',
+            running: this.isRunning,
+            clients: this.clients.size,
+            port: this.wsPort,
+            timestamp: new Date().toISOString()
+          }));
+        } else {
+          res.writeHead(404);
+          res.end('Not found');
+        }
+      });
+  
+      this.httpServer.listen(this.wsPort);
+      console.log(`[RedisToWebSocketBridge] Health check server listening on port ${this.wsPort}`);
+    }
+  
     /**
      * Setup WebSocket server
      */
     async setupWebSocketServer() {
-        // Dynamic import for ws module
-        const WebSocket = require('ws');
-        
-        this.wsServer = new WebSocket.Server({ port: this.wsPort });
+      // Dynamic import for ws module
+      const WebSocket = require('ws');
+      
+      this.wsServer = new WebSocket.Server({ port: this.wsPort + 1 }); // Use port+1 for WebSocket
         
         this.wsServer.on('connection', (ws) => {
             console.log('[RedisToWebSocketBridge] Client connected');
