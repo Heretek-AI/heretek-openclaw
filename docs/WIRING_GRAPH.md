@@ -195,52 +195,79 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    subgraph "Layer 1: Primary (LiteLLM A2A)"
-        A2A_SEND[POST /v1/agents/{name}/send]
-        A2A_RECV[GET /v1/agents/{name}/messages]
-        A2A_STATUS[GET /v1/agents/{name}/heartbeat]
-    end
-    
-    subgraph "Layer 2: Fallback (Redis Pub/Sub)"
-        REDIS_PUB[Publish to a2a:{agent}:inbox]
-        REDIS_SUB[Subscribe to a2a:{agent}:inbox]
+    subgraph "Layer 1: Primary (Redis Pub/Sub)"
+        REDIS_PUB[Publish to agent:{agent}:inbox]
+        REDIS_SUB[Subscribe to agent:{agent}:inbox]
         REDIS_BRIDGE[Redis-to-WebSocket Bridge]
+        REDIS_A2A[agent:a2a broadcast channel]
     end
     
-    subgraph "Layer 3: Direct (Container Health)"
+    subgraph "Layer 2: Status (Container Health)"
         DIRECT_HEALTH[GET http://localhost:{port}/health]
+        STATUS_POLL[Health Polling Service]
     end
     
-    A2A_SEND -.->|If 404| REDIS_PUB
+    subgraph "Layer 3: LiteLLM (Model Routing Only)"
+        LITELLM_ROUTE[Model Routing]
+        LITELLM_CACHE[Response Cache]
+    end
+    
     REDIS_PUB --> REDIS_SUB
     REDIS_SUB --> REDIS_BRIDGE
     REDIS_BRIDGE --> WS_CLIENT
     DIRECT_HEALTH --> STATUS_POLL
+    LITELLM_ROUTE -.->|Not used for A2A| AGENTS
 ```
 
-### 2.2 A2A Message Flow
+### 2.2 Redis A2A Message Flow
 
 ```mermaid
 sequenceDiagram
     participant SENDER as Sender Agent
-    participant LITELLM as LiteLLM Gateway
     participant REDIS as Redis Pub/Sub
     participant RECEIVER as Receiver Agent
     
-    SENDER->>LITELLM: POST /v1/agents/{receiver}/send
-    alt A2A Available
-        LITELLM->>RECEIVER: Route message
-        RECEIVER->>LITELLM: Acknowledge
-        LITELLM->>SENDER: Success response
-    else A2A Unavailable (404)
-        LITELLM-->>SENDER: 404 Error
-        SENDER->>REDIS: PUBLISH a2a:{receiver}:inbox
-        REDIS->>RECEIVER: Deliver via subscription
-        RECEIVER->>REDIS: Acknowledge
-    end
+    SENDER->>REDIS: PUBLISH agent:{receiver}:inbox
+    REDIS->>RECEIVER: Message delivered via subscription
+    RECEIVER->>RECEIVER: Process message
+    RECEIVER->>REDIS: PUBLISH agent:{sender}:inbox (ack)
+    REDIS->>SENDER: Acknowledgment delivered
+    
+    Note over SENDER,RECEIVER: All communication via Redis<br/>No HTTP endpoints involved
 ```
 
-### 2.3 Triad Deliberation Pattern
+### 2.3 Redis Pub/Sub Channel Architecture
+
+```mermaid
+graph TB
+    subgraph "Redis Channels"
+        A2A_MAIN[agent:a2a<br/>Main broadcast channel]
+        STATUS[agent:status<br/>Status updates]
+        MESSAGE[agent:message<br/>Direct messages]
+        ACTIVITY[agent:activity<br/>Activity feed]
+        TRIAD[triad:deliberate<br/>Triad coordination]
+    end
+    
+    subgraph "Agent Inbox Channels"
+        STEWARD_IN[agent:steward:inbox]
+        ALPHA_IN[agent:alpha:inbox]
+        BETA_IN[agent:beta:inbox]
+        CHARLIE_IN[agent:charlie:inbox]
+        OTHER_IN[Other agents...]
+    end
+    
+    A2A_MAIN --> STEWARD_IN
+    A2A_MAIN --> ALPHA_IN
+    A2A_MAIN --> BETA_IN
+    A2A_MAIN --> CHARLIE_IN
+    A2A_MAIN --> OTHER_IN
+    
+    TRIAD --> ALPHA_IN
+    TRIAD --> BETA_IN
+    TRIAD --> CHARLIE_IN
+```
+
+### 2.3 Triad Deliberation Pattern (Redis-based)
 
 ```mermaid
 sequenceDiagram
@@ -251,31 +278,42 @@ sequenceDiagram
     participant EXAMINER as Examiner
     participant SENTINEL as Sentinel
     participant CODER as Coder
+    participant REDIS as Redis Pub/Sub
     
-    EXPLORER->>ALPHA: [INTEL] Discovery report
-    ALPHA->>BETA: Broadcast for deliberation
-    ALPHA->>CHARLIE: Broadcast for deliberation
-    BETA->>ALPHA: Vote + rationale
-    CHARLIE->>ALPHA: Vote + rationale
+    EXPLORER->>REDIS: PUBLISH agent:alpha:inbox [INTEL]
+    REDIS->>ALPHA: Deliver intel
+    ALPHA->>REDIS: PUBLISH triad:deliberate [PROPOSAL]
+    REDIS->>BETA: Deliver proposal
+    REDIS->>CHARLIE: Deliver proposal
+    BETA->>REDIS: PUBLISH triad:deliberate [VOTE]
+    CHARLIE->>REDIS: PUBLISH triad:deliberate [VOTE]
+    REDIS->>ALPHA: Deliver votes
     ALPHA->>ALPHA: Tally votes (2/3 required)
-    ALPHA->>EXAMINER: [QUESTION] Challenge proposal
-    EXAMINER->>ALPHA: Analysis + concerns
-    ALPHA->>SENTINEL: [REVIEW] Safety check
-    SENTINEL->>ALPHA: Safety approval/rejection
-    ALPHA->>CODER: [IMPLEMENT] Execute proposal
-    CODER->>ALPHA: [RESULT] Implementation complete
+    ALPHA->>REDIS: PUBLISH agent:examiner:inbox [QUESTION]
+    REDIS->>EXAMINER: Deliver question
+    EXAMINER->>REDIS: PUBLISH agent:alpha:inbox [ANALYSIS]
+    REDIS->>ALPHA: Deliver analysis
+    ALPHA->>REDIS: PUBLISH agent:sentinel:inbox [REVIEW]
+    REDIS->>SENTINEL: Deliver review request
+    SENTINEL->>REDIS: PUBLISH agent:alpha:inbox [SAFETY RESULT]
+    REDIS->>ALPHA: Deliver safety result
+    ALPHA->>REDIS: PUBLISH agent:coder:inbox [IMPLEMENT]
+    REDIS->>CODER: Deliver implementation request
+    CODER->>REDIS: PUBLISH agent:alpha:inbox [RESULT]
+    REDIS->>ALPHA: Deliver result
 ```
 
 ### 2.4 Communication Files
 
 | File | Purpose |
 |------|---------|
-| [`agents/entrypoint.sh`](agents/entrypoint.sh) | Agent runtime, message polling |
-| [`agents/lib/agent-client.js`](agents/lib/agent-client.js) | A2A client library |
+| [`agents/entrypoint.sh`](agents/entrypoint.sh) | Agent runtime, Redis subscription |
+| [`agents/lib/agent-client.js`](agents/lib/agent-client.js) | Redis A2A client library |
 | [`modules/communication/redis-websocket-bridge.js`](modules/communication/redis-websocket-bridge.js) | Redis-to-WebSocket bridge |
 | [`modules/communication/channel-manager.js`](modules/communication/channel-manager.js) | Channel management |
 | [`skills/a2a-message-send/a2a-redis.js`](skills/a2a-message-send/a2a-redis.js) | Redis A2A implementation |
 | [`skills/a2a-message-send/a2a-cli.js`](skills/a2a-message-send/a2a-cli.js) | CLI tool for A2A |
+| [`skills/triad-heartbeat/SKILL.md`](skills/triad-heartbeat/SKILL.md) | Triad health monitoring |
 
 ---
 
@@ -625,7 +663,7 @@ graph TB
 | Component | Status | Notes |
 |-----------|--------|-------|
 | LiteLLM Gateway | ✅ Working | Model routing configured |
-| A2A Protocol | ⚠️ Partial | Redis fallback active |
+| Redis A2A Protocol | ✅ Primary | Production-ready |
 | Agent Runtime | ✅ Working | Entrypoint.sh functional |
 | Web UI | ✅ Working | Chat, status, flow |
 | Health Checks | ✅ Working | Direct container polling |
@@ -635,14 +673,15 @@ graph TB
 | Triad Consensus | ✅ Working | 2/3 voting |
 | User Rolodex | ✅ Working | Multi-user support |
 
-### 8.2 Known Issues
+### 8.2 Architecture Notes
 
-| Issue | Impact | Workaround |
-|-------|--------|------------|
-| A2A endpoints return 404 | Agent messaging | Redis pub/sub fallback |
-| WebSocket not connected | Real-time UI updates | REST API polling |
-| LangFuse disabled | No distributed tracing | Prometheus metrics only |
-| GraphRAG not implemented | Limited knowledge graph | Vector search only |
+| Item | Status | Description |
+|------|--------|-------------|
+| HTTP A2A Endpoints | ⏸️ Deprecated | Intentionally not implemented |
+| Redis Pub/Sub | ✅ Primary | Chosen for lower latency, better reliability |
+| WebSocket | ⚠️ Optional | Real-time UI updates via REST polling |
+| LangFuse | ⏸️ Disabled | Not needed with Redis-based architecture |
+| GraphRAG | ⏳ Planned | Future enhancement |
 
 ---
 

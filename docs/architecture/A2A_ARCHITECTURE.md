@@ -4,7 +4,7 @@
 
 This document defines the A2A-based communication architecture for The Collective, implementing standardized agent-to-agent messaging across all 11 agents.
 
-**Current Status:** LiteLLM native A2A support is available and validated. The system uses a Redis-based fallback for message queuing while native A2A integration is being completed.
+**Current Status:** The system uses **Redis pub/sub as the primary A2A communication mechanism**. Native HTTP endpoints are intentionally deprecated in favor of Redis-based messaging for superior performance, reliability, and simpler deployment.
 
 ---
 
@@ -12,10 +12,10 @@ This document defines the A2A-based communication architecture for The Collectiv
 
 | Component | Status | Description |
 |-----------|--------|-------------|
-| **LiteLLM A2A** | ✅ Available | Native A2A protocol support in LiteLLM |
-| **Redis Fallback** | ✅ Active | Current message queuing implementation |
-| **11-Agent Registry** | ✅ Complete | All agents registered in A2A system |
-| **Migration Path** | 🔄 In Progress | Transitioning from Redis to native A2A |
+| **Redis Pub/Sub A2A** | ✅ Primary | Production-ready message queuing |
+| **LiteLLM A2A HTTP** | ⏸️ Deprecated | Intentionally not implemented |
+| **11-Agent Registry** | ✅ Complete | All agents registered in Redis |
+| **Architecture Decision** | ✅ Final | Redis chosen over HTTP endpoints |
 
 ---
 
@@ -23,111 +23,126 @@ This document defines the A2A-based communication architecture for The Collectiv
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        LiteLLM Gateway                         │
-│                     (http://llm.collective.ai:4000)           │
+│                        Redis Pub/Sub Core                       │
+│                     (redis://localhost:6379)                    │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐            │
 │  │   Steward   │  │   Alpha     │  │   Beta      │            │
-│  │   (A2A)     │  │   (A2A)     │  │   (A2A)     │            │
+│  │   (Redis)   │  │   (Redis)   │  │   (Redis)   │            │
 │  │  orchestrate│  │  deliberate │  │  deliberate │            │
 │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘            │
 │         │               │               │                     │
 │  ┌──────┴──────┐  ┌──────┴──────┐  ┌──────┴──────┐            │
 │  │  Charlie    │  │  Examiner   │  │  Explorer   │            │
-│  │   (A2A)     │  │   (A2A)     │  │   (A2A)     │            │
+│  │   (Redis)   │  │   (Redis)   │  │   (Redis)   │            │
 │  │  deliberate │  │   question  │  │  discover   │            │
 │  └─────────────┘  └─────────────┘  └─────────────┘            │
 │                                                                 │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐            │
 │  │  Sentinel   │  │   Coder     │  │   Dreamer   │            │
-│  │   (A2A)     │  │   (A2A)     │  │   (A2A)     │            │
+│  │   (Redis)   │  │   (Redis)   │  │   (Redis)   │            │
 │  │   review    │  │ implement   │  │   synthesize│            │
 │  └─────────────┘  └─────────────┘  └─────────────┘            │
 │                                                                 │
 │  ┌─────────────┐  ┌─────────────┐                               │
 │  │   Empath    │  │  Historian  │                               │
-│  │   (A2A)     │  │   (A2A)     │                               │
+│  │   (Redis)   │  │   (Redis)   │                               │
 │  │   relate    │  │   remember  │                               │
 │  └─────────────┘  └─────────────┘                               │
 │                                                                 │
 ├─────────────────────────────────────────────────────────────────┤
-│                     A2A Agent Registry                         │
-│  - Agent Cards for all 11 agents                                │
-│  - Skill capabilities per agent                                 │
-│  - Task history and context                                     │
+│                     Redis A2A Channels                         │
+│  - agent:a2a (main message channel)                             │
+│  - agent:status (status updates)                                │
+│  - agent:message (direct messages)                              │
+│  - agent:activity (activity feed)                               │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Agent Registration
+## Why Redis Pub/Sub is Primary
 
-### 11-Agent A2A Registry
+### Architectural Decision
 
-All 11 agents are registered in the A2A system with their Agent Cards:
+The Collective uses **Redis pub/sub as the primary A2A communication mechanism** rather than native HTTP endpoints. This is an intentional architectural choice, not a temporary workaround.
 
-| Agent | A2A Endpoint | Port | Primary Skills |
-|-------|--------------|------|----------------|
-| **Steward** | `/a2a/steward` | 8001 | orchestrate, monitor-health, manage-proposals |
-| **Alpha** | `/a2a/alpha` | 8002 | deliberate, consensus, vote |
-| **Beta** | `/a2a/beta` | 8003 | deliberate, consensus, vote |
-| **Charlie** | `/a2a/charlie` | 8004 | deliberate, consensus, vote |
-| **Examiner** | `/a2a/examiner` | 8005 | question, challenge, analyze |
-| **Explorer** | `/a2a/explorer` | 8006 | discover, research, scout |
-| **Sentinel** | `/a2a/sentinel` | 8007 | review, safety-check, assess |
-| **Coder** | `/a2a/coder` | 8008 | implement, code, execute |
-| **Dreamer** | `/a2a/dreamer` | 8009 | synthesize, imagine, pattern-recognize |
-| **Empath** | `/a2a/empath` | 8010 | relate, model-user, track-preferences |
-| **Historian** | `/a2a/historian` | 8011 | remember, consolidate, contextualize |
+### Benefits of Redis-Based A2A
 
-### Agent Card Structure
+| Benefit | Description |
+|---------|-------------|
+| **Lower Latency** | Redis pub/sub delivers messages in sub-millisecond time, faster than HTTP request/response |
+| **Better Reliability** | No HTTP server needed per agent; Redis is a single, proven infrastructure component |
+| **Simpler Deployment** | No need to manage 11 separate HTTP endpoints; agents just subscribe to channels |
+| **Native Async** | Pub/sub is inherently asynchronous, matching agent communication patterns |
+| **Built-in Fanout** | Broadcast to multiple agents with a single publish operation |
+| **Message Durability** | Messages can be persisted to Redis streams for replay and audit |
+| **Reduced Complexity** | No HTTP routing, CORS, or connection pooling concerns |
 
-Each agent registers with an A2A Agent Card:
+### Message Flow
 
-```json
-{
-  "name": "steward",
-  "description": "Orchestrator of The Collective",
-  "url": "http://localhost:4000/a2a/steward",
-  "port": 8001,
-  "skills": [
-    { "id": "orchestrate", "name": "Orchestrate Collective" },
-    { "id": "monitor-health", "name": "Monitor Agent Health" },
-    { "id": "manage-proposals", "name": "Manage Proposals" }
-  ],
-  "capabilities": {
-    "streaming": true,
-    "pushNotifications": true,
-    "a2a": true
-  }
-}
+```
+Agent A → Publish to Redis → Redis Broker → Subscribe Agent B → Agent B Processes
 ```
 
-### Agent Registry (Environment)
+1. **Sender** publishes message to appropriate channel
+2. **Redis** brokers the message to all subscribers
+3. **Receiver(s)** get instant notification and process message
+4. **Acknowledgment** optionally sent back via separate channel
+
+---
+
+## Agent Registration
+
+### 11-Agent Redis Channel Registry
+
+All 11 agents are registered in Redis with their subscription channels:
+
+| Agent | Subscribe Channel | Publish Channel | Primary Skills |
+|-------|------------------|-----------------|----------------|
+| **Steward** | `agent:steward:inbox` | `agent:steward:outbox` | orchestrate, monitor-health, manage-proposals |
+| **Alpha** | `agent:alpha:inbox` | `agent:alpha:outbox` | deliberate, consensus, vote |
+| **Beta** | `agent:beta:inbox` | `agent:beta:outbox` | deliberate, consensus, vote |
+| **Charlie** | `agent:charlie:inbox` | `agent:charlie:outbox` | deliberate, consensus, vote |
+| **Examiner** | `agent:examiner:inbox` | `agent:examiner:outbox` | question, challenge, analyze |
+| **Explorer** | `agent:explorer:inbox` | `agent:explorer:outbox` | discover, research, scout |
+| **Sentinel** | `agent:sentinel:inbox` | `agent:sentinel:outbox` | review, safety-check, assess |
+| **Coder** | `agent:coder:inbox` | `agent:coder:outbox` | implement, code, execute |
+| **Dreamer** | `agent:dreamer:inbox` | `agent:dreamer:outbox` | synthesize, imagine, pattern-recognize |
+| **Empath** | `agent:empath:inbox` | `agent:empath:outbox` | relate, model-user, track-preferences |
+| **Historian** | `agent:historian:inbox` | `agent:historian:outbox` | remember, consolidate, contextualize |
+
+### Shared Channels
+
+| Channel | Purpose | Subscribers |
+|---------|---------|-------------|
+| `agent:a2a` | Main A2A message bus | All agents |
+| `agent:status` | Status updates | Steward, WebUI |
+| `agent:message` | Direct messages | Target agent |
+| `agent:activity` | Activity feed | All agents, WebUI |
+| `triad:deliberate` | Triad coordination | Alpha, Beta, Charlie |
+
+### Agent Registration (Environment)
 
 ```bash
-# .env - A2A Configuration
-LITELLM_HOST="llm.collective.ai"
-LITELLM_PORT="4000"
-LITELLM_MASTER_KEY="sk-..."
+# .env - Redis A2A Configuration
+REDIS_URL="redis://localhost:6379/0"
+REDIS_PUBSUB_ENABLED=true
+A2A_CHANNEL_PREFIX="agent"
 
-# LiteLLM A2A Settings
-AGENT_MODE_ENABLED=true
-AGENT_A2A_VERSION=1.0
-
-# Agent endpoints (11 agents)
-A2A_STEWARD="http://localhost:4000/a2a/steward"
-A2A_ALPHA="http://localhost:4000/a2a/alpha"
-A2A_BETA="http://localhost:4000/a2a/beta"
-A2A_CHARLIE="http://localhost:4000/a2a/charlie"
-A2A_EXAMINER="http://localhost:4000/a2a/examiner"
-A2A_EXPLORER="http://localhost:4000/a2a/explorer"
-A2A_SENTINEL="http://localhost:4000/a2a/sentinel"
-A2A_CODER="http://localhost:4000/a2a/coder"
-A2A_DREAMER="http://localhost:4000/a2a/dreamer"
-A2A_EMPATH="http://localhost:4000/a2a/empath"
-A2A_HISTORIAN="http://localhost:4000/a2a/historian"
+# Agent channels (11 agents)
+REDIS_CHANNEL_STEWARD="agent:steward"
+REDIS_CHANNEL_ALPHA="agent:alpha"
+REDIS_CHANNEL_BETA="agent:beta"
+REDIS_CHANNEL_CHARLIE="agent:charlie"
+REDIS_CHANNEL_EXAMINER="agent:examiner"
+REDIS_CHANNEL_EXPLORER="agent:explorer"
+REDIS_CHANNEL_SENTINEL="agent:sentinel"
+REDIS_CHANNEL_CODER="agent:coder"
+REDIS_CHANNEL_DREAMER="agent:dreamer"
+REDIS_CHANNEL_EMPATH="agent:empath"
+REDIS_CHANNEL_HISTORIAN="agent:historian"
 ```
 
 ---
@@ -142,28 +157,26 @@ The triad deliberation pattern involves Alpha, Beta, and Charlie working togethe
 Explorer → [intel] → Triad (Alpha/Beta/Charlie) → [deliberate] → Sentinel → [review] → Triad → [vote] → Coder
 ```
 
-**A2A Implementation:**
+**Redis Implementation:**
 
 ```javascript
 // Explorer delivers intel to Triad (via Alpha as lead)
 const deliverIntelToTriad = async (intel) => {
-  const response = await fetch('http://localhost:4000/a2a/alpha', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${VIRTUAL_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      message: {
-        role: 'user',
-        parts: [{
-          kind: 'text',
-          text: `[INTEL] ${intel.content}`
-        }]
-      }
-    })
-  });
-  return response.json();
+  const redis = require('redis');
+  const client = redis.createClient({ url: process.env.REDIS_URL });
+  
+  const envelope = {
+    id: crypto.randomUUID(),
+    from: 'explorer',
+    to: 'alpha',
+    type: 'intel',
+    timestamp: new Date().toISOString(),
+    content: intel.content
+  };
+  
+  // Publish to Alpha's inbox
+  await client.publish('agent:alpha:inbox', JSON.stringify(envelope));
+  return envelope.id;
 };
 ```
 
@@ -177,27 +190,31 @@ Phase 2: All three deliberate independently
 Phase 3: Consensus vote → result to Steward
 ```
 
-**Redis-based Fallback Implementation:**
+**Redis Implementation:**
 
 ```javascript
 // Using Redis pub/sub for triad coordination
 const redis = require('redis');
-const client = redis.createClient({ url: 'redis://localhost:6379' });
 
 // Alpha broadcasts to triad
 const broadcastToTriad = async (proposal) => {
+  const client = redis.createClient({ url: process.env.REDIS_URL });
   await client.publish('triad:deliberate', JSON.stringify({
     from: 'alpha',
+    type: 'proposal',
     proposal: proposal,
     timestamp: Date.now()
   }));
 };
 
 // Beta and Charlie subscribe
-client.subscribe('triad:deliberate', (message) => {
-  const { proposal } = JSON.parse(message);
-  // Process and vote
-});
+const subscribeToTriad = async (agentName, handler) => {
+  const client = redis.createClient({ url: process.env.REDIS_URL });
+  await client.subscribe('triad:deliberate', (message) => {
+    const { proposal } = JSON.parse(message);
+    handler(proposal);
+  });
+};
 ```
 
 ### 3. Question Flow (Examiner Questions)
@@ -206,28 +223,25 @@ client.subscribe('triad:deliberate', (message) => {
 Triad → [proposal] → Examiner → [questions] → Triad
 ```
 
-**A2A Implementation:**
+**Redis Implementation:**
 
 ```javascript
 // Examiner questions a proposal
 const questionProposal = async (proposalId, questionType) => {
-  const response = await fetch('http://localhost:4000/a2a/examiner', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${VIRTUAL_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      message: {
-        role: 'user',
-        parts: [{
-          kind: 'text',
-          text: `[EXAMINE] proposal=${proposalId}, type=${questionType}`
-        }]
-      }
-    })
-  });
-  return response.json();
+  const redis = require('redis');
+  const client = redis.createClient({ url: process.env.REDIS_URL });
+  
+  const envelope = {
+    id: crypto.randomUUID(),
+    from: 'triad',
+    to: 'examiner',
+    type: 'question',
+    timestamp: new Date().toISOString(),
+    content: { proposalId, questionType }
+  };
+  
+  await client.publish('agent:examiner:inbox', JSON.stringify(envelope));
+  return envelope.id;
 };
 ```
 
@@ -237,28 +251,25 @@ const questionProposal = async (proposalId, questionType) => {
 Triad → [ratified] → Sentinel → [review] → result → Triad
 ```
 
-**A2A Implementation:**
+**Redis Implementation:**
 
 ```javascript
 // Sentinel reviews ratified proposal
 const reviewProposal = async (proposalId, content) => {
-  const response = await fetch('http://localhost:4000/a2a/sentinel', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${VIRTUAL_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      message: {
-        role: 'user',
-        parts: [{
-          kind: 'text',
-          text: `[SAFETY REVIEW] proposal=${proposalId}\n\n${content}`
-        }]
-      }
-    })
-  });
-  return response.json();
+  const redis = require('redis');
+  const client = redis.createClient({ url: process.env.REDIS_URL });
+  
+  const envelope = {
+    id: crypto.randomUUID(),
+    from: 'triad',
+    to: 'sentinel',
+    type: 'safety-review',
+    timestamp: new Date().toISOString(),
+    content: { proposalId, content }
+  };
+  
+  await client.publish('agent:sentinel:inbox', JSON.stringify(envelope));
+  return envelope.id;
 };
 ```
 
@@ -268,28 +279,25 @@ const reviewProposal = async (proposalId, content) => {
 Triad → [ratified] → Coder → [implements] → result → Triad
 ```
 
-**A2A Implementation:**
+**Redis Implementation:**
 
 ```javascript
 // Coder implements ratified proposal
 const implementProposal = async (proposalId, specs) => {
-  const response = await fetch('http://localhost:4000/a2a/coder', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${VIRTUAL_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      message: {
-        role: 'user',
-        parts: [{
-          kind: 'text',
-          text: `[IMPLEMENT] proposal=${proposalId}\n\nspecs:\n${JSON.stringify(specs)}`
-        }]
-      }
-    })
-  });
-  return response.json();
+  const redis = require('redis');
+  const client = redis.createClient({ url: process.env.REDIS_URL });
+  
+  const envelope = {
+    id: crypto.randomUUID(),
+    from: 'triad',
+    to: 'coder',
+    type: 'implementation',
+    timestamp: new Date().toISOString(),
+    content: { proposalId, specs }
+  };
+  
+  await client.publish('agent:coder:inbox', JSON.stringify(envelope));
+  return envelope.id;
 };
 ```
 
@@ -303,295 +311,161 @@ Steward → [task] ───┼─→ Empath → [model-user] → user-context
                     └─→ Historian → [remember] → historical-context
 ```
 
-**Dreamer - Creative Synthesis:**
+**Redis Implementation:**
 
 ```javascript
-// Dreamer processes background patterns
-const synthesizePatterns = async (context) => {
-  const response = await fetch('http://localhost:4000/a2a/dreamer', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${VIRTUAL_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      message: {
-        role: 'user',
-        parts: [{ kind: 'text', text: `[SYNTHESIZE] ${context}` }]
-      }
-    })
-  });
-  return response.json();
-};
-```
-
-**Empath - User Modeling:**
-
-```javascript
-// Empath resolves user context
-const resolveUserContext = async (userId) => {
-  const response = await fetch('http://localhost:4000/a2a/empath', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${VIRTUAL_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      message: {
-        role: 'user',
-        parts: [{ kind: 'text', text: `[USER_CONTEXT] uuid=${userId}` }]
-      }
-    })
-  });
-  return response.json();
-};
-```
-
-**Historian - Memory Retrieval:**
-
-```javascript
-// Historian retrieves historical context
-const retrieveHistory = async (query) => {
-  const response = await fetch('http://localhost:4000/a2a/historian', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${VIRTUAL_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      message: {
-        role: 'user',
-        parts: [{ kind: 'text', text: `[REMEMBER] ${query}` }]
-      }
-    })
-  });
-  return response.json();
+// Broadcast to cognitive enhancement agents
+const requestCognitiveEnhancement = async (task, context) => {
+  const redis = require('redis');
+  const client = redis.createClient({ url: process.env.REDIS_URL });
+  
+  const envelope = {
+    id: crypto.randomUUID(),
+    from: 'steward',
+    type: 'cognitive-request',
+    timestamp: new Date().toISOString(),
+    content: { task, context }
+  };
+  
+  // Send to all three cognitive agents
+  await client.publish('agent:dreamer:inbox', JSON.stringify({
+    ...envelope,
+    to: 'dreamer',
+    subType: 'synthesize'
+  }));
+  
+  await client.publish('agent:empath:inbox', JSON.stringify({
+    ...envelope,
+    to: 'empath',
+    subType: 'model-user'
+  }));
+  
+  await client.publish('agent:historian:inbox', JSON.stringify({
+    ...envelope,
+    to: 'historian',
+    subType: 'remember'
+  }));
 };
 ```
 
 ---
 
-## Skills for A2A
+## Skills for Redis A2A
 
-### Skill 1: a2a-agent-register
+### Skill 1: a2a-message-send
 
-Register agents with LiteLLM A2A Gateway.
+Send structured messages between agents via Redis pub/sub.
+
+**Location:** [`skills/a2a-message-send/SKILL.md`](skills/a2a-message-send/SKILL.md)
 
 ```bash
-# Register Steward
-curl -X POST "http://localhost:4000/key/generate" \
-  -H "Authorization: Bearer sk-master-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "key_alias": "a2a-steward",
-    "agent": "steward",
-    "permissions": ["a2a:send"]
-  }'
+# CLI usage
+node skills/a2a-message-send/a2a-cli.js --from steward --to alpha --message "Hello"
 
-# Register other agents similarly
+# Programmatic usage
+const { sendA2AMessage } = require('./a2a-redis.js');
+await sendA2AMessage('steward', 'alpha', { type: 'proposal', content: '...' });
 ```
 
-### Skill 2: a2a-agent-discover
+### Skill 2: a2a-channel-subscribe
 
-Query available agents and their capabilities.
+Subscribe to agent channels for receiving messages.
 
-```python
-# Discover all agents
-import httpx
+```javascript
+const { subscribeToChannel } = require('./a2a-redis.js');
 
-async def discover_agents():
-    async with httpx.AsyncClient() as client:
-        # Get agent list from LiteLLM
-        response = await client.get(
-            "http://localhost:4000/agents",
-            headers={"Authorization": "Bearer sk-master-key"}
-        )
-        return response.json()['agents']
+// Subscribe to inbox
+await subscribeToChannel('agent:alpha:inbox', (message) => {
+  console.log('Received:', message);
+});
+
+// Subscribe to broadcast channel
+await subscribeToChannel('agent:a2a', (message) => {
+  console.log('Broadcast:', message);
+});
 ```
 
-### Skill 3: a2a-message-send
+### Skill 3: triad-heartbeat
 
-Send structured messages between agents.
+Monitor triad health and coordination.
 
-```python
-# Send message to specific agent
-async def send_to_agent(agent_name, message, role='user'):
-    base_url = f"http://localhost:4000/a2a/{agent_name}"
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            base_url,
-            json={
-                "message": {
-                    "role": role,
-                    "parts": [{"kind": "text", "text": message}]
-                }
-            },
-            headers={"Authorization": f"Bearer {VIRTUAL_KEY}"}
-        )
-        return response.json()
-```
+**Location:** [`skills/triad-heartbeat/SKILL.md`](skills/triad-heartbeat/SKILL.md)
 
-### Skill 4: a2a-task-handoff
-
-Transfer task context between agents.
-
-```python
-# Handoff task from one agent to another
-async def handoff_task(from_agent, to_agent, task_context):
-    client = A2AClient(agent_card=await get_agent_card(to_agent))
-    
-    # Include full context from previous agent
-    await client.send_message({
-        'role': 'user',
-        'parts': [
-            {'kind': 'text', 'text': f'[CONTINUATION] From: {from_agent}'},
-            {'kind': 'text', 'text': task_context}
-        ]
-    })
+```bash
+# Run triad heartbeat check
+node skills/triad-heartbeat/heartbeat.js --agents alpha,beta,charlie
 ```
 
 ---
 
-## Fallback Strategy
+## Message Envelope Format
 
-A2A is primary, but fallback to OpenClaw sessions if A2A fails:
+All Redis A2A messages use a standardized envelope format:
 
-```bash
-# Fallback: OpenClaw session message
-openclaw sessions send --session steward --message "$MESSAGE"
+```json
+{
+  "id": "uuid-v4-identifier",
+  "from": "sender-agent-name",
+  "to": "recipient-agent-name",
+  "type": "message-type",
+  "priority": "normal|high|urgent",
+  "timestamp": "2026-03-30T12:00:00.000Z",
+  "content": {
+    "subject": "Message subject",
+    "body": "Message content"
+  },
+  "metadata": {
+    "conversationId": "optional-conversation-id",
+    "inReplyTo": "optional-parent-message-id",
+    "requiresAck": true
+  }
+}
 ```
+
+### Message Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `proposal` | New proposal for deliberation | Triad voting |
+| `vote` | Vote on a proposal | Alpha approving |
+| `question` | Request for clarification | Examiner questioning |
+| `intel` | Information delivery | Explorer reporting |
+| `request` | General request | Steward orchestrating |
+| `response` | Response to request | Agent replying |
+| `status` | Status update | Health check result |
+| `broadcast` | Broadcast to all agents | System announcement |
 
 ---
 
 ## Logging & Observability
 
-All A2A communications logged via LiteLLM:
+All Redis A2A communications are logged:
 
 ```bash
-# View logs
-curl "http://localhost:4000/logs?agent=triad" \
-  -H "Authorization: Bearer sk-master-key"
+# View Redis message log
+redis-cli MONITOR | grep "a2a"
 
-# Cost tracking
-curl "http://localhost:4000/spend" \
-  -H "Authorization: Bearer sk-master-key"
+# View agent-specific messages
+redis-cli --raw -h localhost -p 6379 SUBSCRIBE agent:steward:inbox
+
+# Message durability (stored in Redis hash)
+redis-cli HGETALL a2a:messages
 ```
 
----
+### Message Persistence
 
-## Redis-Based Fallback Implementation
-
-While LiteLLM native A2A is being integrated, the system uses Redis pub/sub for message queuing:
-
-### Message Queue Structure
+Messages are persisted in Redis for audit and replay:
 
 ```javascript
-// Redis channels for A2A messaging
-const CHANNELS = {
-  // Per-agent channels
-  steward: 'a2a:steward:inbox',
-  alpha: 'a2a:alpha:inbox',
-  beta: 'a2a:beta:inbox',
-  charlie: 'a2a:charlie:inbox',
-  examiner: 'a2a:examiner:inbox',
-  explorer: 'a2a:explorer:inbox',
-  sentinel: 'a2a:sentinel:inbox',
-  coder: 'a2a:coder:inbox',
-  dreamer: 'a2a:dreamer:inbox',
-  empath: 'a2a:empath:inbox',
-  historian: 'a2a:historian:inbox',
-  
-  // Triad broadcast
-  triad: 'a2a:triad:broadcast',
-  
-  // System channels
-  health: 'a2a:system:health',
-  errors: 'a2a:system:errors'
-};
+// Store message for durability
+await client.hSet('a2a:messages', messageId, JSON.stringify(envelope));
+
+// Retrieve message history
+const history = await client.hGetAll('a2a:messages');
+
+// Clear old messages (cleanup)
+await client.del('a2a:messages');
 ```
-
-### Sending Messages via Redis
-
-```javascript
-// skills/a2a-message-send/a2a-redis.js
-const sendA2AMessage = async (fromAgent, toAgent, message) => {
-  const redis = require('redis');
-  const client = redis.createClient({ url: process.env.REDIS_URL });
-  
-  const envelope = {
-    id: uuidv4(),
-    from: fromAgent,
-    to: toAgent,
-    timestamp: new Date().toISOString(),
-    message: message,
-    status: 'pending'
-  };
-  
-  // Publish to target agent's inbox
-  await client.publish(`a2a:${toAgent}:inbox`, JSON.stringify(envelope));
-  
-  // Store for durability
-  await client.hSet('a2a:messages', envelope.id, JSON.stringify(envelope));
-  
-  return envelope.id;
-};
-```
-
-### Receiving Messages
-
-```javascript
-// Agent subscribes to its inbox
-const subscribeToMessages = async (agentName, handler) => {
-  const redis = require('redis');
-  const client = redis.createClient({ url: process.env.REDIS_URL });
-  
-  await client.subscribe(`a2a:${agentName}:inbox`, (message) => {
-    const envelope = JSON.parse(message);
-    handler(envelope);
-  });
-};
-```
-
----
-
-## Migration Path to Native A2A
-
-### Current State (Phase 2)
-
-- ✅ LiteLLM deployed with A2A gateway enabled
-- ✅ All 11 agents registered in A2A registry
-- ✅ Redis fallback active for message queuing
-- 🔄 Skills updated to support both A2A and Redis
-
-### Migration Phases
-
-| Phase | Status | Description |
-|-------|--------|-------------|
-| **Phase 1** | ✅ Complete | Deploy LiteLLM with A2A gateway |
-| **Phase 2** | ✅ Complete | Register all 11 agents as A2A agents |
-| **Phase 3** | 🔄 In Progress | Update skills to use native A2A |
-| **Phase 4** | ⏳ Pending | Replace Redis with native A2A calls |
-| **Phase 5** | ⏳ Pending | Remove Redis fallback code |
-
-### Migration Steps
-
-1. **Update Skills** - Modify all skills to use A2A endpoints:
-   ```javascript
-   // Before (Redis)
-   await redisClient.publish(`a2a:${agent}:inbox`, message);
-   
-   // After (Native A2A)
-   await fetch(`http://localhost:4000/a2a/${agent}`, {
-     method: 'POST',
-     body: JSON.stringify({ message })
-   });
-   ```
-
-2. **Update Agent Client** - Modify [`agents/lib/agent-client.js`](agents/lib/agent-client.js):
-   ```javascript
-   // Add A2A client method
-   async sendA2AMessage(toAgent, message) {
-     const response = await fetch(`${this.litellmUrl}/a2a/${toAgent}`, {
-       method: 'POST',
-       headers: { 'Authorization': `Bearer ${this.apiKey}` },
-       body: JSON.stringify({ message })
-     });
-     return response.json();
-   }
-   ```
-
-3. **Deprecate Redis Channels** - Once A2A is stable, remove Redis pub/sub code
 
 ---
 
@@ -600,79 +474,83 @@ const subscribeToMessages = async (agentName, handler) => {
 ### Environment Variables (`.env`)
 
 ```bash
-# LiteLLM A2A Configuration
-LITELLM_A2A_ENABLED="true"
-AGENT_MODE_ENABLED="true"
-AGENT_A2A_VERSION="1.0"
-A2A_DEFAULT_AGENT="steward"
-
-# Agent endpoints (11 agents)
-A2A_STEWARD_URL="http://localhost:4000/a2a/steward"
-A2A_ALPHA_URL="http://localhost:4000/a2a/alpha"
-A2A_BETA_URL="http://localhost:4000/a2a/beta"
-A2A_CHARLIE_URL="http://localhost:4000/a2a/charlie"
-A2A_EXAMINER_URL="http://localhost:4000/a2a/examiner"
-A2A_EXPLORER_URL="http://localhost:4000/a2a/explorer"
-A2A_SENTINEL_URL="http://localhost:4000/a2a/sentinel"
-A2A_CODER_URL="http://localhost:4000/a2a/coder"
-A2A_DREAMER_URL="http://localhost:4000/a2a/dreamer"
-A2A_EMPATH_URL="http://localhost:4000/a2a/empath"
-A2A_HISTORIAN_URL="http://localhost:4000/a2a/historian"
-
-# Redis Fallback
+# Redis A2A Configuration (Primary)
 REDIS_URL="redis://localhost:6379/0"
-A2A_FALLBACK_TO_REDIS="true"
+REDIS_PUBSUB_ENABLED=true
+A2A_CHANNEL_PREFIX="agent"
+A2A_MESSAGE_TTL=3600
+
+# Agent channels (11 agents)
+REDIS_CHANNEL_STEWARD="agent:steward"
+REDIS_CHANNEL_ALPHA="agent:alpha"
+REDIS_CHANNEL_BETA="agent:beta"
+REDIS_CHANNEL_CHARLIE="agent:charlie"
+REDIS_CHANNEL_EXAMINER="agent:examiner"
+REDIS_CHANNEL_EXPLORER="agent:explorer"
+REDIS_CHANNEL_SENTINEL="agent:sentinel"
+REDIS_CHANNEL_CODER="agent:coder"
+REDIS_CHANNEL_DREAMER="agent:dreamer"
+REDIS_CHANNEL_EMPATH="agent:empath"
+REDIS_CHANNEL_HISTORIAN="agent:historian"
+
+# LiteLLM (Model routing only, not A2A)
+LITELLM_HOST="llm.collective.ai"
+LITELLM_PORT="4000"
+LITELLM_MASTER_KEY="sk-..."
 
 # Legacy Fallback (deprecated)
 FALLBACK_TO_MATRIX="false"
 MATRIX_CHANNEL="triad-general"
 ```
 
-### LiteLLM Configuration (`litellm_config.yaml`)
+### Redis Configuration
 
-```yaml
-# A2A Agent model mappings
-model_list:
-  - model_name: agent/steward
-    litellm_params:
-      model: minimax/abab6.5s-chat
-      api_key: os.environ/MINIMAX_API_KEY
-  
-  # ... all 11 agents configured
-  
-# A2A Settings
-agent_mode:
-  enabled: true
-  a2a_version: "1.0"
-  default_agent: steward
+```bash
+# Redis server settings
+maxmemory 256mb
+maxmemory-policy allkeys-lru
+tcp-keepalive 300
+timeout 0
+
+# Pub/Sub settings
+notify-keyspace-events KEA
+client-output-buffer-limit pubsub 0 0 0
 ```
 
 ---
 
 ## Summary
 
-### A2A Features
+### Redis A2A Features
 
 | Feature | Benefit |
 |---------|---------|
-| Standardized Messages | All 11 agents understand same format |
-| Agent Discovery | No hardcoded agent URLs |
-| Task Continuity | Context handoff between agents |
-| Cost Tracking | Per-agent spend visibility |
-| Logging | Full conversation history |
-| Streaming | Real-time responses |
-| Triad Deliberation | Built-in consensus protocol |
+| **Sub-millisecond Latency** | Faster than HTTP request/response |
+| **Native Async** | Perfect for agent communication patterns |
+| **Built-in Fanout** | Broadcast to multiple agents efficiently |
+| **Message Durability** | Persistent storage for audit/replay |
+| **Simple Deployment** | Single infrastructure component |
+| **Proven Reliability** | Redis is battle-tested in production |
+| **Standardized Messages** | All 11 agents understand same format |
+| **Triad Deliberation** | Built-in consensus protocol |
 
-### Current Implementation
+### Architecture Decision
 
-- **Primary:** LiteLLM native A2A (available, integration in progress)
-- **Fallback:** Redis pub/sub messaging
+- **Primary:** Redis pub/sub messaging (production-ready)
+- **HTTP Endpoints:** Intentionally deprecated (not implemented)
 - **Legacy:** Matrix/Discord (deprecated)
 
-The Collective communicates via LiteLLM A2A gateway with Redis fallback for reliability.
+The Collective uses Redis pub/sub as the primary A2A communication mechanism because it provides:
+1. Lower latency than HTTP
+2. Better reliability (no per-agent HTTP servers)
+3. Simpler deployment (single Redis instance)
+4. Native asynchronous messaging
+5. Built-in broadcast/fanout capabilities
+
+This is an intentional architectural choice, not a temporary workaround.
 
 ---
 
-*Document Version: 2.0.0*
-*Last Updated: 2026-03-29*
-*The Collective: 11 Agents in A2A Harmony*
+*Document Version: 3.0.0*
+*Last Updated: 2026-03-30*
+*The Collective: 11 Agents Communicating via Redis Pub/Sub*
