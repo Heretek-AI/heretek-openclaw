@@ -1,0 +1,52 @@
+{
+  "agent-explorer": {
+    "id": "agent-explorer",
+    "type": "Agent",
+    "name": "Explorer",
+    "description": "Exploration agent for the collective",
+    "embedding": null,
+    "properties": {},
+    "createdAt": 1774849147332,
+    "updatedAt": 1774849147332
+  },
+  "memory-vector": {
+    "id": "memory-vector",
+    "type": "Memory",
+    "name": "Vector Store",
+    "description": "Hybrid hot/cold tiered vector storage",
+    "embedding": null,
+    "properties": {},
+    "createdAt": 1774849147332,
+    "updatedAt": 1774849147332
+  },
+  "concept-consciousness": {
+    "id": "concept-consciousness",
+    "type": "Concept",
+    "name": "Consciousness",
+    "description": "Self-awareness and meta-cognition",
+    "embedding": null,
+    "properties": {},
+    "createdAt": 1774849147333,
+    "updatedAt": 1774849147333
+  },
+  "test-memory-1": {
+    "id": "test-memory-1",
+    "type": "Memory",
+    "name": "Test Memory 1",
+    "description": "A test memory about vector search",
+    "embedding": null,
+    "properties": {},
+    "createdAt": 1774849179092,
+    "updatedAt": 1774849179092
+  },
+  "test-concept-1": {
+    "id": "test-concept-1",
+    "type": "Concept",
+    "name": "Vector Search",
+    "description": "Similarity search in vector space",
+    "embedding": null,
+    "properties": {},
+    "createdAt": 1774849179092,
+    "updatedAt": 1774849179092
+  }
+}
