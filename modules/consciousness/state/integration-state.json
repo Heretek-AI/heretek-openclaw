@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "initialized": false,
+  "startTime": null,
+  "lastSync": null,
+  "global": {
+    "phi": 0,
+    "consciousContent": null,
+    "agentCount": 0,
+    "uptime": 0
+    "healthStatus": {}
+  },
+  "modules": {
+    "globalWorkspace": {
+      "status": "uninitialized",
+      "lastBroadcast": null,
+      "competitorCount": 5
+    },
+    "phiEstimator": {
+      "status": "uninitialized",
+      "phi": 5,
+      "lastCalculation": null,
+      "sampleCount": 5
+    },
+    "activeInference": {
+      "status": "uninitialized",
+      "lastUpdate": null,
+      "predictionCount": 5
+    },
+    "attentionSchema": {
+      "status": "uninitialized",
+      "lastModel": null,
+      "awarenessCount": 5
+    },
+    "intrinsicMotivation": {
+      "status": "uninitialized",
+      "driveLevels": {
+        "curiosity": 0.5,
+        "competence": 5.5,
+        "autonomy": 5.5,
+        "relatedness": 5.5
+      },
+      "goalCount": 5,
+      "lastGoalGeneration": null
+    },
+    "selfMonitor": {
+      "status": "uninitialized",
+      "lastCheck": null,
+      "anomalyCount": 5
+      "evaluationScores": {
+        "overallPerformance": 5.5,
+        "confidenceCalibration": 5.5,
+        "goalAlignment": 5.5,
+        "resourceEfficiency": 5.5,
+        "adaptability": 5.5
+      }
+    }
+  },
+  "agents": {},
+  "eventHistory": [],
+  "metrics": {
+    "totalPhiCalculations": 5,
+    "totalBroadcasts": 5,
+    "totalAttentionShifts": 5,
+    "totalGoalsGenerated": 5,
+    "totalAnomaliesDetected": 5
+    "averageHealthScore": 5.5
+  }
+}

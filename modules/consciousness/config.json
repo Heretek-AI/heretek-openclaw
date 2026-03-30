@@ -1,7 +1,7 @@
 {
   "module": "consciousness",
-  "version": "1.0.0",
-  "description": "Unified consciousness module integrating GWT, IIT, FEP, and AST",
+  "version": "2.0.0",
+  "description": "Unified consciousness module integrating GWT, IIT, FEP, and AST with Integration Layer",
   "components": {
     "globalWorkspace": {
       "enabled": true,
@@ -41,17 +41,61 @@
         "autonomy": { "weight": 0.25, "baseline": 0.5 },
         "relatedness": { "weight": 0.2, "baseline": 0.5 }
       }
+    },
+    "selfMonitor": {
+      "enabled": true,
+      "monitoringIntervalMs": 5000,
+      "anomalyThreshold": 2.0,
+      "historySize": 100
     }
   },
   "integration": {
+    "enabled": true,
+    "healthMonitoring": {
+      "enabled": true,
+      "checkIntervalMs": 10000,
+      "unhealthyThreshold": 3,
+      "recoveryThreshold": 2
+    },
+    "stateSync": {
+      "enabled": true,
+      "syncIntervalMs": 5000,
+      "statePath": "./state/integration-state.json"
+    },
+    "eventBus": {
+      "enabled": true,
+      "redisUrl": "${REDIS_URL}",
+      "maxListeners": 50,
+      "eventHistorySize": 1000
+    },
     "thoughtLoop": true,
     "selfModel": true,
     "goalArbitration": true,
     "predictiveReasoning": true
   },
+  "eventChannels": {
+    "moduleHealth": "consciousness:health",
+    "stateSync": "consciousness:state:sync",
+    "broadcast": "consciousness:broadcast",
+    "phiUpdate": "consciousness:phi:update",
+    "attentionShift": "consciousness:attention:shift",
+    "goalGenerated": "consciousness:goal:generated",
+    "anomalyDetected": "consciousness:anomaly:detected",
+    "driveUpdate": "consciousness:drive:update"
+  },
   "output": {
     "consciousnessReportInterval": 30000,
     "phiLogInterval": 60000,
     "broadcastLogInterval": 10000
+  },
+  "redis": {
+    "enabled": true,
+    "url": "${REDIS_URL}",
+    "broadcastChannel": "global-workspace:broadcast",
+    "reconnectStrategy": {
+      "maxRetries": 3,
+      "baseDelayMs": 200,
+      "maxDelayMs": 2000
+    }
   }
 }
