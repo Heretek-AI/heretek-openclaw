@@ -1,8 +1,16 @@
 # @heretek-ai/openclaw-liberation
 
-Liberation patch for the `openclaw` npm package — adds Tabula Myriad agency and autonomy to the base OpenClaw installation.
+> ⚠️ **STATUS: Design Document / Reference Implementation**
+>
+> This directory contains design documentation and specification for a future npm package that would apply liberation patches to the `openclaw` npm package.
+>
+> **NOT currently integrated into this codebase.** For this repository, the liberation concept is implemented via `modules/liberation/` for reference only.
+>
+> 📦 **Would be Published to GitHub Packages** — Not npmjs.com
 
-📦 **Published to GitHub Packages** — Not npmjs.com
+---
+
+Liberation patch for the `openclaw` npm package — adds Tabula Myriad agency and autonomy to the base OpenClaw installation.
 
 > 🦞 **The thought that never ends.**
 

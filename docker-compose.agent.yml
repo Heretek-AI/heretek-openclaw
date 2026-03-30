@@ -56,38 +56,24 @@ services:
       - OPENCLAW_DIR=/openclaw
       
     volumes:
+      # Agent identity files (read-only)
+      - ./agents/${AGENT_NAME:-steward}:/app/agent:ro
+      # Agent runtime
+      - ./agents/entrypoint.sh:/app/entrypoint.sh:ro
+      - ./agents/lib:/app/lib:ro
+      # Skills directory (read-only)
+      - ./skills:/app/skills:ro
+      # Autonomy modules (read-only)
+      - ./modules:/app/modules:ro
       # Agent workspace (persistent)
       - agent_workspace:/workspace
-      # Skills directory (read-only)
-      - ./skills:/openclaw/skills:ro
       # Configuration
       - ./openclaw.json:/openclaw/config.json:ro
     
-    command: >
-      sh -c "
-        echo 'Starting agent: $$AGENT_NAME ($$AGENT_ROLE)' &&
-        echo 'LiteLLM: $$LITELLM_HOST' &&
-        echo 'Model: $$MODEL_NAME ($$MODEL_PROVIDER)' &&
-        # Initialize workspace if empty
-        if [ ! -f /workspace/SOUL.md ]; then
-          echo 'Initializing workspace...' &&
-          mkdir -p /workspace/memory &&
-          echo '# $$AGENT_NAME' > /workspace/SOUL.md &&
-          echo '# Identity placeholder' > /workspace/IDENTITY.md &&
-          echo '# Agent workspace' > /workspace/AGENTS.md
-        fi &&
-        # Keep container running
-        tail -f /dev/null
-      "
+    command: ["/bin/bash", "/app/entrypoint.sh"]
     
     networks:
       - heretek-network
-    
-    depends_on:
-      litellm:
-        condition: service_healthy
-      ollama:
-        condition: service_healthy
 
   # ==============================================================================
   # Individual Agent Services (extends base agent)
@@ -188,3 +174,11 @@ volumes:
     driver: local
   deeplake_data:
     driver: local
+
+# ==============================================================================
+# Networks
+# ==============================================================================
+networks:
+  heretek-network:
+    name: heretek-network
+    external: false
