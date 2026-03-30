@@ -105,11 +105,12 @@ export function getAgentByPort(port: number): Agent | undefined {
 // Get the base URL for agent communication (Docker network or localhost)
 function getAgentBaseUrl(agent: Agent): string {
 	// In Docker, use container names; in development, use localhost with mapped ports
-	const host = process.env.DOCKER_ENV === 'true'
-		? `heretek-${agent.id}` // Docker container name
+	const isDocker = process.env.DOCKER_ENV === 'true' || process.env.NODE_ENV === 'production';
+	const host = isDocker
+		? `heretek-${agent.id}`  // Docker container names
 		: 'localhost';
-	// Use agent's actual port - Docker uses internal 8000, localhost uses mapped port
-	const port = agent.port;
+	// Docker exposes port 8000 internally; localhost uses the mapped port (agent.port)
+	const port = isDocker ? 8000 : agent.port;
 	return `http://${host}:${port}`;
 }
 

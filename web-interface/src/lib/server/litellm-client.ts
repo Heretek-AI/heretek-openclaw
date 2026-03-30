@@ -1,4 +1,5 @@
 import type { ChatRequest, ChatResponse, A2AMessage, SessionMessage } from '../types';
+import { randomUUID } from 'crypto';
 
 // LiteLLM Gateway configuration
 const LITELLM_BASE_URL = process.env.LITELLM_HOST || process.env.LITELLM_URL || 'http://localhost:4000';
@@ -105,7 +106,7 @@ export async function sendChatToAgent(request: ChatRequest): Promise<ChatRespons
 		// Update conversation cache
 		if (conversationId) {
 			const newMessage: SessionMessage = {
-				id: crypto.randomUUID(),
+				id: randomUUID(),
 				fromAgent: fromUser,
 				toAgent: agent,
 				content: message,
@@ -113,7 +114,7 @@ export async function sendChatToAgent(request: ChatRequest): Promise<ChatRespons
 				messageType: 'text'
 			};
 			const responseMessage: SessionMessage = {
-				id: crypto.randomUUID(),
+				id: randomUUID(),
 				fromAgent: agent,
 				toAgent: fromUser,
 				content: assistantMessage,

@@ -13,6 +13,7 @@
  */
 
 import { Pool } from 'pg';
+import { randomUUID } from 'crypto';
 
 export interface Session {
     id: string;
@@ -77,7 +78,7 @@ export class SessionManager {
         metadata?: Record<string, any>
     ): Promise<Session> {
         const session: Session = {
-            id: crypto.randomUUID(),
+            id: randomUUID(),
             type,
             name,
             participants: participants.map(id => ({
@@ -144,7 +145,7 @@ export class SessionManager {
         }
 
         const fullMessage: SessionMessage = {
-            id: crypto.randomUUID(),
+            id: randomUUID(),
             timestamp: new Date(),
             ...message
         };

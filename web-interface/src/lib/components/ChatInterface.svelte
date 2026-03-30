@@ -20,9 +20,22 @@
 		const messageText = inputMessage.trim();
 		inputMessage = '';
 
+		// Generate UUID compatible with all environments
+		function generateUUID(): string {
+			if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+				return crypto.randomUUID();
+			}
+			// Fallback for older browsers or Node.js
+			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+				const r = Math.random() * 16 | 0;
+				const v = c === 'x' ? r : (r & 0x3 | 0x8);
+				return v.toString(16);
+			});
+		}
+
 		// Add user message to list
 		const userMessage: Message = {
-			id: crypto.randomUUID(),
+			id: generateUUID(),
 			from: 'user',
 			to: selectedAgent.id,
 			content: messageText,
@@ -48,7 +61,7 @@
 
 			if (data.success) {
 				const agentMessage: Message = {
-					id: crypto.randomUUID(),
+					id: generateUUID(),
 					from: selectedAgent.id,
 					to: 'user',
 					content: data.response,
@@ -58,7 +71,7 @@
 				messages = [...messages, agentMessage];
 			} else {
 				const errorMessage: Message = {
-					id: crypto.randomUUID(),
+					id: generateUUID(),
 					from: 'system',
 					to: 'user',
 					content: `Error: ${data.error}`,
@@ -69,7 +82,7 @@
 			}
 		} catch (error) {
 			const errorMessage: Message = {
-				id: crypto.randomUUID(),
+				id: generateUUID(),
 				from: 'system',
 				to: 'user',
 				content: `Failed to send message: ${error}`,

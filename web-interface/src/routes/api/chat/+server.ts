@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { sendChatToAgent, getConversationHistory, clearConversationCache } from '$lib/server/litellm-client';
 import type { ChatRequest } from '$lib/types';
+import { randomUUID } from 'crypto';
 
 // POST /api/chat - Send message to an agent
 export const POST: RequestHandler = async ({ request }) => {
@@ -30,7 +31,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		// Generate conversation ID if not provided
-		const conversationId = body.conversationId || crypto.randomUUID();
+		const conversationId = body.conversationId || randomUUID();
 		
 		// Get conversation history for context
 		const history = getConversationHistory(conversationId);
