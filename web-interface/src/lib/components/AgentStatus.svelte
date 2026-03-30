@@ -11,20 +11,24 @@
 	let recentActivity: AgentActivity[] = [];
 	let ws: WebSocket | null = null;
 	let isConnected = false;
+	let reconnectTimer: NodeJS.Timeout | null = null;
+	let reconnectAttempts = 0;
+	const maxReconnectAttempts = 5;
+	const reconnectInterval = 5000;
 	
 	onMount(async () => {
 		// Initial load of agent status from API
 		await refreshStatus();
-		// Poll every 30 seconds
+		// Poll every 30 seconds for status updates
 		pollInterval = setInterval(refreshStatus, 30000);
 		
-		// Connect to channel WS for real-time activity
+		// Connect to WebSocket for real-time activity
 		connectActivityWS();
 	});
 	
 	onDestroy(() => {
 		if (pollInterval) clearInterval(pollInterval);
-		if (ws) ws.close();
+		disconnectActivityWS();
 	});
 	
 	async function refreshStatus() {
@@ -39,10 +43,176 @@
 		}
 	}
 
-	// Connect to channel WebSocket for activity updates - disabled
+	/**
+	 * Connect to WebSocket for real-time agent activity updates
+	 */
 	function connectActivityWS() {
-		console.log('[AgentStatus] WebSocket disabled - activity polling via REST API');
+		if (ws?.readyState === WebSocket.OPEN) {
+			return;
+		}
+
+		console.log('[AgentStatus] Connecting to WebSocket for activity updates...');
+		
+		// Determine WebSocket URL - try environment variable or default to localhost
+		const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3002';
+		
+		try {
+			ws = new WebSocket(wsUrl);
+
+			ws.onopen = () => {
+				console.log('[AgentStatus] WebSocket connected for activity updates');
+				isConnected = true;
+				reconnectAttempts = 0;
+			};
+
+			ws.onmessage = (event) => {
+				try {
+					const message = JSON.parse(event.data);
+					handleActivityMessage(message);
+				} catch (error) {
+					console.error('[AgentStatus] Failed to parse activity message:', error);
+				}
+			};
+
+			ws.onclose = (event) => {
+				console.log(`[AgentStatus] WebSocket closed (code: ${event.code})`);
+				isConnected = false;
+				scheduleReconnect();
+			};
+
+			ws.onerror = (error) => {
+				console.error('[AgentStatus] WebSocket error:', error);
+				isConnected = false;
+			};
+		} catch (error) {
+			console.error('[AgentStatus] Failed to create WebSocket connection:', error);
+			isConnected = false;
+			scheduleReconnect();
+		}
+	}
+
+	/**
+	 * Handle incoming WebSocket activity messages
+	 */
+	function handleActivityMessage(message: any): void {
+		switch (message.type) {
+			case 'status':
+				// Agent status update
+				if (message.data) {
+					const activity: AgentActivity = {
+						agentId: message.data.agentId,
+						agentName: message.data.agentName || message.data.agentId,
+						channel: message.data.channel || 'status',
+						action: `Status changed to ${message.data.status}`,
+						timestamp: new Date(message.data.timestamp || Date.now()),
+						type: 'heartbeat'
+					};
+					addActivity(activity);
+					
+					// Update agent status in the list
+					const agent = agents.find(a => a.id === message.data.agentId);
+					if (agent) {
+						agent.status = message.data.status;
+						agents = [...agents];
+					}
+				}
+				break;
+
+			case 'a2a':
+				// A2A message activity
+				if (message.data) {
+					const activity: AgentActivity = {
+						agentId: message.data.from,
+						agentName: message.data.from,
+						channel: 'a2a',
+						action: `Message to ${message.data.to}`,
+						timestamp: new Date(message.data.timestamp || Date.now()),
+						type: 'message'
+					};
+					addActivity(activity);
+				}
+				break;
+
+			case 'message':
+				// General message activity
+				if (message.data) {
+					const activity: AgentActivity = {
+						agentId: message.data.from || 'unknown',
+						agentName: message.data.from || 'unknown',
+						channel: message.data.channel || 'general',
+						action: 'Sent message',
+						timestamp: new Date(message.data.timestamp || Date.now()),
+						type: 'message'
+					};
+					addActivity(activity);
+				}
+				break;
+
+			case 'channel_activity':
+			case 'agent_subscribed':
+			case 'agent_unsubscribed':
+				// Channel events
+				if (message.data) {
+					const activity: AgentActivity = {
+						agentId: message.data.agentId || 'unknown',
+						agentName: message.data.agentId || 'unknown',
+						channel: message.data.channel || 'unknown',
+						action: message.type.replace('_', ' '),
+						timestamp: new Date(message.data.timestamp || Date.now()),
+						type: 'subscription'
+					};
+					addActivity(activity);
+				}
+				break;
+		}
+	}
+
+	/**
+	 * Add activity to recent activity list
+	 */
+	function addActivity(activity: AgentActivity): void {
+		console.log(`[AgentStatus] Activity: ${activity.agentName} - ${activity.action}`);
+		recentActivity = [activity, ...recentActivity].slice(0, 20); // Keep last 20 activities
+	}
+
+	/**
+	 * Disconnect from WebSocket
+	 */
+	function disconnectActivityWS() {
+		if (reconnectTimer) {
+			clearTimeout(reconnectTimer);
+			reconnectTimer = null;
+		}
+		
+		if (ws) {
+			ws.close();
+			ws = null;
+		}
+		
 		isConnected = false;
+	}
+
+	/**
+	 * Schedule reconnection attempt
+	 */
+	function scheduleReconnect() {
+		if (reconnectAttempts >= maxReconnectAttempts) {
+			console.error('[AgentStatus] Max reconnect attempts reached');
+			return;
+		}
+
+		if (reconnectTimer) {
+			clearTimeout(reconnectTimer);
+		}
+		
+		reconnectAttempts++;
+		const delay = Math.min(reconnectInterval * reconnectAttempts, 30000);
+		
+		console.log(`[AgentStatus] Reconnecting in ${delay}ms (attempt ${reconnectAttempts}/${maxReconnectAttempts})...`);
+		
+		reconnectTimer = setTimeout(() => {
+			connectActivityWS();
+		}, delay);
 	}
 
 	$: onlineCount = agents.filter(a => a.status === 'online').length;

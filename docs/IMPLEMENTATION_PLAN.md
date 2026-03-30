@@ -28,37 +28,26 @@ This document consolidates all planning documents and provides a clear, actionab
 
 ## 1. Plan Consolidation
 
-### 1.1 Plans to Archive
+### 1.1 Archived Plans
 
-The following plans in `docs/plans/` should be archived as they are either completed or superseded:
+The following plans have been archived as of 2026-03-30:
 
-| Plan | Status | Action |
-|------|--------|--------|
-| `PRIME_DIRECTIVE.md` | Active | Keep as master directive |
-| `PRIME_DIRECTIVE_ENhanced.md` | Superseded | Archive |
-| `PRIME_DIRECTIVE_REVIEW.md` | Complete | Archive |
-| `DEVELOPMENT_PLAN_2026.md` | Outdated | Archive |
-| `FULL_STACK_VALIDATION_PLAN.md` | Partial | Merge into this plan |
-| `COLLECTIVE_TEST_TASK.md` | Reference | Archive to reference |
-| `active/` directory | Mixed | Review and archive completed |
-| `completed/` directory | Complete | Keep as historical |
-| `reference/` directory | Reference | Keep as reference |
-| `specs/` directory | Reference | Keep as specifications |
+| Plan | Status | Location |
+|------|--------|----------|
+| `PRIME_DIRECTIVE.md` | Active | `docs/plans/` (master directive) |
+| `PRIME_DIRECTIVE_ENhanced.md` | Superseded | [`docs/plans/archive/2026-03-30/`](docs/plans/archive/2026-03-30/PRIME_DIRECTIVE_ENhanced.md) |
+| `PRIME_DIRECTIVE_REVIEW.md` | Complete | [`docs/plans/archive/2026-03-30/`](docs/plans/archive/2026-03-30/PRIME_DIRECTIVE_REVIEW.md) |
+| `DEVELOPMENT_PLAN_2026.md` | Outdated | [`docs/plans/archive/2026-03-30/`](docs/plans/archive/2026-03-30/DEVELOPMENT_PLAN_2026.md) |
+| `FULL_STACK_VALIDATION_PLAN.md` | Merged | [`docs/plans/archive/2026-03-30/`](docs/plans/archive/2026-03-30/FULL_STACK_VALIDATION_PLAN.md) |
+| `COLLECTIVE_TEST_TASK.md` | Reference | [`docs/plans/archive/2026-03-30/`](docs/plans/archive/2026-03-30/COLLECTIVE_TEST_TASK.md) |
 
-### 1.2 Archive Procedure
-
-```bash
-# Create archive directory
-mkdir -p docs/plans/archive/2026-03-30
-
-# Move superseded plans
-mv docs/plans/PRIME_DIRECTIVE_ENhanced.md docs/plans/archive/2026-03-30/
-mv docs/plans/PRIME_DIRECTIVE_REVIEW.md docs/plans/archive/2026-03-30/
-mv docs/plans/DEVELOPMENT_PLAN_2026.md docs/plans/archive/2026-03-30/
-
-# Review active plans
-# Keep only what's actively being worked on
-```
+**Archive directories:**
+- `docs/plans/active/` - Currently active plans (in progress)
+- `docs/plans/completed/` - Historical completed plans
+- `docs/plans/reference/` - Reference documents and assessments
+- `docs/plans/specs/` - Technical specifications
+- `docs/plans/research/` - Research documents
+- `docs/plans/archive/` - Superseded/retired plans (see [`archive/README.md`](docs/plans/archive/README.md))
 
 ---
 

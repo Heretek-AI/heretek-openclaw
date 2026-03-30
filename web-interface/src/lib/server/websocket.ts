@@ -1,34 +1,146 @@
 import { WebSocketServer, WebSocket } from 'ws';
-import type { AgentStatusUpdate, Message, WSMessage } from '../types';
+import { createClient } from 'redis';
+import type { AgentStatusUpdate, Message, WSMessage, A2AMessage } from '../types';
 
 // WebSocket server for real-time updates
 let wss: WebSocketServer | null = null;
 const clients: Set<WebSocket> = new Set();
 
-// Initialize WebSocket server
-export function initWebSocketServer(port: number = 3002): WebSocketServer {
+// Redis client for pub/sub
+let redisSubscriber: ReturnType<typeof createClient> | null = null;
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+
+// Redis channels to subscribe to
+const REDIS_CHANNELS = ['agent:status', 'agent:message', 'agent:a2a', 'agent:activity'];
+
+/**
+ * Initialize Redis subscriber for pub/sub
+ */
+async function initRedisSubscriber(): Promise<void> {
+	if (redisSubscriber) {
+		return;
+	}
+
+	redisSubscriber = createClient({ url: redisUrl });
+
+	redisSubscriber.on('error', (err) => {
+		console.error('[WebSocket] Redis Subscriber Error:', err);
+	});
+
+	redisSubscriber.on('connect', () => {
+		console.log('[WebSocket] Redis subscriber connected');
+	});
+
+	redisSubscriber.on('disconnect', () => {
+		console.log('[WebSocket] Redis subscriber disconnected');
+	});
+
+	try {
+		await redisSubscriber.connect();
+		console.log('[WebSocket] Redis subscriber initialized');
+
+		// Subscribe to agent channels
+		for (const channel of REDIS_CHANNELS) {
+			await redisSubscriber.subscribe(channel, (message) => {
+				handleRedisMessage(channel, message);
+			});
+			console.log(`[WebSocket] Subscribed to Redis channel: ${channel}`);
+		}
+	} catch (error) {
+		console.error('[WebSocket] Failed to connect to Redis:', error);
+	}
+}
+
+/**
+ * Handle messages from Redis pub/sub
+ */
+function handleRedisMessage(channel: string, message: string): void {
+	try {
+		const data = JSON.parse(message);
+		console.log(`[WebSocket] Redis message on ${channel}:`, data);
+
+		switch (channel) {
+			case 'agent:status':
+				// Agent status update
+				broadcast({ type: 'status', data: data as AgentStatusUpdate });
+				break;
+
+			case 'agent:message':
+				// Chat message
+				broadcast({ type: 'message', data: data as Message });
+				break;
+
+			case 'agent:a2a':
+				// A2A message between agents
+				broadcast({ type: 'a2a', data: data as A2AMessage });
+				break;
+
+			case 'agent:activity':
+				// General activity event
+				broadcast({ type: 'channel_activity', data });
+				break;
+
+			default:
+				console.warn(`[WebSocket] Unknown Redis channel: ${channel}`);
+		}
+	} catch (error) {
+		console.error('[WebSocket] Failed to parse Redis message:', error);
+	}
+}
+
+// Initialize WebSocket server with Redis integration
+export async function initWebSocketServer(port: number = 3002): Promise<WebSocketServer> {
 	if (wss) {
 		return wss;
 	}
+
+	// Initialize Redis subscriber first
+	await initRedisSubscriber();
 
 	wss = new WebSocketServer({ port });
 
 	wss.on('connection', (ws) => {
 		clients.add(ws);
-		console.log('WebSocket client connected');
+		console.log('[WebSocket] Client connected');
+
+		// Send welcome message with connection info
+		ws.send(JSON.stringify({
+			type: 'connected',
+			timestamp: new Date().toISOString(),
+			data: {
+				message: 'Connected to WebSocket bridge',
+				redisChannels: REDIS_CHANNELS
+			}
+		}));
 
 		ws.on('close', () => {
 			clients.delete(ws);
-			console.log('WebSocket client disconnected');
+			console.log('[WebSocket] Client disconnected');
 		});
 
 		ws.on('error', (error) => {
-			console.error('WebSocket error:', error);
+			console.error('[WebSocket] Client error:', error);
 			clients.delete(ws);
+		});
+
+		// Handle incoming messages from clients
+		ws.on('message', (data) => {
+			try {
+				const message = JSON.parse(data.toString());
+				console.log('[WebSocket] Client message:', message);
+				
+				// Handle client requests (e.g., send message to agent)
+				if (message.type === 'a2a' && message.action === 'send') {
+					// Forward to Redis for agent delivery
+					redisSubscriber?.publish('agent:a2a:outbound', JSON.stringify(message));
+				}
+			} catch (error) {
+				console.error('[WebSocket] Failed to parse client message:', error);
+			}
 		});
 	});
 
-	console.log(`WebSocket server started on port ${port}`);
+	console.log(`[WebSocket] Server started on port ${port}`);
 	return wss;
 }
 

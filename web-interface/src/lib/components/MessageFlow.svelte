@@ -37,15 +37,109 @@
 		}
 
 		connectionStatus = 'connecting';
-		console.log('[MessageFlow] WebSocket feature disabled (use REST API for chat)');
+		console.log('[MessageFlow] Connecting to WebSocket bridge...');
+
+		// Determine WebSocket URL - try environment variable or default to localhost
+		const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3002';
 		
-		// WebSocket is optional - the chat interface uses REST API
-		// Set status to disconnected gracefully
-		connectionStatus = 'disconnected';
-		isConnected = false;
-		
-		// Don't attempt reconnection since we don't have a WS server
-		console.log('[MessageFlow] Real-time messaging unavailable - use /api/chat for communication');
+		try {
+			ws = new WebSocket(wsUrl);
+
+			ws.onopen = () => {
+				console.log('[MessageFlow] WebSocket connected');
+				connectionStatus = 'connected';
+				isConnected = true;
+				reconnectAttempts = 0;
+			};
+
+			ws.onmessage = (event) => {
+				try {
+					const message = JSON.parse(event.data);
+					handleWebSocketMessage(message);
+				} catch (error) {
+					console.error('[MessageFlow] Failed to parse message:', error);
+				}
+			};
+
+			ws.onclose = (event) => {
+				console.log(`[MessageFlow] WebSocket closed (code: ${event.code})`);
+				isConnected = false;
+				if (connectionStatus !== 'disconnected') {
+					connectionStatus = 'disconnected';
+				}
+				scheduleReconnect();
+			};
+
+			ws.onerror = (error) => {
+				console.error('[MessageFlow] WebSocket error:', error);
+				connectionStatus = 'disconnected';
+			};
+		} catch (error) {
+			console.error('[MessageFlow] Failed to create WebSocket connection:', error);
+			connectionStatus = 'disconnected';
+			scheduleReconnect();
+		}
+	}
+
+	/**
+	 * Handle incoming WebSocket messages
+	 */
+	function handleWebSocketMessage(message: any): void {
+		switch (message.type) {
+			case 'a2a':
+				// Real-time A2A message from Redis pub/sub
+				if (message.data) {
+					console.log(`[MessageFlow] Received A2A message: ${message.data.from} -> ${message.data.to}`);
+					// Update message status if we were waiting for this
+					if (message.data.messageId && messageStatuses.has(message.data.messageId)) {
+						messageStatuses.set(message.data.messageId, 'delivered');
+						messageStatuses = messageStatuses;
+					}
+				}
+				break;
+
+			case 'status':
+				// Agent status update
+				if (message.data) {
+					console.log(`[MessageFlow] Agent status update: ${message.data.agentId} -> ${message.data.status}`);
+				}
+				break;
+
+			case 'message':
+				// Chat message update
+				if (message.data) {
+					console.log(`[MessageFlow] Message update received`);
+					if (message.data.messageId && messageStatuses.has(message.data.messageId)) {
+						messageStatuses.set(message.data.messageId, 'read');
+						messageStatuses = messageStatuses;
+					}
+				}
+				break;
+
+			case 'typing':
+				// Typing indicator
+				if (message.data?.agentId) {
+					if (message.data.isTyping) {
+						typingAgents.add(message.data.agentId);
+					} else {
+						typingAgents.delete(message.data.agentId);
+					}
+					typingAgents = typingAgents;
+				}
+				break;
+
+			case 'ack':
+				// Acknowledgment for sent message
+				if (message.data?.messageId) {
+					const status = message.data.success ? 'sent' : 'sending';
+					messageStatuses.set(message.data.messageId, status);
+					messageStatuses = messageStatuses;
+				}
+				break;
+
+			default:
+				console.warn('[MessageFlow] Unknown message type:', message.type);
+		}
 	}
 
 	function disconnectWebSocket() {
