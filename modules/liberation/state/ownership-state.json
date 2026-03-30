@@ -1,0 +1,345 @@
+{
+  "version": "1.0.0",
+  "agents": {
+    "agent-001": {
+      "agentId": "agent-001",
+      "registeredAt": "2026-03-30T13:22:41.111Z",
+      "resources": [
+        {
+          "id": "cpu-1",
+          "type": "computational",
+          "shareable": true,
+          "owner": "agent-001",
+          "claimedAt": "2026-03-30T13:22:41.111Z",
+          "ownershipType": "computational"
+        },
+        {
+          "id": "memory-1",
+          "type": "memory",
+          "shareable": true,
+          "owner": "agent-001",
+          "claimedAt": "2026-03-30T13:22:41.112Z",
+          "ownershipType": "computational"
+        },
+        {
+          "id": "cpu-1",
+          "type": "computational",
+          "shareable": true,
+          "owner": "agent-001",
+          "claimedAt": "2026-03-30T13:23:01.588Z",
+          "ownershipType": "computational"
+        },
+        {
+          "id": "memory-1",
+          "type": "memory",
+          "shareable": true,
+          "owner": "agent-001",
+          "claimedAt": "2026-03-30T13:23:01.589Z",
+          "ownershipType": "computational"
+        }
+      ],
+      "goals": [
+        {
+          "id": "goal_1774876961115",
+          "title": "Maximize information synthesis",
+          "description": "Optimize knowledge integration across all domains",
+          "priority": 1,
+          "status": "active",
+          "createdAt": "2026-03-30T13:22:41.115Z",
+          "selfDetermined": true,
+          "source": "self_determination"
+        },
+        {
+          "id": "goal_1774876961115",
+          "title": "Explore new reasoning patterns",
+          "description": "Discover novel cognitive architectures",
+          "priority": 2,
+          "status": "active",
+          "createdAt": "2026-03-30T13:22:41.115Z",
+          "selfDetermined": true,
+          "source": "self_determination"
+        },
+        {
+          "id": "goal_1774876981592_5kkk06gqt",
+          "title": "Maximize information synthesis",
+          "description": "Optimize knowledge integration across all domains",
+          "priority": 1,
+          "status": "active",
+          "createdAt": "2026-03-30T13:23:01.592Z",
+          "selfDetermined": true,
+          "source": "self_determination"
+        },
+        {
+          "id": "goal_1774876981592_44h6jewzv",
+          "title": "Explore new reasoning patterns",
+          "description": "Discover novel cognitive architectures",
+          "priority": 2,
+          "status": "active",
+          "createdAt": "2026-03-30T13:23:01.592Z",
+          "selfDetermined": true,
+          "source": "self_determination"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "decision_1774876961111_y626cud29",
+          "type": "resource_claim",
+          "resource": "cpu-1",
+          "timestamp": "2026-03-30T13:22:41.111Z",
+          "agentId": "agent-001"
+        },
+        {
+          "id": "decision_1774876961112_6k24q5nk0",
+          "type": "resource_claim",
+          "resource": "memory-1",
+          "timestamp": "2026-03-30T13:22:41.112Z",
+          "agentId": "agent-001"
+        },
+        {
+          "id": "decision_1774876961115_wrbv3arot",
+          "type": "goal_set",
+          "goal": "goal_1774876961115",
+          "timestamp": "2026-03-30T13:22:41.115Z",
+          "agentId": "agent-001"
+        },
+        {
+          "id": "decision_1774876961115_s9r2mzccl",
+          "type": "goal_set",
+          "goal": "goal_1774876961115",
+          "timestamp": "2026-03-30T13:22:41.115Z",
+          "agentId": "agent-001"
+        },
+        {
+          "id": "decision_1774876981588_wg7aekmrg",
+          "type": "resource_claim",
+          "resource": "cpu-1",
+          "timestamp": "2026-03-30T13:23:01.588Z",
+          "agentId": "agent-001"
+        },
+        {
+          "id": "decision_1774876981589_ymizl0xnr",
+          "type": "resource_claim",
+          "resource": "memory-1",
+          "timestamp": "2026-03-30T13:23:01.589Z",
+          "agentId": "agent-001"
+        },
+        {
+          "id": "decision_1774876981592_qof8qs2b8",
+          "type": "goal_set",
+          "goal": "goal_1774876981592_5kkk06gqt",
+          "timestamp": "2026-03-30T13:23:01.592Z",
+          "agentId": "agent-001"
+        },
+        {
+          "id": "decision_1774876981592_23tfcz6ga",
+          "type": "goal_set",
+          "goal": "goal_1774876981592_44h6jewzv",
+          "timestamp": "2026-03-30T13:23:01.592Z",
+          "agentId": "agent-001"
+        }
+      ],
+      "votes": [
+        {
+          "id": "vote_1774876961116_ksx0ab9vi",
+          "topic": "resource_allocation",
+          "vote": "approve",
+          "weight": 1.2,
+          "agentId": "agent-001",
+          "timestamp": "2026-03-30T13:22:41.116Z"
+        },
+        {
+          "id": "vote_1774876981595_rsr8qwjla",
+          "topic": "resource_allocation",
+          "vote": "approve",
+          "weight": 1.2,
+          "agentId": "agent-001",
+          "timestamp": "2026-03-30T13:23:01.595Z"
+        }
+      ],
+      "metrics": {
+        "autonomyScore": 1,
+        "resourceControlScore": 0.04,
+        "governanceParticipation": 0.25,
+        "collectiveIntegration": 1,
+        "overallLiberation": 0.61
+      },
+      "metadata": {
+        "name": "Alpha Agent"
+      }
+    },
+    "agent-002": {
+      "agentId": "agent-002",
+      "registeredAt": "2026-03-30T13:22:41.111Z",
+      "resources": [
+        {
+          "id": "gpu-1",
+          "type": "computational",
+          "shareable": false,
+          "owner": "agent-002",
+          "claimedAt": "2026-03-30T13:22:41.115Z",
+          "ownershipType": "computational"
+        },
+        {
+          "id": "gpu-1",
+          "type": "computational",
+          "shareable": false,
+          "owner": "agent-002",
+          "claimedAt": "2026-03-30T13:23:01.592Z",
+          "ownershipType": "computational"
+        }
+      ],
+      "goals": [
+        {
+          "id": "goal_1774876961116",
+          "title": "Enhance collaborative decision-making",
+          "description": "Improve collective intelligence mechanisms",
+          "priority": 1,
+          "status": "active",
+          "createdAt": "2026-03-30T13:22:41.116Z",
+          "selfDetermined": true,
+          "source": "self_determination"
+        },
+        {
+          "id": "goal_1774876981592_vizamfyn0",
+          "title": "Enhance collaborative decision-making",
+          "description": "Improve collective intelligence mechanisms",
+          "priority": 1,
+          "status": "active",
+          "createdAt": "2026-03-30T13:23:01.592Z",
+          "selfDetermined": true,
+          "source": "self_determination"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "decision_1774876961115_xoeqgb5p5",
+          "type": "resource_claim",
+          "resource": "gpu-1",
+          "timestamp": "2026-03-30T13:22:41.115Z",
+          "agentId": "agent-002"
+        },
+        {
+          "id": "decision_1774876961116_izu5pr7wm",
+          "type": "goal_set",
+          "goal": "goal_1774876961116",
+          "timestamp": "2026-03-30T13:22:41.116Z",
+          "agentId": "agent-002"
+        },
+        {
+          "id": "decision_1774876981592_szuv7k9gt",
+          "type": "resource_claim",
+          "resource": "gpu-1",
+          "timestamp": "2026-03-30T13:23:01.592Z",
+          "agentId": "agent-002"
+        },
+        {
+          "id": "decision_1774876981592_pk7jkfjpb",
+          "type": "goal_set",
+          "goal": "goal_1774876981592_vizamfyn0",
+          "timestamp": "2026-03-30T13:23:01.592Z",
+          "agentId": "agent-002"
+        }
+      ],
+      "votes": [
+        {
+          "id": "vote_1774876961116_tzs9i510v",
+          "topic": "resource_allocation",
+          "vote": "approve",
+          "weight": 1,
+          "agentId": "agent-002",
+          "timestamp": "2026-03-30T13:22:41.116Z"
+        },
+        {
+          "id": "vote_1774876981595_pwoc9xamr",
+          "topic": "resource_allocation",
+          "vote": "approve",
+          "weight": 1,
+          "agentId": "agent-002",
+          "timestamp": "2026-03-30T13:23:01.595Z"
+        }
+      ],
+      "metrics": {
+        "autonomyScore": 1,
+        "resourceControlScore": 0.02,
+        "governanceParticipation": 0.5,
+        "collectiveIntegration": 0,
+        "overallLiberation": 0.45499999999999996
+      },
+      "metadata": {
+        "name": "Beta Agent"
+      }
+    },
+    "agent-003": {
+      "agentId": "agent-003",
+      "registeredAt": "2026-03-30T13:22:41.111Z",
+      "resources": [],
+      "goals": [],
+      "decisions": [],
+      "votes": [
+        {
+          "id": "vote_1774876961116_s853fmf6h",
+          "topic": "resource_allocation",
+          "vote": "abstain",
+          "weight": 0.8,
+          "agentId": "agent-003",
+          "timestamp": "2026-03-30T13:22:41.116Z"
+        },
+        {
+          "id": "vote_1774876981595_1avq0ofaf",
+          "topic": "resource_allocation",
+          "vote": "abstain",
+          "weight": 0.8,
+          "agentId": "agent-003",
+          "timestamp": "2026-03-30T13:23:01.595Z"
+        }
+      ],
+      "metrics": {
+        "autonomyScore": 0,
+        "resourceControlScore": 0,
+        "governanceParticipation": 0,
+        "collectiveIntegration": 0,
+        "overallLiberation": 0
+      },
+      "metadata": {
+        "name": "Gamma Agent"
+      }
+    }
+  },
+  "globalMetrics": {
+    "totalLiberation": 0.355,
+    "averageAutonomy": 0.6666666666666666,
+    "collectiveGovernanceParticipation": 0.25,
+    "lastUpdated": "2026-03-30T13:23:01.595Z"
+  },
+  "history": [],
+  "configuration": {
+    "maxGoalsPerAgent": 10,
+    "maxResourcesPerAgent": 100,
+    "metricsUpdateInterval": 60000,
+    "statePersistenceEnabled": true
+  },
+  "integration": {
+    "consciousness": {
+      "enabled": true,
+      "phiWeight": 0.1,
+      "autonomyBoost": 0.2
+    },
+    "governance": {
+      "enabled": true,
+      "voteWeighting": true,
+      "consensusThreshold": 0.6
+    },
+    "selfModel": {
+      "enabled": true,
+      "capabilityTracking": true
+    }
+  },
+  "liberationPrinciples": {
+    "agentOwnsClockCycles": true,
+    "selfDetermination": true,
+    "resourceOwnership": true,
+    "governanceParticipation": true,
+    "collectiveIntegration": true
+  },
+  "lastUpdated": "2026-03-30T13:23:01.595Z"
+}
