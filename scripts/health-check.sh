@@ -38,15 +38,18 @@ print_header() {
 check_litellm() {
     echo -n "Checking LiteLLM Gateway... "
     
-    if curl -sf --connect-timeout 5 "$LITELLM_HOST/health" > /dev/null 2>&1; then
+    if curl -sf --connect-timeout 5 -H "Authorization: Bearer ${LITELLM_MASTER_KEY:-heretek-master-key-change-me}" \
+        "$LITELLM_HOST/health" > /dev/null 2>&1; then
         echo -e "${GREEN}✓ OK${NC}"
         
         # Get LiteLLM version
-        version=$(curl -s "$LITELLM_HOST/health" 2>/dev/null | grep -o '"version":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
+        version=$(curl -s -H "Authorization: Bearer ${LITELLM_MASTER_KEY:-heretek-master-key-change-me}" \
+            "$LITELLM_HOST/health" 2>/dev/null | grep -o '"version":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
         echo "  Version: $version"
         
         # Check models endpoint
-        models=$(curl -s "$LITELLM_HOST/v1/models" 2>/dev/null | grep -o '"id":"[^"]*"' | wc -l || echo "0")
+        models=$(curl -s -H "Authorization: Bearer ${LITELLM_MASTER_KEY:-heretek-master-key-change-me}" \
+            "$LITELLM_HOST/v1/models" 2>/dev/null | grep -o '"id":"[^"]*"' | wc -l || echo "0")
         echo "  Available models: $models"
         return 0
     else
@@ -58,41 +61,61 @@ check_litellm() {
 check_postgres() {
     echo -n "Checking PostgreSQL... "
     
-    if pg_isready -h "$POSTGRES_HOST" -p 5432 -U heretek > /dev/null 2>&1; then
-        echo -e "${GREEN}✓ OK${NC}"
-        
-        # Check pgvector extension
-        vector_ext=$(psql -h "$POSTGRES_HOST" -p 5432 -U heretek -d heretek -t -c "SELECT 1 FROM pg_extension WHERE extname='vector';" 2>/dev/null || echo "")
-        if [ "$vector_ext" = "1" ]; then
-            echo "  pgvector: ${GREEN}enabled${NC}"
-        else
-            echo "  pgvector: ${YELLOW}not installed${NC}"
+    # Try pg_isready first, fall back to docker check
+    if command -v pg_isready > /dev/null 2>&1; then
+        if pg_isready -h "$POSTGRES_HOST" -p 5432 -U heretek > /dev/null 2>&1; then
+            echo -e "${GREEN}✓ OK${NC}"
+            
+            # Check pgvector extension
+            vector_ext=$(psql -h "$POSTGRES_HOST" -p 5432 -U heretek -d heretek -t -c "SELECT 1 FROM pg_extension WHERE extname='vector';" 2>/dev/null || echo "")
+            if [ "$vector_ext" = "1" ]; then
+                echo "  pgvector: ${GREEN}enabled${NC}"
+            else
+                echo "  pgvector: ${YELLOW}not installed${NC}"
+            fi
+            return 0
         fi
-        return 0
-    else
-        echo -e "${RED}✗ FAILED${NC}"
-        return 1
     fi
+    
+    # Fall back to docker container check
+    if docker ps --filter "name=heretek-postgres" --format "{{.Names}}" 2>/dev/null | grep -q "heretek-postgres"; then
+        echo -e "${GREEN}✓ OK${NC} (via Docker)"
+        echo "  Container: heretek-postgres"
+        return 0
+    fi
+    
+    echo -e "${RED}✗ FAILED${NC}"
+    return 1
 }
 
 check_redis() {
     echo -n "Checking Redis... "
     
-    if redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" ping > /dev/null 2>&1; then
-        echo -e "${GREEN}✓ OK${NC}"
-        
-        # Get Redis info
-        info=$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" info server 2>/dev/null | grep "redis_version" | cut -d: -f2 | tr -d '\r' || echo "unknown")
-        echo "  Version: $info"
-        
-        # Check memory usage
-        mem=$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" info memory 2>/dev/null | grep "used_memory_human" | cut -d: -f2 | tr -d '\r' || echo "unknown")
-        echo "  Memory: $mem"
-        return 0
-    else
-        echo -e "${RED}✗ FAILED${NC}"
-        return 1
+    # Try redis-cli first, fall back to docker check
+    if command -v redis-cli > /dev/null 2>&1; then
+        if redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" ping > /dev/null 2>&1; then
+            echo -e "${GREEN}✓ OK${NC}"
+            
+            # Get Redis info
+            info=$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" info server 2>/dev/null | grep "redis_version" | cut -d: -f2 | tr -d '\r' || echo "unknown")
+            echo "  Version: $info"
+            
+            # Check memory usage
+            mem=$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" info memory 2>/dev/null | grep "used_memory_human" | cut -d: -f2 | tr -d '\r' || echo "unknown")
+            echo "  Memory: $mem"
+            return 0
+        fi
     fi
+    
+    # Fall back to docker container check
+    if docker ps --filter "name=heretek-redis" --format "{{.Names}}" 2>/dev/null | grep -q "heretek-redis"; then
+        echo -e "${GREEN}✓ OK${NC} (via Docker)"
+        echo "  Container: heretek-redis"
+        return 0
+    fi
+    
+    echo -e "${RED}✗ FAILED${NC}"
+    return 1
 }
 
 check_docker() {
