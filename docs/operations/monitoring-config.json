@@ -1,0 +1,194 @@
+{
+  "version": "1.0.0",
+  "description": "Production monitoring and alerting thresholds for Heretek OpenClaw",
+  "monitoring": {
+    "health_check_interval_seconds": 30,
+    "metrics_retention_days": 30,
+    "alert_cooldown_minutes": 15
+  },
+  "thresholds": {
+    "cpu": {
+      "warning_percent": 70,
+      "critical_percent": 90,
+      "sustained_duration_seconds": 300
+    },
+    "memory": {
+      "warning_percent": 75,
+      "critical_percent": 90,
+      "sustained_duration_seconds": 300
+    },
+    "disk": {
+      "warning_percent": 80,
+      "critical_percent": 95,
+      "sustained_duration_seconds": 600
+    },
+    "response_time": {
+      "warning_ms": 5000,
+      "critical_ms": 15000,
+      "timeout_ms": 30000
+    },
+    "agent_health": {
+      "max_consecutive_failures": 3,
+      "heartbeat_timeout_seconds": 120,
+      "recovery_attempts": 3
+    },
+    "api_rate_limits": {
+      "requests_per_minute_warning": 80,
+      "requests_per_minute_critical": 95,
+      "error_rate_warning_percent": 5,
+      "error_rate_critical_percent": 15
+    },
+    "database": {
+      "connection_pool_warning_percent": 70,
+      "connection_pool_critical_percent": 90,
+      "query_time_warning_ms": 1000,
+      "query_time_critical_ms": 5000
+    },
+    "redis": {
+      "memory_warning_percent": 70,
+      "memory_critical_percent": 85,
+      "connection_timeout_ms": 5000
+    }
+  },
+  "alerting": {
+    "channels": {
+      "console": {
+        "enabled": true,
+        "levels": ["warning", "critical"]
+      },
+      "file": {
+        "enabled": true,
+        "path": "/root/.openclaw/logs/alerts.log",
+        "max_size_mb": 10,
+        "rotation_count": 5
+      },
+      "webhook": {
+        "enabled": false,
+        "url": "",
+        "secret": "",
+        "retry_count": 3,
+        "timeout_ms": 10000
+      },
+      "email": {
+        "enabled": false,
+        "smtp_host": "",
+        "smtp_port": 587,
+        "from_address": "",
+        "recipients": [],
+        "use_tls": true
+      }
+    },
+    "rules": [
+      {
+        "name": "agent_offline",
+        "condition": "agent.heartbeat_missed > 120",
+        "severity": "critical",
+        "message": "Agent {{agent_id}} has not responded for {{duration}} seconds",
+        "channels": ["console", "file"]
+      },
+      {
+        "name": "high_cpu_usage",
+        "condition": "system.cpu_percent > 90",
+        "severity": "critical",
+        "message": "CPU usage at {{cpu_percent}}% for {{duration}} seconds",
+        "channels": ["console", "file"]
+      },
+      {
+        "name": "high_memory_usage",
+        "condition": "system.memory_percent > 90",
+        "severity": "critical",
+        "message": "Memory usage at {{memory_percent}}% for {{duration}} seconds",
+        "channels": ["console", "file"]
+      },
+      {
+        "name": "disk_space_low",
+        "condition": "system.disk_percent > 95",
+        "severity": "critical",
+        "message": "Disk usage at {{disk_percent}}% - immediate action required",
+        "channels": ["console", "file"]
+      },
+      {
+        "name": "service_degraded",
+        "condition": "service.health_score < 0.5",
+        "severity": "warning",
+        "message": "Service {{service_name}} health degraded to {{health_score}}",
+        "channels": ["console", "file"]
+      },
+      {
+        "name": "database_connection_failed",
+        "condition": "database.connections_failed > 0",
+        "severity": "critical",
+        "message": "Database connection failed: {{error}}",
+        "channels": ["console", "file"]
+      },
+      {
+        "name": "redis_connection_failed",
+        "condition": "redis.connected == false",
+        "severity": "critical",
+        "message": "Redis connection lost",
+        "channels": ["console", "file"]
+      },
+      {
+        "name": "api_error_rate_high",
+        "condition": "api.error_rate_percent > 15",
+        "severity": "warning",
+        "message": "API error rate at {{error_rate_percent}}%",
+        "channels": ["console", "file"]
+      }
+    ]
+  },
+  "dashboard": {
+    "port": 7000,
+    "refresh_interval_seconds": 5,
+    "widgets": [
+      {
+        "id": "system_health",
+        "type": "gauge",
+        "title": "System Health",
+        "metrics": ["cpu_percent", "memory_percent", "disk_percent"]
+      },
+      {
+        "id": "agent_status",
+        "type": "status_grid",
+        "title": "Agent Status",
+        "metrics": ["agentheartbeat", "agent_health_score"]
+      },
+      {
+        "id": "api_latency",
+        "type": "timeseries",
+        "title": "API Response Time",
+        "metrics": ["response_time_p50", "response_time_p95", "response_time_p99"]
+      },
+      {
+        "id": "request_rate",
+        "type": "timeseries",
+        "title": "Request Rate",
+        "metrics": ["requests_per_second"]
+      },
+      {
+        "id": "error_rate",
+        "type": "timeseries",
+        "title": "Error Rate",
+        "metrics": ["error_rate_percent"]
+      },
+      {
+        "id": "database_connections",
+        "type": "gauge",
+        "title": "Database Connections",
+        "metrics": ["db_active_connections", "db_max_connections"]
+      },
+      {
+        "id": "redis_memory",
+        "type": "gauge",
+        "title": "Redis Memory",
+        "metrics": ["redis_used_memory", "redis_max_memory"]
+      },
+      {
+        "id": "recent_alerts",
+        "type": "list",
+        "title": "Recent Alerts",
+        "metrics": ["alert_history"]
+      }
+    ]
+  }
+}

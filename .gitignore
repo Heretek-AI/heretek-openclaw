@@ -5,3 +5,4 @@ build/
 *.log
 web-interface/.svelte-kit/generated/
 container-logs.txt
+clawbridge

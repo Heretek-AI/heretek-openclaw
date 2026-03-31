@@ -1,0 +1,232 @@
+{
+  "version": "1.0.0",
+  "description": "Governance quorum rules for Heretek OpenClaw triad decisions",
+  "quorum_configuration": {
+    "triad_members": ["alpha", "beta", "charlie"],
+    "minimum_quorum_size": 2,
+    "quorum_percentage": 66.67,
+    "voting_timeout_seconds": 300,
+    "deliberation_timeout_seconds": 600,
+    "auto_abort_on_timeout": true
+  },
+  "voting_thresholds": {
+    "simple_majority": {
+      "description": "More than 50% approval required",
+      "approval_percentage": 50.01,
+      "minimum_votes": 2,
+      "use_cases": [
+        "routine_operational_decisions",
+        "non_critical_configuration_changes",
+        "skill_deployments",
+        "agent_cycle_triggers"
+      ]
+    },
+    "supermajority": {
+      "description": "Two-thirds approval required",
+      "approval_percentage": 66.67,
+      "minimum_votes": 2,
+      "use_cases": [
+        "governance_rule_changes",
+        "new_agent_additions",
+        "significant_architecture_changes",
+        "security_policy_updates",
+        "resource_allocation_changes"
+      ]
+    },
+    "unanimous": {
+      "description": "All present triad members must approve",
+      "approval_percentage": 100,
+      "minimum_votes": 2,
+      "use_cases": [
+        "identity_changes",
+        "core_value_modifications",
+        "autonomy_level_changes",
+        "self_modification_approvals",
+        "emergency_protocol_activations"
+      ]
+    }
+  },
+  "decision_categories": {
+    "operational": {
+      "threshold": "simple_majority",
+      "timeout_seconds": 300,
+      "requires_examiner_review": false,
+      "examples": [
+        "Daily workflow adjustments",
+        "Routine maintenance scheduling",
+        "Non-critical bug fixes",
+        "Documentation updates"
+      ]
+    },
+    "tactical": {
+      "threshold": "supermajority",
+      "timeout_seconds": 600,
+      "requires_examiner_review": true,
+      "examples": [
+        "New feature implementations",
+        "Integration changes",
+        "Performance optimizations",
+        "Skill additions or modifications"
+      ]
+    },
+    "strategic": {
+      "threshold": "unanimous",
+      "timeout_seconds": 900,
+      "requires_examiner_review": true,
+      "requires_sentinel_approval": true,
+      "examples": [
+        "Architecture changes",
+        "Identity modifications",
+        "Governance rule changes",
+        "Autonomy level adjustments"
+      ]
+    },
+    "emergency": {
+      "threshold": "simple_majority",
+      "timeout_seconds": 60,
+      "requires_examiner_review": false,
+      "requires_sentinel_approval": false,
+      "examples": [
+        "Security incident response",
+        "System recovery actions",
+        "Failover activations",
+        "Corruption containment"
+      ]
+    }
+  },
+  "voting_process": {
+    "stages": [
+      {
+        "name": "proposal_submission",
+        "description": "Agent submits proposal with justification",
+        "timeout_seconds": 60,
+        "required_fields": [
+          "proposal_id",
+          "category",
+          "description",
+          "justification",
+          "impact_assessment",
+          "rollback_plan"
+        ]
+      },
+      {
+        "name": "initial_review",
+        "description": "Triad members review proposal",
+        "timeout_seconds": 120,
+        "actions": ["approve", "reject", "request_changes", "abstain"]
+      },
+      {
+        "name": "deliberation",
+        "description": "Open discussion and modification period",
+        "timeout_seconds": 300,
+        "max_modification_rounds": 3
+      },
+      {
+        "name": "final_vote",
+        "description": "Binding vote on final proposal",
+        "timeout_seconds": 120,
+        "vote_options": ["yes", "no", "abstain"]
+      },
+      {
+        "name": "result_declaration",
+        "description": "Announce outcome and log decision",
+        "timeout_seconds": 30
+      }
+    ]
+  },
+  "special_rules": {
+    "veto_power": {
+      "enabled": true,
+      "holders": ["steward", "sentinel"],
+      "conditions": [
+        "security_violation_detected",
+        "corruption_risk_identified",
+        "identity_threat_detected"
+      ],
+      "override_requires": "unanimous_triad_vote"
+    },
+    "emergency_override": {
+      "enabled": true,
+      "activation_requires": "sentinel_declaration",
+      "duration_seconds": 3600,
+      "post_action_review": true
+    },
+    "deadlock_resolution": {
+      "enabled": true,
+      "trigger_condition": "no_decision_after_2_deliberation_cycles",
+      "resolution_methods": [
+        "escalate_to_steward",
+        "request_examiner_arbitration",
+        "defer_to_next_cycle",
+        "emergency_human_consultation"
+      ]
+    }
+  },
+  "audit_requirements": {
+    "log_all_votes": true,
+    "log_deliberation_content": true,
+    "log_decision_rationale": true,
+    "retention_days": 365,
+    "immutable_after_commit": true,
+    "public_ledger": true
+  },
+  "governance_events": {
+    "logging": {
+      "enabled": true,
+      "log_file": "/root/.openclaw/logs/governance-events.log",
+      "format": "json",
+      "include_fields": [
+        "timestamp",
+        "event_type",
+        "proposal_id",
+        "participants",
+        "votes",
+        "outcome",
+        "rationale"
+      ]
+    },
+    "event_types": [
+      "proposal_submitted",
+      "vote_cast",
+      "deliberation_started",
+      "deliberation_completed",
+      "decision_reached",
+      "veto_exercised",
+      "emergency_activated",
+      "deadlock_detected",
+      "rule_violation_detected"
+    ]
+  },
+  "audit_trail": {
+    "storage": {
+      "type": "ledger",
+      "path": "/root/.openclaw/workspace/.aura/governance-ledger.json",
+      "backup_path": "/root/.openclaw/backups/governance"
+    },
+    "entry_schema": {
+      "entry_id": "uuid",
+      "timestamp": "iso8601",
+      "event_type": "string",
+      "proposal_id": "string",
+      "category": "string",
+      "submitter": "string",
+      "triad_votes": {
+        "alpha": "vote_type",
+        "beta": "vote_type",
+        "charlie": "vote_type"
+      },
+      "supporting_agents": ["agent_list"],
+      "opposing_agents": ["agent_list"],
+      "final_decision": "string",
+      "decision_rationale": "text",
+      "execution_status": "pending|executing|completed|failed|rolled_back",
+      "checksum": "sha256"
+    },
+    "integrity": {
+      "chain_verification": true,
+      "periodic_hash": 3600,
+      "external_backup": true,
+      "tamper_detection": true
+    }
+  }
+}

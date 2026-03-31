@@ -1,0 +1,128 @@
+{
+  "version": "1.0.0",
+  "description": "Automated backup configuration for Heretek OpenClaw",
+  "backup_settings": {
+    "base_directory": "/root/.openclaw/backups",
+    "temp_directory": "/tmp/openclaw-backup",
+    "compression": "gzip",
+    "encryption": {
+      "enabled": false,
+      "algorithm": "aes-256-cbc",
+      "key_file": ""
+    }
+  },
+  "schedules": {
+    "database": {
+      "enabled": true,
+      "cron": "0 2 * * *",
+      "description": "Daily PostgreSQL backup at 2 AM",
+      "retention_days": 30,
+      "min_backups": 7
+    },
+    "redis": {
+      "enabled": true,
+      "cron": "0 3 * * *",
+      "description": "Daily Redis backup at 3 AM",
+      "retention_days": 7,
+      "min_backups": 3
+    },
+    "workspace": {
+      "enabled": true,
+      "cron": "0 4 * * *",
+      "description": "Daily workspace backup at 4 AM",
+      "retention_days": 30,
+      "min_backups": 7
+    },
+    "agent_state": {
+      "enabled": true,
+      "cron": "0 */6 * * *",
+      "description": "Agent state backup every 6 hours",
+      "retention_days": 7,
+      "min_backups": 4
+    },
+    "full_system": {
+      "enabled": true,
+      "cron": "0 5 * * 0",
+      "description": "Weekly full system backup on Sunday at 5 AM",
+      "retention_days": 90,
+      "min_backups": 4
+    }
+  },
+  "sources": {
+    "postgresql": {
+      "type": "database",
+      "host": "localhost",
+      "port": 5432,
+      "database": "heretek",
+      "user": "heretek",
+      "password_env": "POSTGRES_PASSWORD",
+      "tables": ["*"],
+      "exclude_tables": [],
+      "schema_only": false
+    },
+    "redis": {
+      "type": "keyvalue",
+      "host": "localhost",
+      "port": 6379,
+      "password_env": "REDIS_PASSWORD",
+      "databases": [0],
+      "keys_pattern": "*",
+      "format": "rdb"
+    },
+    "workspace": {
+      "type": "filesystem",
+      "paths": [
+        "/root/.openclaw/workspace",
+        "/root/.openclaw/agents",
+        "/root/.openclaw/skills",
+        "/root/.openclaw/memory"
+      ],
+      "exclude_patterns": [
+        "*.log",
+        "*.tmp",
+        "node_modules",
+        ".git",
+        "__pycache__",
+        "*.pyc"
+      ]
+    },
+    "agent_state": {
+      "type": "filesystem",
+      "paths": [
+        "/root/.openclaw/agents/*/sessions",
+        "/root/.openclaw/agents/*/state",
+        "/root/.openclaw/cron"
+      ],
+      "exclude_patterns": [
+        "*.log",
+        "*.tmp"
+      ]
+    },
+    "config": {
+      "type": "filesystem",
+      "paths": [
+        "/root/.openclaw/openclaw.json",
+        "/root/.openclaw/config.json",
+        "/root/heretek/heretek-openclaw/openclaw.json"
+      ],
+      "exclude_patterns": []
+    }
+  },
+  "rotation": {
+    "strategy": "fifo",
+    "check_on_backup": true,
+    "delete_expired": true,
+    "log_deletions": true
+  },
+  "notifications": {
+    "on_success": false,
+    "on_failure": true,
+    "on_rotation": false,
+    "channels": ["file", "console"]
+  },
+  "verification": {
+    "verify_after_backup": true,
+    "test_restore_monthly": true,
+    "checksum_algorithm": "sha256"
+  }
+}
