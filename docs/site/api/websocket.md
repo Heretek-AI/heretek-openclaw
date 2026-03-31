@@ -1,4 +1,4 @@
-# WebSocket RPC API
+# WebSocket RPC API Reference
 
 **Version:** 2.0.0  
 **Last Updated:** 2026-03-31  
@@ -6,29 +6,29 @@
 
 ---
 
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Connection](#connection)
+3. [Message Format](#message-format)
+4. [Message Types](#message-types)
+5. [Handshake](#handshake)
+6. [Discovery](#discovery)
+7. [Error Handling](#error-handling)
+8. [Client Example](#client-example)
+9. [Related Documents](#related-documents)
+
+---
+
 ## Overview
 
 The WebSocket RPC API provides real-time bidirectional communication between agents and the OpenClaw Gateway. This is the primary transport layer for the A2A (Agent-to-Agent) Protocol.
 
-**Note:** This document describes the Gateway WebSocket RPC endpoint. For the legacy Redis WebSocket Bridge (deprecated), see [`../archive/REDIS_A2A_ARCHITECTURE.md`](../archive/REDIS_A2A_ARCHITECTURE.md).
+**Endpoint:** `ws://127.0.0.1:18789`
 
 ---
 
-## Connection Endpoint
-
-### Primary Endpoint
-
-```
-ws://127.0.0.1:18789
-```
-
-### WebSocket Subprotocol
-
-Clients SHOULD specify the subprotocol during handshake:
-
-```javascript
-const ws = new WebSocket('ws://127.0.0.1:18789', ['a2a-v1']);
-```
+## Connection
 
 ### Connection Parameters
 
@@ -37,10 +37,6 @@ const ws = new WebSocket('ws://127.0.0.1:18789', ['a2a-v1']);
 | `protocol` | string | No | `a2a-v1` | WebSocket subprotocol identifier |
 | `timeout` | number | No | `30000` | Connection timeout (ms) |
 | `heartbeat` | number | No | `30000` | Heartbeat interval (ms) |
-
----
-
-## Connection Lifecycle
 
 ### Connection States
 
@@ -51,87 +47,12 @@ const ws = new WebSocket('ws://127.0.0.1:18789', ['a2a-v1']);
 | `CLOSING` | 2 | Connection closing |
 | `CLOSED` | 3 | Connection closed |
 
-### Connection Flow
+### WebSocket Subprotocol
 
-```
-┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
-│ CLOSED  │───>│CONNECTING│───>│  OPEN   │───>│ CLOSING │
-└─────────┘    └─────────┘    └─────────┘    └─────────┘
-     ▲                              │              │
-     │                              │              │
-     └──────────────────────────────┴──────────────┘
-```
+Clients SHOULD specify the subprotocol during handshake:
 
----
-
-## Handshake Procedures
-
-### Connection Establishment
-
-1. Client initiates WebSocket connection to Gateway
-2. Gateway accepts connection and assigns client ID
-3. Client optionally sends capability advertisement
-4. Gateway acknowledges and connection is ready
-
-### Capability Advertisement (Optional)
-
-After connection, clients MAY advertise capabilities:
-
-```json
-{
-  "type": "handshake",
-  "content": {
-    "action": "advertise",
-    "capabilities": {
-      "supportedMessageTypes": ["message", "status", "error"],
-      "supportedAgents": ["steward", "alpha", "beta"],
-      "version": "1.0.0"
-    }
-  }
-}
-```
-
-### Gateway Response
-
-Gateway responds with acknowledgment:
-
-```json
-{
-  "type": "handshake",
-  "content": {
-    "action": "acknowledge",
-    "clientId": "client-uuid",
-    "availableAgents": ["steward", "alpha", "beta", "charlie"],
-    "protocolVersion": "1.0.0"
-  }
-}
-```
-
-### Authentication (Optional)
-
-For secured deployments, authentication MAY be required:
-
-```json
-{
-  "type": "auth",
-  "content": {
-    "token": "<JWT-or-API-key>"
-  }
-}
-```
-
-### Connection Termination
-
-Either party MAY terminate the connection:
-
-```json
-{
-  "type": "disconnect",
-  "content": {
-    "reason": "shutdown" | "timeout" | "error" | "manual",
-    "message": "Optional explanation"
-  }
-}
+```javascript
+const ws = new WebSocket('ws://127.0.0.1:18789', ['a2a-v1']);
 ```
 
 ---
@@ -140,12 +61,10 @@ Either party MAY terminate the connection:
 
 ### Envelope Structure
 
-All A2A messages follow a standardized envelope format:
-
 ```typescript
 interface A2AMessage {
   // Required fields
-  type: MessageType;           // Message type (see Message Types section)
+  type: MessageType;           // Message type
   content: MessageContent;     // Message payload
   
   // Optional fields
@@ -203,15 +122,11 @@ interface MessageMetadata {
 }
 ```
 
-### Message Validation
-
-Messages MUST be valid UTF-8 encoded JSON. Invalid messages SHOULD be rejected with an error response.
-
 ---
 
 ## Message Types
 
-### Core Message Types (0x00-0x0F)
+### Core Message Types
 
 | Code | Type | Description | Required Fields |
 |------|------|-------------|-----------------|
@@ -220,7 +135,7 @@ Messages MUST be valid UTF-8 encoded JSON. Invalid messages SHOULD be rejected w
 | 0x03 | `error` | Error notification | `content`, `error` |
 | 0x04 | `event` | Gateway event | `content`, `event` |
 
-### Control Message Types (0x10-0x1F)
+### Control Message Types
 
 | Code | Type | Description | Required Fields |
 |------|------|-------------|-----------------|
@@ -231,15 +146,7 @@ Messages MUST be valid UTF-8 encoded JSON. Invalid messages SHOULD be rejected w
 | 0x14 | `ping` | Keep-alive ping | - |
 | 0x15 | `pong` | Keep-alive response | - |
 
-### Authentication Message Types (0x20-0x2F)
-
-| Code | Type | Description | Required Fields |
-|------|------|-------------|-----------------|
-| 0x20 | `auth` | Authentication request | `content.token` |
-| 0x21 | `auth-response` | Authentication response | `content.status` |
-| 0x22 | `disconnect` | Connection termination | `content.reason` |
-
-### Application Message Types (0x30-0x4F)
+### Application Message Types
 
 | Code | Type | Description | Required Fields |
 |------|------|-------------|-----------------|
@@ -250,15 +157,52 @@ Messages MUST be valid UTF-8 encoded JSON. Invalid messages SHOULD be rejected w
 | 0x34 | `response` | Service response | `content.result` |
 | 0x35 | `broadcast` | Multi-agent broadcast | `content.message` |
 
-For complete message type registry, see [`../standards/A2A_PROTOCOL.md`](../standards/A2A_PROTOCOL.md#appendix-a-message-type-registry).
+---
+
+## Handshake
+
+### Connection Establishment
+
+1. Client initiates WebSocket connection
+2. Gateway accepts and assigns client ID
+3. Client sends capability advertisement (optional)
+4. Gateway acknowledges
+
+### Capability Advertisement
+
+```json
+{
+  "type": "handshake",
+  "content": {
+    "action": "advertise",
+    "capabilities": {
+      "supportedMessageTypes": ["message", "status", "error"],
+      "supportedAgents": ["steward", "alpha", "beta"],
+      "version": "1.0.0"
+    }
+  }
+}
+```
+
+### Gateway Response
+
+```json
+{
+  "type": "handshake",
+  "content": {
+    "action": "acknowledge",
+    "clientId": "client-uuid",
+    "availableAgents": ["steward", "alpha", "beta", "charlie"],
+    "protocolVersion": "1.0.0"
+  }
+}
+```
 
 ---
 
-## Discovery Mechanisms
+## Discovery
 
 ### Agent Discovery
-
-Agents are discovered through the Gateway registry:
 
 **Request:**
 ```json
@@ -295,27 +239,12 @@ Agents are discovered through the Gateway registry:
 
 ### Agent Status Subscription
 
-Clients MAY subscribe to agent status updates:
-
 ```json
 {
   "type": "subscribe",
   "content": {
     "channel": "agent:status",
     "agents": ["steward", "alpha"]
-  }
-}
-```
-
-### Workspace Discovery
-
-Workspaces can be discovered and queried:
-
-```json
-{
-  "type": "workspace",
-  "content": {
-    "action": "list"
   }
 }
 ```
@@ -378,20 +307,9 @@ Workspaces can be discovered and queried:
 | 4003 | `SESSION_LOCKED` | Session is locked by another process |
 | 4004 | `SESSION_CORRUPT` | Session data is corrupted |
 
-#### Authentication Errors (5xxx)
-
-| Code | Error | Description |
-|------|-------|-------------|
-| 5001 | `AUTH_REQUIRED` | Authentication required |
-| 5002 | `AUTH_FAILED` | Authentication failed |
-| 5003 | `TOKEN_EXPIRED` | Authentication token expired |
-| 5004 | `PERMISSION_DENIED` | Insufficient permissions |
-
-For complete error code registry, see [`../standards/A2A_PROTOCOL.md`](../standards/A2A_PROTOCOL.md#appendix-b-error-codes).
-
 ---
 
-## Client Implementation Example
+## Client Example
 
 ```javascript
 const WebSocket = require('ws');
@@ -440,16 +358,6 @@ class A2AClient {
         }
       });
     });
-  }
-
-  send(message) {
-    if (!message.id) {
-      message.id = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    }
-    if (!message.timestamp) {
-      message.timestamp = Date.now();
-    }
-    this.ws.send(JSON.stringify(message));
   }
 
   async sendMessage(agent, content, metadata = {}) {
@@ -529,33 +437,13 @@ main().catch(console.error);
 
 ---
 
-## Legacy Redis WebSocket Bridge (Deprecated)
+## Related Documents
 
-**Status:** Deprecated. Retained for backward compatibility with web UI components only.
-
-The legacy WebSocket bridge (port 3003) provided Redis Pub/Sub to WebSocket translation. This is deprecated in favor of direct Gateway WebSocket RPC.
-
-### Legacy Endpoint
-
-```
-ws://localhost:3003
-```
-
-### Legacy Health Check
-
-```
-http://localhost:3002/health
-```
-
-For historical reference, see [`../archive/REDIS_A2A_ARCHITECTURE.md`](../archive/REDIS_A2A_ARCHITECTURE.md).
-
----
-
-## References
-
-- [`../standards/A2A_PROTOCOL.md`](../standards/A2A_PROTOCOL.md) - Complete A2A Protocol specification
-- [`../architecture/A2A_ARCHITECTURE.md`](../architecture/A2A_ARCHITECTURE.md) - A2A Architecture overview
-- [`../architecture/GATEWAY_ARCHITECTURE.md`](../architecture/GATEWAY_ARCHITECTURE.md) - Gateway architecture details
+| Document | Description |
+|----------|-------------|
+| [API Overview](./overview.md) | API reference overview |
+| [LiteLLM API](./litellm.md) | LiteLLM Gateway reference |
+| [A2A Protocol](../architecture/a2a-protocol.md) | A2A communication protocol |
 
 ---
 

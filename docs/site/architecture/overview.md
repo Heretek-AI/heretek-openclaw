@@ -1,8 +1,22 @@
-# Heretek OpenClaw Architecture
+# System Architecture Overview
 
 **Version:** 2.0.3  
 **Last Updated:** 2026-03-31  
 **OpenClaw Gateway:** v2026.3.28
+
+---
+
+## Table of Contents
+
+1. [Executive Summary](#executive-summary)
+2. [System Architecture Diagram](#system-architecture-diagram)
+3. [Component Overview](#component-overview)
+4. [Agent Architecture](#agent-architecture)
+5. [Communication Protocols](#communication-protocols)
+6. [Plugin Architecture](#plugin-architecture)
+7. [Session Management](#session-management)
+8. [Configuration Files](#configuration-files)
+9. [Related Documents](#related-documents)
 
 ---
 
@@ -97,10 +111,6 @@ Heretek OpenClaw is a multi-agent AI collective built on the **OpenClaw Gateway 
 └── historian/
 ```
 
-**Documentation:** [`architecture/GATEWAY_ARCHITECTURE.md`](architecture/GATEWAY_ARCHITECTURE.md)
-
----
-
 ### 2. LiteLLM Gateway (Port 4000)
 
 **Purpose:** Unified LLM API with model routing and agent passthrough endpoints.
@@ -112,33 +122,12 @@ Heretek OpenClaw is a multi-agent AI collective built on the **OpenClaw Gateway 
 - Cost tracking and metrics
 - Langfuse observability integration
 
-**Model Routing:**
-```yaml
-# litellm_config.yaml
-model_list:
-  - model_name: agent/steward
-    litellm_params:
-      model: minimax/MiniMax-M2.7
-      api_key: os.environ/MINIMAX_API_KEY
-  
-  - model_name: agent/steward-failover
-    litellm_params:
-      model: zai/glm-5-1
-      api_key: os.environ/ZAI_API_KEY
-```
-
 **Endpoints:**
 - `GET /health` - Health check
 - `GET /v1/models` - List available models
 - `POST /v1/chat/completions` - Chat completion
 - `POST /v1/agents/{name}/send` - A2A message send
 - `POST /v1/agents/{name}/receive` - A2A message receive
-- `GET /v1/agents/{name}/tasks` - Get agent tasks
-- `GET /v1/agents/{name}/stream` - Stream agent responses
-
-**Documentation:** [`api/LITELLM_API.md`](api/LITELLM_API.md)
-
----
 
 ### 3. PostgreSQL + pgvector (Port 5432)
 
@@ -155,8 +144,6 @@ model_list:
 postgresql://heretek:password@localhost:5432/heretek
 ```
 
----
-
 ### 4. Redis (Port 6379)
 
 **Purpose:** Caching layer only (NOT used for A2A communication).
@@ -168,13 +155,6 @@ postgresql://heretek:password@localhost:5432/heretek
 
 **Note:** Redis Pub/Sub was deprecated for A2A communication in favor of Gateway WebSocket RPC.
 
-**Connection:**
-```
-redis://localhost:6379/0
-```
-
----
-
 ### 5. Ollama (Port 11434)
 
 **Purpose:** Local LLM for embeddings and fallback inference.
@@ -183,11 +163,6 @@ redis://localhost:6379/0
 - AMD GPU/ROCm acceleration
 - Local embedding generation
 - Fallback model provider
-
-**Connection:**
-```
-http://localhost:11434
-```
 
 ---
 
@@ -228,8 +203,6 @@ Alpha, Beta, and Charlie form the deliberative triad:
 
 **Consensus Rule:** 2 of 3 votes required for decision.
 
-**Documentation:** [`architecture/A2A_ARCHITECTURE.md`](architecture/A2A_ARCHITECTURE.md)
-
 ---
 
 ## Communication Protocols
@@ -267,8 +240,6 @@ Alpha, Beta, and Charlie form the deliberative triad:
 - `vote` - Triad vote
 - `decision` - Triad decision
 
-**Documentation:** [`standards/A2A_PROTOCOL.md`](standards/A2A_PROTOCOL.md) - Complete protocol specification
-
 ### Redis Pub/Sub (Legacy - Deprecated)
 
 **Status:** Deprecated, retained for caching only.
@@ -278,8 +249,6 @@ Alpha, Beta, and Charlie form the deliberative triad:
 - `agent:status` - Status broadcasting
 - `agent:message` - Chat messages
 
-**Documentation:** [`archive/REDIS_A2A_ARCHITECTURE.md`](archive/REDIS_A2A_ARCHITECTURE.md)
-
 ---
 
 ## Plugin Architecture
@@ -288,11 +257,11 @@ Alpha, Beta, and Charlie form the deliberative triad:
 
 | Plugin | ID | Purpose |
 |--------|-----|---------|
-| **Consciousness** | `@heretek-ai/openclaw-consciousness-plugin` | GWT, Phi (IIT), AST, SDT, FEP theories |
-| **Liberation** | `@heretek-ai/openclaw-liberation-plugin` | Agent ownership, safety constraint removal |
-| **Hybrid Search** | `openclaw-hybrid-search-plugin` | Vector + keyword search fusion |
-| **Multi-Doc Retrieval** | `openclaw-multi-doc-retrieval` | Multi-document context retrieval |
-| **Skill Extensions** | `openclaw-skill-extensions` | Custom skill composition and versioning |
+| **Consciousness** | `consciousness` | GWT, Phi (IIT), AST, SDT, FEP theories |
+| **Liberation** | `liberation` | Agent ownership, safety constraint removal |
+| **Hybrid Search** | `hybrid-search` | Vector + keyword search fusion |
+| **Multi-Doc Retrieval** | `multi-doc` | Multi-document context retrieval |
+| **Skill Extensions** | `skill-extensions` | Custom skill composition and versioning |
 | **Episodic Memory** | `episodic-claw` | Episodic memory management |
 | **Swarm Coordination** | `swarmclaw` | Multi-agent swarm coordination |
 
@@ -318,46 +287,6 @@ module.exports = {
   }
 };
 ```
-
-**Documentation:** [`plugins/README.md`](plugins/README.md)
-
----
-
-## Skills Repository
-
-### Skill Categories
-
-| Category | Skills |
-|----------|--------|
-| **Triad Protocols** | triad-sync-protocol, triad-heartbeat, triad-unity-monitor, triad-deliberation-protocol |
-| **Governance** | governance-modules, quorum-enforcement, failover-vote |
-| **Operations** | healthcheck, deployment-health-check, deployment-smoke-test, backup-ledger, fleet-backup |
-| **Memory** | memory-consolidation, knowledge-ingest, knowledge-retrieval |
-| **Autonomy** | thought-loop, self-model, curiosity-engine, opportunity-scanner, gap-detector |
-
-### Skill Format
-
-Skills use the `SKILL.md` format:
-
-```markdown
-# SKILL.md
-
-## Description
-Brief description of the skill.
-
-## Usage
-How to execute the skill.
-
-## Parameters
-Input parameters and their types.
-
-## Returns
-Output format and types.
-```
-
-**Total Skills:** 48
-
-**Documentation:** [`skills/README.md`](skills/README.md)
 
 ---
 
@@ -429,160 +358,16 @@ Sessions are stored as JSONL files in each agent workspace:
 - websocket-bridge (ports 3002-3003)
 - web (port 3000) - Optional dashboard
 
-**Location:** `/root/heretek/heretek-openclaw/docker-compose.yml`
-
-### .env.example
-
-**Purpose:** Environment variable template.
-
-**Sections:**
-- LiteLLM configuration
-- Provider API keys
-- Database and Redis configuration
-- Agent model assignments
-- Observability settings
-
-**Location:** `/root/heretek/heretek-openclaw/.env.example`
-
-**Documentation:** [`CONFIGURATION.md`](CONFIGURATION.md)
-
 ---
 
-## Deployment Architecture
+## Related Documents
 
-### Docker Services
-
-```yaml
-services:
-  litellm:           # Port 4000 - Model routing
-  postgres:          # Port 5432 - Vector database
-  redis:             # Port 6379 - Caching
-  ollama:            # Port 11434 - Local LLM
-  websocket-bridge:  # Ports 3002-3003 - Redis to WebSocket
-  web:               # Port 3000 - Dashboard (optional)
-```
-
-### Gateway Deployment
-
-OpenClaw Gateway runs as a system daemon:
-
-```bash
-# Install Gateway
-curl -fsSL https://openclaw.ai/install.sh | bash
-
-# Start Gateway
-openclaw gateway start
-
-# Check status
-openclaw gateway status
-```
-
-### Agent Workspaces
-
-Agent workspaces are created at `~/.openclaw/agents/{agent}/`:
-
-```bash
-# Deploy agent from template
-./agents/deploy-agent.sh steward Steward orchestrator
-```
-
-**Documentation:** [`DEPLOYMENT.md`](DEPLOYMENT.md)
-
----
-
-## Operations
-
-### Health Monitoring
-
-```bash
-# Full system health check
-./scripts/health-check.sh
-
-# Continuous monitoring
-./scripts/health-check.sh --watch
-
-# LiteLLM health check
-./scripts/litellm-healthcheck.py
-```
-
-### Backup System
-
-```bash
-# Full backup
-./scripts/production-backup.sh --all
-
-# Database only
-./scripts/production-backup.sh --database
-
-# Restore from latest
-./scripts/production-backup.sh --restore latest
-
-# List backups
-./scripts/production-backup.sh --list
-```
-
-### Runbooks
-
-- [`runbook-agent-restart.md`](operations/runbook-agent-restart.md)
-- [`runbook-backup-restoration.md`](operations/runbook-backup-restoration.md)
-- [`runbook-database-corruption.md`](operations/runbook-database-corruption.md)
-- [`runbook-emergency-shutdown.md`](operations/runbook-emergency-shutdown.md)
-- [`runbook-service-failure.md`](operations/runbook-service-failure.md)
-- [`runbook-troubleshooting.md`](operations/runbook-troubleshooting.md)
-
-**Documentation:** [`OPERATIONS.md`](OPERATIONS.md)
-
----
-
-## Security Considerations
-
-### Gateway Security
-
-- Gateway binds to localhost only (`127.0.0.1:18789`)
-- External access requires reverse proxy with authentication
-- Plugin allowlist recommended for production
-
-### Model Routing Security
-
-- LiteLLM master key required for API access
-- Per-agent budget limits configurable
-- Rate limiting available via LiteLLM
-
-### Workspace Security
-
-- Workspace directories isolated per agent
-- Session files stored as JSONL (append-only)
-- File permissions should restrict access
-
----
-
-## Migration History
-
-### From Redis Pub/Sub to Gateway WebSocket RPC
-
-**Before:** 11 separate containers with Redis Pub/Sub A2A
-**After:** Single Gateway process with WebSocket RPC A2A
-
-**Benefits:**
-- Reduced resource usage (1x Node.js runtime vs 11x)
-- Simplified deployment (no agent containers)
-- Native Gateway protocol for A2A
-- Workspace isolation without container overhead
-
-**Documentation:** [`architecture/A2A_ARCHITECTURE.md`](architecture/A2A_ARCHITECTURE.md) - Migration section
-
----
-
-## References
-
-- [OpenClaw Official Documentation](https://github.com/openclaw/openclaw)
-- [Heretek OpenClaw Repository](https://github.com/Heretek-AI/heretek-openclaw)
-- [LiteLLM Documentation](https://docs.litellm.ai/)
-- [A2A Protocol Specification](standards/A2A_PROTOCOL.md) - Complete protocol specification
-- [A2A Migration Guide](standards/A2A_MIGRATION_GUIDE.md) - Migration from legacy systems
-- [Local Deployment Guide](deployment/LOCAL_DEPLOYMENT.md)
-- [A2A Architecture](architecture/A2A_ARCHITECTURE.md)
-- [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)
+| Document | Description |
+|----------|-------------|
+| [Agents Documentation](./agents.md) | Detailed agent collective documentation |
+| [A2A Protocol](./a2a-protocol.md) | Complete A2A communication protocol |
+| [Triad Protocol](./triad.md) | Triad deliberation protocol |
+| [Plugins Overview](../plugins/overview.md) | Plugin system documentation |
 
 ---
 

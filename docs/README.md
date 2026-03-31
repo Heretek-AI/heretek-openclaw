@@ -33,6 +33,8 @@ Heretek OpenClaw is a multi-agent AI collective with **11 specialized agents** r
 ## Documentation Index
 
 ### Architecture
+- [`A2A_PROTOCOL.md`](standards/A2A_PROTOCOL.md) - **NEW** Complete A2A Protocol specification v1.0.0
+- [`A2A_MIGRATION_GUIDE.md`](standards/A2A_MIGRATION_GUIDE.md) - **NEW** Migration guide from legacy systems
 - [`A2A_ARCHITECTURE.md`](architecture/A2A_ARCHITECTURE.md) - Agent-to-Agent communication protocol via Gateway WebSocket RPC
 - [`GATEWAY_ARCHITECTURE.md`](architecture/GATEWAY_ARCHITECTURE.md) - OpenClaw Gateway architecture details
 - [`REDIS_A2A_ARCHITECTURE.md`](archive/REDIS_A2A_ARCHITECTURE.md) - Legacy Redis Pub/Sub architecture (archived for reference)
