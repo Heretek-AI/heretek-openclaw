@@ -1,0 +1,586 @@
+{
+  "dashboards": [
+    {
+      "id": "openclaw-agent-overview",
+      "name": "OpenClaw Agent Overview",
+      "description": "Real-time overview of all OpenClaw agent activities, costs, and performance metrics",
+      "version": 1,
+      "filters": {
+        "tags": ["openclaw"],
+        "environment": "production"
+      },
+      "tiles": [
+        {
+          "id": "total-traces",
+          "type": "metric",
+          "title": "Total Traces (24h)",
+          "query": {
+            "type": "count",
+            "index": "traces",
+            "filter": {
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 0, "y": 0, "w": 3, "h": 2 }
+        },
+        {
+          "id": "avg-latency",
+          "type": "metric",
+          "title": "Avg Latency (ms)",
+          "query": {
+            "type": "avg",
+            "index": "generations",
+            "field": "latency",
+            "filter": {
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 3, "y": 0, "w": 3, "h": 2 }
+        },
+        {
+          "id": "total-cost",
+          "type": "metric",
+          "title": "Total Cost (24h)",
+          "query": {
+            "type": "sum",
+            "index": "generations",
+            "field": "metadata.cost.total",
+            "filter": {
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 6, "y": 0, "w": 3, "h": 2 },
+          "format": { "type": "currency", "currency": "USD" }
+        },
+        {
+          "id": "error-rate",
+          "type": "metric",
+          "title": "Error Rate (%)",
+          "query": {
+            "type": "percentage",
+            "index": "scores",
+            "filter": {
+              "name": "message-success",
+              "value": 0,
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 9, "y": 0, "w": 3, "h": 2 }
+        },
+        {
+          "id": "traces-by-agent",
+          "type": "bar-chart",
+          "title": "Traces by Agent",
+          "query": {
+            "type": "group-by",
+            "index": "traces",
+            "field": "userId",
+            "aggregation": "count",
+            "filter": {
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 0, "y": 2, "w": 6, "h": 4 }
+        },
+        {
+          "id": "cost-by-model",
+          "type": "pie-chart",
+          "title": "Cost by Model",
+          "query": {
+            "type": "group-by",
+            "index": "generations",
+            "field": "model",
+            "aggregation": "sum",
+            "aggregationField": "metadata.cost.total",
+            "filter": {
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 6, "y": 2, "w": 6, "h": 4 }
+        },
+        {
+          "id": "latency-over-time",
+          "type": "line-chart",
+          "title": "Latency Over Time",
+          "query": {
+            "type": "time-series",
+            "index": "generations",
+            "field": "latency",
+            "aggregation": "p95",
+            "interval": "1h",
+            "filter": {
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 0, "y": 6, "w": 12, "h": 4 }
+        }
+      ]
+    },
+    {
+      "id": "a2a-communication",
+      "name": "A2A Communication Traces",
+      "description": "Detailed view of Agent-to-Agent communication patterns and deliberation flows",
+      "version": 1,
+      "filters": {
+        "tags": ["a2a", "deliberation"],
+        "environment": "production"
+      },
+      "tiles": [
+        {
+          "id": "a2a-message-count",
+          "type": "metric",
+          "title": "A2A Messages (24h)",
+          "query": {
+            "type": "count",
+            "index": "traces",
+            "filter": {
+              "name": "a2a-deliberation",
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 0, "y": 0, "w": 4, "h": 2 }
+        },
+        {
+          "id": "consensus-rate",
+          "type": "metric",
+          "title": "Consensus Rate (%)",
+          "query": {
+            "type": "percentage",
+            "index": "generations",
+            "filter": {
+              "name": "consensus-result",
+              "output.consensus": true,
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 4, "y": 0, "w": 4, "h": 2 }
+        },
+        {
+          "id": "avg-deliberation-time",
+          "type": "metric",
+          "title": "Avg Deliberation Time (s)",
+          "query": {
+            "type": "avg",
+            "index": "traces",
+            "field": "duration",
+            "filter": {
+              "name": "triad-deliberation",
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 8, "y": 0, "w": 4, "h": 2 }
+        },
+        {
+          "id": "deliberation-flow",
+          "type": "table",
+          "title": "Recent Deliberations",
+          "query": {
+            "type": "list",
+            "index": "traces",
+            "filter": {
+              "name": "triad-deliberation",
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            },
+            "columns": ["id", "sessionId", "metadata.proposalType", "output.consensus", "timestamp"],
+            "limit": 20,
+            "orderBy": "timestamp",
+            "order": "desc"
+          },
+          "position": { "x": 0, "y": 2, "w": 12, "h": 6 }
+        }
+      ]
+    },
+    {
+      "id": "cost-tracking",
+      "name": "Cost Tracking Dashboard",
+      "description": "Detailed cost breakdown by agent, model, and time period",
+      "version": 1,
+      "filters": {
+        "tags": ["cost-tracking"],
+        "environment": "production"
+      },
+      "tiles": [
+        {
+          "id": "daily-cost",
+          "type": "metric",
+          "title": "Today's Cost",
+          "query": {
+            "type": "sum",
+            "index": "generations",
+            "field": "metadata.cost.total",
+            "filter": {
+              "timestamp": {
+                "gte": "now-1d"
+              }
+            }
+          },
+          "position": { "x": 0, "y": 0, "w": 3, "h": 2 },
+          "format": { "type": "currency", "currency": "USD" }
+        },
+        {
+          "id": "weekly-cost",
+          "type": "metric",
+          "title": "Weekly Costs",
+          "query": {
+            "type": "sum",
+            "index": "generations",
+            "field": "metadata.cost.total",
+            "filter": {
+              "timestamp": {
+                "gte": "now-7d"
+              }
+            }
+          },
+          "position": { "x": 3, "y": 0, "w": 3, "h": 2 },
+          "format": { "type": "currency", "currency": "USD" }
+        },
+        {
+          "id": "monthly-cost",
+          "type": "metric",
+          "title": "Monthly Costs",
+          "query": {
+            "type": "sum",
+            "index": "generations",
+            "field": "metadata.cost.total",
+            "filter": {
+              "timestamp": {
+                "gte": "now-30d"
+              }
+            }
+          },
+          "position": { "x": 6, "y": 0, "w": 3, "h": 2 },
+          "format": { "type": "currency", "currency": "USD" }
+        },
+        {
+          "id": "cost-budget-remaining",
+          "type": "metric",
+          "title": "Budget Remaining (%)",
+          "query": {
+            "type": "custom",
+            "formula": "((50 - daily-cost) / 50) * 100",
+            "filter": {
+              "timestamp": {
+                "gte": "now-1d"
+              }
+            }
+          },
+          "position": { "x": 9, "y": 0, "w": 3, "h": 2 },
+          "format": { "type": "percentage" }
+        },
+        {
+          "id": "cost-by-agent",
+          "type": "bar-chart",
+          "title": "Cost by Agent",
+          "query": {
+            "type": "group-by",
+            "index": "generations",
+            "field": "metadata.agent",
+            "aggregation": "sum",
+            "aggregationField": "metadata.cost.total",
+            "filter": {
+              "timestamp": {
+                "gte": "now-7d"
+              }
+            }
+          },
+          "position": { "x": 0, "y": 2, "w": 6, "h": 4 }
+        },
+        {
+          "id": "cost-trend",
+          "type": "line-chart",
+          "title": "Cost Trend (7 days)",
+          "query": {
+            "type": "time-series",
+            "index": "generations",
+            "field": "metadata.cost.total",
+            "aggregation": "sum",
+            "interval": "1d",
+            "filter": {
+              "timestamp": {
+                "gte": "now-7d"
+              }
+            }
+          },
+          "position": { "x": 6, "y": 2, "w": 6, "h": 4 }
+        },
+        {
+          "id": "token-usage",
+          "type": "table",
+          "title": "Token Usage by Model",
+          "query": {
+            "type": "group-by",
+            "index": "generations",
+            "field": "model",
+            "aggregations": [
+              { "type": "sum", "field": "usage.input", "alias": "Input Tokens" },
+              { "type": "sum", "field": "usage.output", "alias": "Output Tokens" },
+              { "type": "sum", "field": "usage.total", "alias": "Total Tokens" },
+              { "type": "sum", "field": "metadata.cost.total", "alias": "Total Cost" }
+            ],
+            "filter": {
+              "timestamp": {
+                "gte": "now-7d"
+              }
+            }
+          },
+          "position": { "x": 0, "y": 6, "w": 12, "h": 4 }
+        }
+      ]
+    },
+    {
+      "id": "session-analytics",
+      "name": "Session Analytics",
+      "description": "User session tracking and conversation analysis",
+      "version": 1,
+      "filters": {
+        "tags": ["session", "user-interaction"],
+        "environment": "production"
+      },
+      "tiles": [
+        {
+          "id": "total-sessions",
+          "type": "metric",
+          "title": "Total Sessions (24h)",
+          "query": {
+            "type": "count",
+            "index": "traces",
+            "filter": {
+              "name": "user-session",
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 0, "y": 0, "w": 3, "h": 2 }
+        },
+        {
+          "id": "avg-session-length",
+          "type": "metric",
+          "title": "Avg Session Length",
+          "query": {
+            "type": "avg",
+            "index": "traces",
+            "field": "duration",
+            "filter": {
+              "name": "user-session",
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 3, "y": 0, "w": 3, "h": 2 },
+          "format": { "type": "duration" }
+        },
+        {
+          "id": "unique-users",
+          "type": "metric",
+          "title": "Unique Users (24h)",
+          "query": {
+            "type": "count-distinct",
+            "index": "traces",
+            "field": "userId",
+            "filter": {
+              "name": "user-session",
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 6, "y": 0, "w": 3, "h": 2 }
+        },
+        {
+          "id": "session-completion-rate",
+          "type": "metric",
+          "title": "Session Completion Rate",
+          "query": {
+            "type": "percentage",
+            "index": "events",
+            "filter": {
+              "name": "session-end",
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 9, "y": 0, "w": 3, "h": 2 }
+        },
+        {
+          "id": "sessions-over-time",
+          "type": "line-chart",
+          "title": "Sessions Over Time (24h)",
+          "query": {
+            "type": "time-series",
+            "index": "traces",
+            "aggregation": "count",
+            "interval": "1h",
+            "filter": {
+              "name": "user-session",
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            }
+          },
+          "position": { "x": 0, "y": 2, "w": 12, "h": 4 }
+        },
+        {
+          "id": "recent-sessions",
+          "type": "table",
+          "title": "Recent Sessions",
+          "query": {
+            "type": "list",
+            "index": "traces",
+            "filter": {
+              "name": "user-session",
+              "timestamp": {
+                "gte": "now-24h"
+              }
+            },
+            "columns": ["sessionId", "userId", "duration", "timestamp"],
+            "limit": 20,
+            "orderBy": "timestamp",
+            "order": "desc"
+          },
+          "position": { "x": 0, "y": 6, "w": 12, "h": 4 }
+        }
+      ]
+    }
+  ],
+  "alerts": [
+    {
+      "id": "high-latency-alert",
+      "name": "High Latency Alert",
+      "description": "Triggered when P95 latency exceeds threshold",
+      "enabled": true,
+      "conditions": {
+        "metric": {
+          "type": "percentile",
+          "index": "generations",
+          "field": "latency",
+          "percentile": 95,
+          "window": "5m"
+        },
+        "operator": "greater_than",
+        "threshold": 5000
+      },
+      "channels": ["email", "webhook"],
+      "severity": "warning"
+    },
+    {
+      "id": "cost-threshold-alert",
+      "name": "Daily Cost Threshold Alert",
+      "description": "Triggered when daily costs exceed $50",
+      "enabled": true,
+      "conditions": {
+        "metric": {
+          "type": "sum",
+          "index": "generations",
+          "field": "metadata.cost.total",
+          "window": "1d"
+        },
+        "operator": "greater_than",
+        "threshold": 50
+      },
+      "channels": ["email", "webhook"],
+      "severity": "critical"
+    },
+    {
+      "id": "error-rate-alert",
+      "name": "High Error Rate Alert",
+      "description": "Triggered when error rate exceeds 5%",
+      "enabled": true,
+      "conditions": {
+        "metric": {
+          "type": "percentage",
+          "index": "scores",
+          "filter": {
+            "name": "message-success",
+            "value": 0
+          },
+          "window": "10m"
+        },
+        "operator": "greater_than",
+        "threshold": 5
+      },
+      "channels": ["email", "webhook"],
+      "severity": "critical"
+    },
+    {
+      "id": "consensus-failure-alert",
+      "name": "Triad Consensus Failure Alert",
+      "description": "Triggered when consensus fails in triad deliberation",
+      "enabled": true,
+      "conditions": {
+        "metric": {
+          "type": "count",
+          "index": "generations",
+          "filter": {
+            "name": "consensus-result",
+            "output.consensus": false
+          },
+          "window": "1h"
+        },
+        "operator": "greater_than",
+        "threshold": 3
+      },
+      "channels": ["email"],
+      "severity": "warning"
+    }
+  ],
+  "savedViews": [
+    {
+      "id": "all-openclaw-traces",
+      "name": "All OpenClaw Traces",
+      "filters": {
+        "tags": ["openclaw"],
+        "environment": "production"
+      }
+    },
+    {
+      "id": "a2a-messages-only",
+      "name": "A2A Messages Only",
+      "filters": {
+        "tags": ["a2a", "deliberation"],
+        "name": "a2a-deliberation"
+      }
+    },
+    {
+      "id": "high-cost-traces",
+      "name": "High Cost Traces (>$1)",
+      "filters": {
+        "metadata.cost.total": {
+          "gte": 1
+        }
+      }
+    },
+    {
+      "id": "error-traces",
+      "name": "Error Traces",
+      "filters": {
+        "scores.name": "message-success",
+        "scores.value": 0
+      }
+    }
+  ]
+}

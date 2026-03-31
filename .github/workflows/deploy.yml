@@ -1,0 +1,239 @@
+# ==============================================================================
+# Heretek OpenClaw — Deploy Workflow
+# ==============================================================================
+# Automated deployment workflow for production and staging environments
+# Triggered by: releases, manual dispatch, or merge to main
+# ==============================================================================
+
+name: Deploy
+
+on:
+  release:
+    types: [published]
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: 'Version to deploy (leave empty for latest)'
+        required: false
+        type: string
+
+env:
+  NODE_VERSION: '20'
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ------------------------------------------------------------------------------
+  # Version Detection
+  # ------------------------------------------------------------------------------
+  detect-version:
+    name: Detect Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is-release: ${{ steps.version.outputs.is-release }}
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "version=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+            echo "is-release=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "is-release=true" >> $GITHUB_OUTPUT
+          elif [[ -n "${{ inputs.version }}" ]]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+            echo "is-release=false" >> $GITHUB_OUTPUT
+          else
+            # Generate version from commit SHA
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            echo "version=dev-${SHORT_SHA}" >> $GITHUB_OUTPUT
+            echo "is-release=false" >> $GITHUB_OUTPUT
+          fi
+
+  # ------------------------------------------------------------------------------
+  # Build and Push Docker Image
+  # ------------------------------------------------------------------------------
+  build-and-push:
+    name: Build and Push
+    runs-on: ubuntu-latest
+    needs: detect-version
+    permissions:
+      contents: read
+      packages: write
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ needs.detect-version.outputs.version }}
+            type=raw,value=latest,enable=${{ needs.detect-version.outputs.is-release == 'true' }}
+            type=raw,value=staging,enable=${{ inputs.environment == 'staging' }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+          build-args: |
+            VERSION=${{ needs.detect-version.outputs.version }}
+            BUILD_SHA=${{ github.sha }}
+            BUILD_TIME=${{ github.event.head_commit.timestamp }}
+
+  # ------------------------------------------------------------------------------
+  # Deploy to Staging
+  # ------------------------------------------------------------------------------
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [detect-version, build-and-push]
+    if: inputs.environment == 'staging' || github.event_name == 'push'
+    environment:
+      name: staging
+      url: https://staging.heretek-openclaw.example.com
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging
+        run: |
+          echo "Deploying version ${{ needs.detect-version.outputs.version }} to staging..."
+          # Add actual deployment commands here (kubectl, docker compose, etc.)
+          # Example:
+          # kubectl set image deployment/openclaw openclaw=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.detect-version.outputs.version }}
+          echo "Staging deployment complete"
+
+      - name: Run staging health check
+        run: |
+          # Add health check commands for staging
+          echo "Running staging health check..."
+          # Example:
+          # curl -f https://staging.heretek-openclaw.example.com/health || exit 1
+
+  # ------------------------------------------------------------------------------
+  # Deploy to Production
+  # ------------------------------------------------------------------------------
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [detect-version, build-and-push, deploy-staging]
+    if: inputs.environment == 'production' || needs.detect-version.outputs.is-release == 'true'
+    environment:
+      name: production
+      url: https://heretek-openclaw.example.com
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to production
+        run: |
+          echo "Deploying version ${{ needs.detect-version.outputs.version }} to production..."
+          # Add actual deployment commands here (kubectl, docker compose, etc.)
+          # Example:
+          # kubectl set image deployment/openclaw openclaw=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.detect-version.outputs.version }}
+          echo "Production deployment complete"
+
+      - name: Run production health check
+        run: |
+          # Add health check commands for production
+          echo "Running production health check..."
+          # Example:
+          # curl -f https://heretek-openclaw.example.com/health || exit 1
+
+      - name: Create deployment record
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ needs.detect-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** Production" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployed at:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
+  # ------------------------------------------------------------------------------
+  # Automated Commit/Versioning
+  # ------------------------------------------------------------------------------
+  auto-version:
+    name: Auto Version
+    runs-on: ubuntu-latest
+    needs: [detect-version, deploy-production]
+    if: needs.detect-version.outputs.is-release == 'true'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Update version files
+        run: |
+          # Update version in openclaw.json if it exists
+          if [ -f "openclaw.json" ]; then
+            jq --arg version "${{ needs.detect-version.outputs.version }}" \
+              '.collective.version = $version | .version = ($version | ltrimstr("v"))' \
+              openclaw.json > openclaw.json.tmp && mv openclaw.json.tmp openclaw.json
+          fi
+
+      - name: Commit version updates
+        run: |
+          git add openclaw.json || true
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: bump version to ${{ needs.detect-version.outputs.version }} [skip ci]"
+            git push origin HEAD:main
+          else
+            echo "No changes to commit"
+          fi
