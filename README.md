@@ -1,4 +1,4 @@
-zz# Heretek OpenClaw
+# Heretek OpenClaw
 
 **Unified Autonomous Agent Collective with OpenClaw Gateway**
 

@@ -43,8 +43,13 @@ Heretek OpenClaw is a multi-agent AI collective with **11 specialized agents** r
 
 ### Deployment & Operations
 - [`LOCAL_DEPLOYMENT.md`](deployment/LOCAL_DEPLOYMENT.md) - Local deployment instructions
+- [`DEPLOYMENT.md`](DEPLOYMENT.md) - Full deployment guide with external integrations
 - [`PLUGIN_EXPANSION.md`](plugins/PLUGIN_EXPANSION.md) - Plugin development guide
 - [`USER_MANAGEMENT.md`](users/USER_MANAGEMENT.md) - User management documentation
+
+### External Integrations
+- [`EXTERNAL_PROJECTS.md`](EXTERNAL_PROJECTS.md) - External projects and plugins documentation
+- [`operations/LANGFUSE_OBSERVABILITY.md`](operations/LANGFUSE_OBSERVABILITY.md) - Langfuse observability setup
 
 ### Operations Runbooks
 - [`README.md`](operations/README.md) - Operations overview
