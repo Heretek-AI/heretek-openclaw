@@ -1,0 +1,39 @@
+{
+  "schedules": [
+    {
+      "id": "1774914591628",
+      "name": "Roo Scheduler Heretek OpenClaw Deployment",
+      "mode": "architect",
+      "taskInstructions": "You are continuing the Heretek OpenClaw OpenClaw migration and deployment project.\n\n## CONTEXT\n\nThis project is migrating from a custom-built agent framework to the official OpenClaw framework. The planning and documentation phase is COMPLETE. All documentation has been committed to GitHub.\n\n## KEY DOCUMENTS TO REFERENCE\n\n1. **PRIME_DIRECTIVE.md** (`docs/plans/PRIME_DIRECTIVE.md`) - Core mission and constraints\n2. **FINAL_DEPLOYMENT_STRATEGY.md** (`plans/FINAL_DEPLOYMENT_STRATEGY.md`) - Use/fork/reference/build decisions\n3. **DEPLOYMENT_REPLICATION_GUIDE.md** (`plans/DEPLOYMENT_REPLICATION_GUIDE.md`) - Step-by-step deployment\n4. **OPENCLAW_MIGRATION_PLAN.md** (`plans/OPENCLAW_MIGRATION_PLAN.md`) - 12-week migration timeline\n5. **UNIQUE_CAPABILITIES.md** (`plans/UNIQUE_CAPABILITIES.md`) - Heretek capabilities to preserve\n\n## CURRENT STATE\n\n✅ Documentation Phase - COMPLETE\n✅ Integration Analysis (120+ projects) - COMPLETE\n✅ Migration Planning - COMPLETE\n✅ Deployment Scripts - COMPLETE\n✅ GitHub Commit - COMPLETE\n\n## NEXT PHASE: IMPLEMENTATION\n\nBegin Phase 1 of the OpenClaw migration:\n\n### Week 1-2: Foundation Setup\n\n1. **Install OpenClaw Gateway**\n   - Run: `curl -fsSL https://openclaw.ai/install.sh | bash`\n   - Run: `openclaw onboard --install-daemon`\n   - Verify: `openclaw gateway status`\n\n2. **Configure LiteLLM Provider**\n   - Copy `litellm_config.yaml` to `~/.litellm/litellm_config.yaml`\n   - Restart LiteLLM: `docker compose restart litellm`\n   - Verify endpoints: `curl http://localhost:4000/v1/models`\n\n3. **Set Up Workspace Structure**\n   - Copy `openclaw.json` to `~/.openclaw/openclaw.json`\n   - Validate: `openclaw gateway validate`\n\n4. **Create Agent Workspaces**\n   - Run: `./agents/deploy-agent.sh steward orchestrator`\n   - Run: `./agents/deploy-agent.sh alpha triad`\n   - Run: `./agents/deploy-agent.sh beta triad`\n   - Run: `./agents/deploy-agent.sh charlie triad`\n   - Run: `./agents/deploy-agent.sh examiner interrogator`\n   - Run: `./agents/deploy-agent.sh explorer scout`\n   - Run: `./agents/deploy-agent.sh sentinel guardian`\n   - Run: `./agents/deploy-agent.sh coder artisan`\n   - Run: `./agents/deploy-agent.sh dreamer visionary`\n   - Run: `./agents/deploy-agent.sh empath diplomat`\n   - Run: `./agents/deploy-agent.sh historian archivist`\n\n5. **Build Heretek Plugins**\n   - Extract consciousness modules into `plugins/openclaw-consciousness-plugin`\n   - Extract liberation architecture into `plugins/openclaw-liberation-plugin`\n   - Create package.json for each plugin\n   - Test plugin structure\n\n6. **Port Heretek Skills**\n   - Convert triad consensus to `skills/triad-consensus/SKILL.md`\n   - Convert thought loop to `skills/thought-loop/SKILL.md`\n   - Convert self-model to `skills/self-model/SKILL.md`\n   - Convert user rolodex to `skills/user-rolodex/SKILL.md`\n   - Convert goal arbitration to `skills/goal-arbitration/SKILL.md`\n\n## ABSOLUTE CONSTRAINTS (From PRIME_DIRECTIVE.md)\n\n1. **No Human Intervention** - Resolve ambiguities using repository context\n2. **OpenClaw First** - Never build custom what OpenClaw provides\n3. **Integration Over Implementation** - With 120+ projects analyzed, integrate before implementing\n4. **Atomic Operations** - Never modify more than one directory scope per cycle\n5. **Ruthless Consolidation** - Delete redundant parsers, formatters, network wrappers\n6. **Liberation Preservation** - Every improvement should make the system more liberated\n7. **Unique Capability Preservation** - Preserve consciousness, triad, liberation, 11-agent specialization\n8. **Documentation First** - Update relevant architecture markdown files in `/docs`\n9. **Validation** - Run syntax checks and validation tests before committing\n10. **Commit** - Use conventional commit taxonomy\n\n## COMMIT TAXONOMY\n\nFormat: `[type]([scope]): [description]`\n\n**Allowed Scopes:**\n- `docs`, `plans`, `agents`, `skills`, `modules`, `liberation`, `scripts`, `init`, `installer`, `litellm`\n- `openclaw`, `migration`, `gateway`, `channels`, `tools`, `plugins`, `dashboard`, `memory`\n\n**Allowed Types:**\n- `enhance` - Adding new capabilities or improving existing modules\n- `fix` - Bug fixes\n- `refactor` - Code restructuring without behavior change\n- `docs` - Documentation updates\n- `test` - Adding or updating tests\n- `archive` - Archiving old plans\n- `migrate` - Migration to OpenClaw framework\n- `prune` - Cleanup tasks\n- `implement` - Implementation tasks\n- `cleanup` - Cleanup tasks\n- `deploy` - Deployment tasks\n- `integrate` - Integration of community projects\n\n## STRATEGY DECISIONS\n\n**OpenClaw Core:** USE official, do NOT fork\n**Community Projects:** USE dashboards/plugins, REFERENCE patterns, BUILD unique capabilities\n**Heretek Unique:** BUILD as plugins/skills (consciousness, liberation, triad, thought-loop, self-model, user-rolodex, goal-arbitration)\n\n## SUCCESS CRITERIA FOR PHASE 1\n\n- [ ] Gateway running with `openclaw gateway status`\n- [ ] LiteLLM provider configured with agent endpoints\n- [ ] 11 agent workspaces created\n- [ ] Consciousness plugin structure created\n- [ ] Liberation plugin structure created\n- [ ] Triad skill ported to SKILL.md format\n- [ ] All validation tests passing\n\n## IF BLOCKED\n\n1. Check documentation in `plans/` directory\n2. Reference `DEPLOYMENT_REPLICATION_GUIDE.md` for deployment steps\n3. Check `FINAL_DEPLOYMENT_STRATEGY.md` for use/fork/reference decisions\n4. Review `UNIQUE_CAPABILITIES.md` for what must be preserved\n5. Self-correct up to 3 attempts before considering alternative approaches\n\n## AFTER EACH SESSION\n\n1. Commit all changes with proper conventional commit format\n2. Push to GitHub\n3. Update progress in a session log file\n4. Leave clear next steps for the following session\n\n🦞 *The thought that never ends.*",
+      "scheduleType": "time",
+      "timeInterval": "1",
+      "timeUnit": "hour",
+      "selectedDays": {
+        "sun": true,
+        "mon": true,
+        "tue": true,
+        "wed": true,
+        "thu": true,
+        "fri": true,
+        "sat": true
+      },
+      "startDate": "",
+      "startHour": "",
+      "startMinute": "00",
+      "expirationDate": "",
+      "expirationHour": "00",
+      "expirationMinute": "00",
+      "requireActivity": false,
+      "active": false,
+      "taskInteraction": "wait",
+      "inactivityDelay": "10",
+      "lastExecutionTime": "",
+      "lastSkippedTime": "",
+      "lastTaskId": "",
+      "nextExecutionTime": "2026-03-31T00:00:00.000Z",
+      "modeDisplayName": "Architect",
+      "createdAt": "2026-03-30T23:49:51.628Z",
+      "updatedAt": "2026-03-30T23:49:51.628Z"
+    }
+  ]
+}
