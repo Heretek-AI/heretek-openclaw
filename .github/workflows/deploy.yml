@@ -139,20 +139,44 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubectl for staging
+        run: |
+          echo "${{ secrets.STAGING_KUBECONFIG }}" | base64 -d > kubeconfig.yml
+          export KUBECONFIG=kubeconfig.yml
+          kubectl config use-context staging
+
       - name: Deploy to staging
         run: |
           echo "Deploying version ${{ needs.detect-version.outputs.version }} to staging..."
-          # Add actual deployment commands here (kubectl, docker compose, etc.)
-          # Example:
-          # kubectl set image deployment/openclaw openclaw=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.detect-version.outputs.version }}
+          
+          # Update Helm values with new image tag
+          helm upgrade openclaw ./charts/openclaw \
+            --namespace openclaw-staging \
+            --set image.repository=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --set image.tag=${{ needs.detect-version.outputs.version }} \
+            --set environment=staging \
+            --wait \
+            --timeout 5m0s
+          
           echo "Staging deployment complete"
 
       - name: Run staging health check
         run: |
-          # Add health check commands for staging
           echo "Running staging health check..."
-          # Example:
-          # curl -f https://staging.heretek-openclaw.example.com/health || exit 1
+          
+          # Wait for pods to be ready
+          kubectl wait --for=condition=ready pod -l app=openclaw -n openclaw-staging --timeout=120s
+          
+          # Health check via Gateway endpoint
+          GATEWAY_POD=$(kubectl get pod -l app=openclaw-gateway -n openclaw-staging -o jsonpath='{.items[0].metadata.name}')
+          kubectl exec -n openclaw-staging $GATEWAY_POD -- curl -f http://localhost:18789/health || exit 1
+          
+          echo "Staging health check passed"
 
   # ------------------------------------------------------------------------------
   # Deploy to Production
@@ -171,20 +195,47 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubectl for production
+        run: |
+          echo "${{ secrets.PRODUCTION_KUBECONFIG }}" | base64 -d > kubeconfig.yml
+          export KUBECONFIG=kubeconfig.yml
+          kubectl config use-context production
+
       - name: Deploy to production
         run: |
           echo "Deploying version ${{ needs.detect-version.outputs.version }} to production..."
-          # Add actual deployment commands here (kubectl, docker compose, etc.)
-          # Example:
-          # kubectl set image deployment/openclaw openclaw=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.detect-version.outputs.version }}
+          
+          # Update Helm values with new image tag
+          helm upgrade openclaw ./charts/openclaw \
+            --namespace openclaw-production \
+            --set image.repository=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --set image.tag=${{ needs.detect-version.outputs.version }} \
+            --set environment=production \
+            --wait \
+            --timeout 10m0s
+          
           echo "Production deployment complete"
 
       - name: Run production health check
         run: |
-          # Add health check commands for production
           echo "Running production health check..."
-          # Example:
-          # curl -f https://heretek-openclaw.example.com/health || exit 1
+          
+          # Wait for pods to be ready
+          kubectl wait --for=condition=ready pod -l app=openclaw -n openclaw-production --timeout=300s
+          
+          # Health check via Gateway endpoint
+          GATEWAY_POD=$(kubectl get pod -l app=openclaw-gateway -n openclaw-production -o jsonpath='{.items[0].metadata.name}')
+          kubectl exec -n openclaw-production $GATEWAY_POD -- curl -f http://localhost:18789/health || exit 1
+          
+          # Verify all agents are registered
+          kubectl exec -n openclaw-production $GATEWAY_POD -- curl -f http://localhost:18789/v1/agents || exit 1
+          
+          echo "Production health check passed"
 
       - name: Create deployment record
         run: |
@@ -195,6 +246,9 @@ jobs:
           echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Deployed at:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_STEP_SUMMARY
           echo "- **Deployed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          
+          # Add Helm release info
+          echo "- **Helm Revision:** $(helm history openclaw -n openclaw-production --max-revision 1 | tail -n 1 | awk '{print $1}')" >> $GITHUB_STEP_SUMMARY
 
   # ------------------------------------------------------------------------------
   # Automated Commit/Versioning

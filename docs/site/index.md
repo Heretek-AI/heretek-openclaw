@@ -71,7 +71,6 @@ Heretek OpenClaw is a brain-inspired multi-agent AI collective consisting of **1
 | **Conflict Monitor** | ACC conflict detection |
 | **Emotional Salience** | Amygdala importance detection |
 | **MCP Server** | Model Context Protocol compatibility |
-| **ClawBridge** | Mobile-first dashboard |
 
 ### 🛠️ Rich Skills Repository
 
@@ -165,6 +164,7 @@ For detailed deployment instructions, see the [Deployment Guide](./deployment/lo
 | **PostgreSQL** | 5432 | Vector database with pgvector |
 | **Redis** | 6379 | Caching layer |
 | **Ollama** | 11434 | Local embeddings |
+| **Langfuse** | 3000 | LLM observability dashboard |
 
 ---
 
@@ -215,7 +215,6 @@ For detailed deployment instructions, see the [Deployment Guide](./deployment/lo
 - Emotional Salience plugin
 - MCP Server
 - GraphRAG enhancements
-- ClawBridge dashboard
 
 ### [Agents Documentation](./agents/overview.md)
 - Agent system overview
@@ -343,6 +342,7 @@ docker compose down
 - [LiteLLM Documentation](https://docs.litellm.ai/)
 - [A2A Protocol Specification](../standards/A2A_PROTOCOL.md)
 - [Gateway Architecture](../architecture/GATEWAY_ARCHITECTURE.md)
+- [Langfuse Documentation](https://langfuse.com/docs)
 
 ---
 
