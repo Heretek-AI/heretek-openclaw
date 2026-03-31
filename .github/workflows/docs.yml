@@ -61,7 +61,7 @@ jobs:
       - name: Run lychee link checker
         uses: lycheeverse/lychee-action@v1
         with:
-          args: '--verbose --no-progress --exclude "^(https://github.com|https://npmjs.com|https://nodejs.org)" "**/*.md"'
+          args: '--verbose --no-progress .lycheeignore "**/*.md"'
           fail: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

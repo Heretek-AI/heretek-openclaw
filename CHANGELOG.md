@@ -48,7 +48,7 @@ This release completes the second phase of codebase cleanup, removing all redund
   - `scripts/deploy-openclaw.sh` - OpenClaw deployment script
 
 - **Docker Files**
-  - `Dockerfile.websocket-bridge` - Legacy WebSocket bridge
+  - `Dockerfile.websocket-bridge` - Legacy WebSocket bridge (referenced in docs but file was missing)
 
 ### Cleanup Statistics
 

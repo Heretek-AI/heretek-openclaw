@@ -652,17 +652,9 @@ ollama:
 ### WebSocket Bridge
 
 ```yaml
-websocket-bridge:
-  build:
-    context: ./modules/communication
-    dockerfile: Dockerfile.websocket-bridge
-  container_name: heretek-websocket-bridge
-  restart: unless-stopped
-  ports:
-    - "3002:3002"
-    - "3003:3003"
-  environment:
-    - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+# websocket-bridge: REMOVED (v2.0.4)
+# This service was removed because the Dockerfile.websocket-bridge was missing.
+# The functionality is no longer used in the current architecture.
 ```
 
 ---
