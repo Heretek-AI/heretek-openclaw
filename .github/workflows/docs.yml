@@ -1,0 +1,134 @@
+# ==============================================================================
+# Heretek OpenClaw — Docs Workflow
+# ==============================================================================
+# Documentation validation workflow for markdown linting, link checking,
+# spell checking, and table of contents validation
+# Triggered by: push to main, pull requests, or manual dispatch
+# ==============================================================================
+
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.md'
+      - 'docs/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**/*.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+jobs:
+  # ------------------------------------------------------------------------------
+  # Markdown Linting
+  # ------------------------------------------------------------------------------
+  markdownlint:
+    name: Markdown Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run markdownlint
+        run: npm run ci:docs
+
+  # ------------------------------------------------------------------------------
+  # Link Checking
+  # ------------------------------------------------------------------------------
+  lychee:
+    name: Link Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run lychee link checker
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: '--verbose --no-progress --exclude "^(https://github.com|https://npmjs.com|https://nodejs.org)" "**/*.md"'
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ------------------------------------------------------------------------------
+  # Spell Checking
+  # ------------------------------------------------------------------------------
+  cspell:
+    name: Spell Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install cspell
+        run: npm install --legacy-peer-deps cspell
+
+      - name: Run cspell
+        run: npx cspell "**/*.md" --no-progress
+
+  # ------------------------------------------------------------------------------
+  # Table of Contents Validation
+  # ------------------------------------------------------------------------------
+  toc-validation:
+    name: TOC Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install markdown-toc
+        run: npm install --legacy-peer-deps markdown-toc
+
+      - name: Validate table of contents
+        run: |
+          echo "Validating table of contents in documentation files..."
+          for file in docs/*.md README.md; do
+            if [ -f "$file" ]; then
+              echo "Checking: $file"
+              # Check if file has a TOC section
+              if grep -q "<!-- toc -->" "$file" || grep -q "## Table of Contents" "$file"; then
+                echo "  ✓ TOC marker found in $file"
+              else
+                echo "  ⚠ No TOC marker found in $file (optional)"
+              fi
+            fi
+          done
+          echo "TOC validation complete"
