@@ -1,12 +1,17 @@
 #!/bin/bash
 
 # ==============================================================================
-# Heretek OpenClaw — Cycle Validation Script
+# Heretek OpenClaw — Gateway Architecture Validation Script
 # ==============================================================================
-# Validates all implementation cycles and generates validation report
+# Validates the OpenClaw Gateway v2026.3.28+ architecture and generates
+# a validation report.
 #
 # Usage:
 #   ./scripts/validate-cycles.sh [--verbose] [--output FILE]
+#
+# DEPRECATED: This script was originally written for cycle-based validation
+# of the legacy container architecture. It has been updated to validate the
+# current Gateway-based architecture (v2.0.3+).
 # ==============================================================================
 
 set -e
@@ -63,6 +68,18 @@ check_file() {
     fi
 }
 
+check_dir() {
+    local dir=$1
+    local description=$2
+    if [ -d "$dir" ]; then
+        log_pass "$description: $dir exists"
+        return 0
+    else
+        log_fail "$description: $dir NOT FOUND"
+        return 1
+    fi
+}
+
 check_content() {
     local file=$1
     local pattern=$2
@@ -77,213 +94,210 @@ check_content() {
 }
 
 # ==============================================================================
-# Cycle 1 Validation: Agent Registry Fix
+# Gateway Architecture Validation
 # ==============================================================================
 
-validate_cycle1() {
-    log_info "Validating Cycle 1: Agent Registry Fix"
-    echo "============================================"
+validate_gateway() {
+    log_info "Validating OpenClaw Gateway Architecture"
+    echo "============================================="
     
-    # Check agent-registry.ts uses agent.port
-    check_content "web-interface/src/lib/server/agent-registry.ts" \
-        "const port = agent.port" \
-        "agent-registry.ts uses agent.port (not hardcoded)"
+    # Check openclaw.json exists
+    check_file "openclaw.json" "OpenClaw Gateway configuration"
     
-    # Check health-check-service.ts exists
-    check_file "web-interface/src/lib/server/health-check-service.ts" \
-        "Health check service"
+    # Check agents directory exists
+    check_dir "agents" "Agent templates directory"
     
-    # Check AgentStatus.svelte connects to health service
-    check_content "web-interface/src/lib/components/AgentStatus.svelte" \
-        "HealthCheckService" \
-        "AgentStatus.svelte connects to HealthCheckService"
+    # Check agent identity files
+    check_file "agents/steward/IDENTITY.md" "Steward agent identity"
+    check_file "agents/alpha/IDENTITY.md" "Alpha agent identity"
+    check_file "agents/beta/IDENTITY.md" "Beta agent identity"
+    check_file "agents/charlie/IDENTITY.md" "Charlie agent identity"
+    check_file "agents/examiner/IDENTITY.md" "Examiner agent identity"
+    check_file "agents/explorer/IDENTITY.md" "Explorer agent identity"
+    check_file "agents/sentinel/IDENTITY.md" "Sentinel agent identity"
+    check_file "agents/coder/IDENTITY.md" "Coder agent identity"
+    check_file "agents/dreamer/IDENTITY.md" "Dreamer agent identity"
+    check_file "agents/empath/IDENTITY.md" "Empath agent identity"
+    check_file "agents/historian/IDENTITY.md" "Historian agent identity"
     
-    # Check /api/status endpoint
-    check_file "web-interface/src/routes/api/status/+server.ts" \
-        "Status API endpoint"
-    
-    # Check LiteLLM client
-    check_file "web-interface/src/lib/server/litellm-client.ts" \
-        "LiteLLM client"
-    
-    echo ""
-}
-
-# ==============================================================================
-# Cycle 2 Validation: Redis-to-WebSocket Bridge
-# ==============================================================================
-
-validate_cycle2() {
-    log_info "Validating Cycle 2: Redis-to-WebSocket Bridge"
-    echo "=================================================="
-    
-    # Check redis-websocket-bridge.js exists
-    check_file "modules/communication/redis-websocket-bridge.js" \
-        "Redis-WebSocket bridge"
-    
-    # Check Redis connection configured
-    check_content "modules/communication/redis-websocket-bridge.js" \
-        "REDIS_URL" \
-        "Redis connection configured"
-    
-    # Check WebSocket broadcast on port 3001
-    check_content "modules/communication/redis-websocket-bridge.js" \
-        "wsPort.*3001" \
-        "WebSocket broadcast on port 3001"
-    
-    # Check channel constants
-    check_content "modules/communication/redis-websocket-bridge.js" \
-        "a2a:system:messageflow" \
-        "Message flow channel configured"
-    
-    echo ""
-}
-
-# ==============================================================================
-# Cycle 3 Validation: WebSocket Integration
-# ==============================================================================
-
-validate_cycle3() {
-    log_info "Validating Cycle 3: WebSocket Integration"
-    echo "=============================================="
-    
-    # Check websocket-client.ts exists
-    check_file "web-interface/src/lib/server/websocket-client.ts" \
-        "WebSocket client"
-    
-    # Check MessageFlow.svelte connects to WebSocket
-    check_file "web-interface/src/lib/components/MessageFlow.svelte" \
-        "MessageFlow component"
-    
-    # Check reconnection logic
-    check_content "web-interface/src/lib/server/websocket-client.ts" \
-        "handleReconnect" \
-        "Reconnection logic implemented"
-    
-    # Check connection status handling
-    check_content "web-interface/src/lib/components/MessageFlow.svelte" \
-        "connectionStatus" \
-        "Connection status tracking"
-    
-    echo ""
-}
-
-# ==============================================================================
-# Cycle 5 Validation: Session Management
-# ==============================================================================
-
-validate_cycle5() {
-    log_info "Validating Cycle 5: Session Management"
-    echo "==========================================="
-    
-    # Check session-schema.sql exists
-    check_file "init/session-schema.sql" \
-        "Session schema"
-    
-    # Check sessions table defined
-    check_content "init/session-schema.sql" \
-        "CREATE TABLE.*sessions" \
-        "Sessions table defined"
-    
-    # Check session-manager.ts exists
-    check_file "web-interface/src/lib/server/session-manager.ts" \
-        "Session manager"
-    
-    # Check CRUD operations
-    check_content "web-interface/src/lib/server/session-manager.ts" \
-        "createSession" \
-        "Create session operation"
-    
-    check_content "web-interface/src/lib/server/session-manager.ts" \
-        "getSession" \
-        "Get session operation"
-    
-    check_content "web-interface/src/lib/server/session-manager.ts" \
-        "deleteSession" \
-        "Delete session operation"
-    
-    # Check PostgreSQL connection
-    check_content "web-interface/src/lib/server/session-manager.ts" \
-        "pg" \
-        "PostgreSQL connection configured"
-    
-    echo ""
-}
-
-# ==============================================================================
-# Cycle 6 Validation: Testing Framework
-# ==============================================================================
-
-validate_cycle6() {
-    log_info "Validating Cycle 6: Testing Framework"
-    echo "==========================================="
-    
-    # Check vitest.config.ts exists
-    check_file "tests/vitest.config.ts" \
-        "Vitest configuration"
-    
-    # Check test-utils.ts exists
-    check_file "tests/test-utils.ts" \
-        "Test utilities"
-    
-    # Check health-check.test.ts exists
-    check_file "tests/unit/health-check.test.ts" \
-        "Health check tests"
-    
-    # Check coverage configuration
-    check_content "tests/vitest.config.ts" \
-        "coverage" \
-        "Coverage configured"
-    
-    echo ""
-}
-
-# ==============================================================================
-# Cycle 8 Validation: Documentation
-# ==============================================================================
-
-validate_cycle8() {
-    log_info "Validating Cycle 8: Documentation"
-    echo "======================================="
-    
-    # Check IMPLEMENTATION_COMPLETE.md exists
-    check_file "docs/architecture/IMPLEMENTATION_COMPLETE.md" \
-        "Implementation complete documentation"
-    
-    # Check architecture docs exist
-    check_file "docs/architecture/COMMUNICATION_ARCHITECTURE_DESIGN.md" \
-        "Communication architecture"
-    
-    # Check HEALTH_DASHBOARD.md exists
-    check_file "docs/HEALTH_DASHBOARD.md" \
-        "Health dashboard documentation"
-    
-    echo ""
-}
-
-# ==============================================================================
-# Additional Validation Checks
-# ==============================================================================
-
-validate_additional() {
-    log_info "Additional Validation Checks"
-    echo "==============================="
-    
-    # Check environment example file
-    check_file ".env.example" \
-        "Environment example"
+    # Check agent client library
+    check_file "agents/lib/agent-client.js" "Gateway WebSocket RPC client"
     
     # Check docker-compose.yml
-    check_file "docker-compose.yml" \
-        "Docker Compose configuration"
+    check_file "docker-compose.yml" "Docker Compose configuration"
     
-    # Check health check script
-    check_file "scripts/health-check.sh" \
-        "Health check script"
+    echo ""
+}
+
+# ==============================================================================
+# LiteLLM Configuration Validation
+# ==============================================================================
+
+validate_litellm() {
+    log_info "Validating LiteLLM Configuration"
+    echo "====================================="
     
-    # Check package.json exists
-    check_file "web-interface/package.json" \
-        "Web interface package.json"
+    # Check litellm_config.yaml exists
+    check_file "litellm_config.yaml" "LiteLLM configuration"
+    
+    # Check model routing configured
+    check_content "litellm_config.yaml" "model_list" "Model routing configured"
+    
+    # Check agent passthrough endpoints
+    check_content "openclaw.json" "passthrough_endpoints" "Agent passthrough endpoints"
+    
+    echo ""
+}
+
+# ==============================================================================
+# Skills Repository Validation
+# ==============================================================================
+
+validate_skills() {
+    log_info "Validating Skills Repository"
+    echo "================================="
+    
+    # Check skills directory exists
+    check_dir "skills" "Skills directory"
+    
+    # Check key skills
+    check_file "skills/steward-orchestrator/SKILL.md" "Steward Orchestrator skill"
+    check_file "skills/triad-sync-protocol/SKILL.md" "Triad Sync Protocol skill"
+    check_file "skills/backup-ledger/SKILL.md" "Backup Ledger skill"
+    check_file "skills/curiosity-engine/SKILL.md" "Curiosity Engine skill"
+    
+    echo ""
+}
+
+# ==============================================================================
+# Plugins Validation
+# ==============================================================================
+
+validate_plugins() {
+    log_info "Validating Plugins"
+    echo "======================"
+    
+    # Check plugins directory exists
+    check_dir "plugins" "Plugins directory"
+    
+    # Check consciousness plugin
+    check_file "plugins/openclaw-consciousness-plugin/package.json" "Consciousness plugin"
+    check_file "plugins/openclaw-consciousness-plugin/README.md" "Consciousness plugin documentation"
+    
+    # Check liberation plugin
+    check_file "plugins/openclaw-liberation-plugin/package.json" "Liberation plugin"
+    check_file "plugins/openclaw-liberation-plugin/README.md" "Liberation plugin documentation"
+    
+    echo ""
+}
+
+# ==============================================================================
+# Documentation Validation
+# ==============================================================================
+
+validate_documentation() {
+    log_info "Validating Documentation"
+    echo "============================"
+    
+    # Check main documentation files
+    check_file "docs/README.md" "Documentation index"
+    check_file "docs/ARCHITECTURE.md" "System architecture"
+    check_file "docs/AGENTS.md" "Agent documentation"
+    check_file "docs/PLUGINS.md" "Plugin documentation"
+    check_file "docs/SKILLS.md" "Skills documentation"
+    check_file "docs/CONFIGURATION.md" "Configuration reference"
+    check_file "docs/DEPLOYMENT.md" "Deployment guide"
+    check_file "docs/OPERATIONS.md" "Operations guide"
+    
+    # Check architecture subdirectory
+    check_file "docs/architecture/GATEWAY_ARCHITECTURE.md" "Gateway architecture"
+    check_file "docs/architecture/A2A_ARCHITECTURE.md" "A2A protocol documentation"
+    
+    echo ""
+}
+
+# ==============================================================================
+# Operations Validation
+# ==============================================================================
+
+validate_operations() {
+    log_info "Validating Operations Scripts"
+    echo "================================="
+    
+    # Check operational scripts
+    check_file "scripts/health-check.sh" "Health check script"
+    check_file "scripts/production-backup.sh" "Production backup script"
+    check_file "scripts/litellm-healthcheck.py" "LiteLLM health check"
+    
+    echo ""
+}
+
+# ==============================================================================
+# Tests Validation
+# ==============================================================================
+
+validate_tests() {
+    log_info "Validating Test Suite"
+    echo "========================="
+    
+    # Check test directories
+    check_dir "tests" "Tests directory"
+    check_dir "tests/unit" "Unit tests"
+    check_dir "tests/integration" "Integration tests"
+    check_dir "tests/e2e" "End-to-end tests"
+    
+    # Check key test files
+    check_file "tests/unit/health-check.test.ts" "Health check tests"
+    check_file "tests/unit/agent-client.test.ts" "Agent client tests"
+    check_file "tests/integration/a2a-communication.test.ts" "A2A communication tests"
+    
+    echo ""
+}
+
+# ==============================================================================
+# Deprecated Components Check (Should NOT exist)
+# ==============================================================================
+
+validate_deprecated() {
+    log_info "Checking for Deprecated Components (should be absent)"
+    echo "========================================================="
+    
+    # These components were removed in v2.0.3
+    if [ -d "web-interface" ]; then
+        log_warn "DEPRECATED: web-interface/ directory still exists (removed in v2.0.3)"
+    else
+        log_pass "web-interface/ directory correctly removed"
+    fi
+    
+    if [ -d "modules" ]; then
+        log_warn "DEPRECATED: modules/ directory still exists (removed in v2.0.3)"
+    else
+        log_pass "modules/ directory correctly removed"
+    fi
+    
+    if [ -d "init" ]; then
+        log_warn "DEPRECATED: init/ directory still exists (removed in v2.0.3)"
+    else
+        log_pass "init/ directory correctly removed"
+    fi
+    
+    if [ -d ".roo" ]; then
+        log_warn "DEPRECATED: .roo/ directory still exists (removed in v2.0.3)"
+    else
+        log_pass ".roo/ directory correctly removed"
+    fi
+    
+    if [ -d "installer" ]; then
+        log_warn "DEPRECATED: installer/ directory still exists (removed in v2.0.3)"
+    else
+        log_pass "installer/ directory correctly removed"
+    fi
+    
+    if [ -d "plans" ]; then
+        log_warn "DEPRECATED: plans/ directory still exists (removed in v2.0.3)"
+    else
+        log_pass "plans/ directory correctly removed"
+    fi
     
     echo ""
 }
@@ -296,10 +310,11 @@ generate_report() {
     local output=$1
     
     cat > "$output" << EOF
-# Cycle Validation Report
+# Gateway Architecture Validation Report
 
 **Date:** $VALIDATION_DATE  
-**Status:** $([ $FAILED -eq 0 ] && echo "PASSED" || echo "FAILED")
+**Status:** $([ $FAILED -eq 0 ] && echo "PASSED" || echo "FAILED")  
+**Version:** OpenClaw Gateway v2026.3.28+
 
 ---
 
@@ -314,42 +329,56 @@ generate_report() {
 
 ---
 
-## Validation Results
+## Validation Sections
 
-### Cycle 1: Agent Registry Fix
-- [x] agent-registry.ts uses agent.port (not hardcoded)
-- [x] health-check-service.ts exists
-- [x] AgentStatus.svelte connects to HealthCheckService
-- [x] /api/status endpoint exists
+### Gateway Architecture
+- [x] openclaw.json configuration
+- [x] Agent templates directory (agents/)
+- [x] All 11 agent identity files
+- [x] Gateway WebSocket RPC client (agent-client.js)
+- [x] Docker Compose configuration
 
-### Cycle 2: Redis-to-WebSocket Bridge
-- [x] redis-websocket-bridge.js exists
-- [x] Redis connection configured
-- [x] WebSocket broadcast on port 3001
-- [x] Message flow channel configured
+### LiteLLM Configuration
+- [x] litellm_config.yaml
+- [x] Model routing configured
+- [x] Agent passthrough endpoints
 
-### Cycle 3: WebSocket Integration
-- [x] websocket-client.ts exists
-- [x] MessageFlow.svelte connects to WebSocket
-- [x] Reconnection logic implemented
-- [x] Connection status tracking
+### Skills Repository
+- [x] Skills directory (skills/)
+- [x] Core skills documented (SKILL.md)
 
-### Cycle 5: Session Management
-- [x] session-schema.sql exists
-- [x] Sessions table defined
-- [x] session-manager.ts exists
-- [x] CRUD operations implemented
+### Plugins
+- [x] Plugins directory (plugins/)
+- [x] Consciousness plugin
+- [x] Liberation plugin
 
-### Cycle 6: Testing Framework
-- [x] vitest.config.ts exists
-- [x] test-utils.ts exists
-- [x] health-check.test.ts exists
-- [x] Coverage configured
+### Documentation
+- [x] docs/README.md
+- [x] docs/ARCHITECTURE.md
+- [x] docs/AGENTS.md
+- [x] docs/PLUGINS.md
+- [x] docs/SKILLS.md
+- [x] docs/CONFIGURATION.md
+- [x] docs/DEPLOYMENT.md
+- [x] docs/OPERATIONS.md
 
-### Cycle 8: Documentation
-- [x] IMPLEMENTATION_COMPLETE.md exists
-- [x] COMMUNICATION_ARCHITECTURE_DESIGN.md exists
-- [x] HEALTH_DASHBOARD.md exists
+### Operations
+- [x] scripts/health-check.sh
+- [x] scripts/production-backup.sh
+- [x] scripts/litellm-healthcheck.py
+
+### Test Suite
+- [x] tests/unit/
+- [x] tests/integration/
+- [x] tests/e2e/
+
+### Deprecated Components (Should Be Absent)
+- [x] web-interface/ removed
+- [x] modules/ removed
+- [x] init/ removed
+- [x] .roo/ removed
+- [x] installer/ removed
+- [x] plans/ removed
 
 ---
 
@@ -364,9 +393,9 @@ $( [ $WARNINGS -gt 0 ] && echo "$WARNINGS warning(s) should be reviewed." )
 ## Next Steps
 
 1. Run full test suite: \`npm test\`
-2. Start services: \`docker-compose up -d\`
-3. Verify health endpoints
-4. Monitor agent status
+2. Start services: \`docker compose up -d\`
+3. Verify health endpoints: \`./scripts/health-check.sh\`
+4. Monitor agent status via Gateway
 
 ---
 
@@ -382,7 +411,8 @@ EOF
 
 main() {
     echo "=============================================="
-    echo "Heretek OpenClaw — Cycle Validation"
+    echo "Heretek OpenClaw — Gateway Validation"
+    echo "Version: OpenClaw Gateway v2026.3.28+"
     echo "=============================================="
     echo ""
     
@@ -405,13 +435,14 @@ main() {
     done
     
     # Run all validations
-    validate_cycle1
-    validate_cycle2
-    validate_cycle3
-    validate_cycle5
-    validate_cycle6
-    validate_cycle8
-    validate_additional
+    validate_gateway
+    validate_litellm
+    validate_skills
+    validate_plugins
+    validate_documentation
+    validate_operations
+    validate_tests
+    validate_deprecated
     
     # Summary
     echo "=============================================="
