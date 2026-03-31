@@ -1,0 +1,44 @@
+{
+  "title": "Heretek OpenClaw",
+  "description": "Self-improving autonomous agent collective with LiteLLM A2A protocol",
+  "repository": "https://github.com/heretek/heretek-openclaw",
+  "discord": "https://discord.gg/3AnUqsXnmK",
+  "version": "2.0.0",
+  "navigation": {
+    "architecture": [
+      { "label": "Overview", "path": "/heretek-openclaw/architecture/overview" },
+      { "label": "Agents", "path": "/heretek-openclaw/architecture/agents" },
+      { "label": "A2A Protocol", "path": "/heretek-openclaw/architecture/a2a-protocol" },
+      { "label": "Triad", "path": "/heretek-openclaw/architecture/triad" }
+    ],
+    "api": [
+      { "label": "Overview", "path": "/heretek-openclaw/api/overview" },
+      { "label": "WebSocket API", "path": "/heretek-openclaw/api/websocket" },
+      { "label": "LiteLLM API", "path": "/heretek-openclaw/api/litellm" },
+      { "label": "MCP Server", "path": "/heretek-openclaw/api/mcp" }
+    ],
+    "deployment": [
+      { "label": "Overview", "path": "/heretek-openclaw/deployment/overview" },
+      { "label": "Local", "path": "/heretek-openclaw/deployment/local" },
+      { "label": "Docker", "path": "/heretek-openclaw/deployment/docker" },
+      { "label": "Kubernetes", "path": "/heretek-openclaw/deployment/kubernetes" }
+    ],
+    "operations": [
+      { "label": "Overview", "path": "/heretek-openclaw/operations/overview" },
+      { "label": "Monitoring", "path": "/heretek-openclaw/operations/monitoring" },
+      { "label": "Backup", "path": "/heretek-openclaw/operations/backup" },
+      { "label": "Troubleshooting", "path": "/heretek-openclaw/operations/troubleshooting" }
+    ],
+    "plugins": [
+      { "label": "Overview", "path": "/heretek-openclaw/plugins/overview" },
+      { "label": "Clawbridge", "path": "/heretek-openclaw/plugins/clawbridge" },
+      { "label": "Conflict Monitor", "path": "/heretek-openclaw/plugins/conflict-monitor" },
+      { "label": "Emotional Salience", "path": "/heretek-openclaw/plugins/emotional-salience" },
+      { "label": "GraphRAG", "path": "/heretek-openclaw/plugins/graphrag" },
+      { "label": "MCP Server", "path": "/heretek-openclaw/plugins/mcp-server" }
+    ],
+    "agents": [
+      { "label": "Overview", "path": "/heretek-openclaw/agents/overview" }
+    ]
+  }
+}

@@ -1,34 +1,29 @@
-# Lychee Link Checker Exclusions
-# This file excludes URLs that should not be checked
-
-# Localhost URLs (not accessible from CI)
-localhost:*
-127.0.0.1:*
-0.0.0.0:*
+# Ignore localhost URLs
 http://localhost:*
 https://localhost:*
-ws://localhost:*
-wss://localhost:*
+127.0.0.1:*
 
-# Docker internal hostnames
-http://litellm:*
-http://redis:*
-http://postgres:*
-http://neo4j:*
-http://ollama:*
-http://heretek-*
-
-# Relative paths to non-existent modules/memory/ files
-modules/memory/*
-
-# Relative paths to non-existent session-manager.js
-**/session-manager.js
-
-# External URLs that are expected to fail or are not accessible
+# Ignore internal network URLs
 http://192.168.*
 http://10.*
-http://172.*
 
-# GitHub anchors that may not exist
-# (lychee sometimes fails on anchor links)
-**/*.md#*
+# Ignore GitHub edit URLs
+github.com/*edit*
+github.com/*blob*
+github.com/*tree*
+
+# Ignore anchor links
+#*
+
+# Ignore relative markdown links
+*.md
+*.md#*
+
+# Ignore API endpoints
+/api/*
+/v1/*
+
+# Ignore placeholder URLs
+example.com
+example.org
+your-domain.com

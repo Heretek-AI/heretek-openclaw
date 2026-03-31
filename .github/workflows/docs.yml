@@ -43,8 +43,11 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
+      - name: Install markdownlint-cli
+        run: npm install --legacy-peer-deps markdownlint-cli
+
       - name: Run markdownlint
-        run: npm run ci:docs
+        run: npx markdownlint '**/*.md' --ignore node_modules --config .markdownlint.json
 
   # ------------------------------------------------------------------------------
   # Link Checking
@@ -91,7 +94,7 @@ jobs:
         run: npm install --legacy-peer-deps cspell
 
       - name: Run cspell
-        run: npx cspell "**/*.md" --no-progress
+        run: npx cspell "**/*.md" --no-progress --config .cspell.json
 
   # ------------------------------------------------------------------------------
   # Table of Contents Validation
