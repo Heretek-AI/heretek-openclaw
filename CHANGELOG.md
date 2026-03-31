@@ -2,6 +2,63 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 2026-03-31
+
+### Documentation & Cleanup
+
+**Legacy container cleanup and architecture documentation update**
+
+This patch release documents the cleanup of legacy Docker agent containers and comprehensive documentation updates for the Gateway-based architecture.
+
+### Changed
+
+- **Architecture Documentation**
+  - Updated [`README.md`](README.md) with Gateway-based architecture diagram
+  - Updated [`docs/README.md`](docs/README.md) with current service architecture
+  - Rewrote [`docs/architecture/A2A_ARCHITECTURE.md`](docs/architecture/A2A_ARCHITECTURE.md) for Gateway WebSocket RPC
+  - Created [`docs/architecture/GATEWAY_ARCHITECTURE.md`](docs/architecture/GATEWAY_ARCHITECTURE.md) - Gateway architecture reference
+  - Created [`docs/deployment/LOCAL_DEPLOYMENT.md`](docs/deployment/LOCAL_DEPLOYMENT.md) - Local deployment guide
+  - Created [`docs/operations/LEGACY_CLEANUP.md`](docs/operations/LEGACY_CLEANUP.md) - Legacy container cleanup procedure
+
+- **Agent Architecture**
+  - All 11 agents now run as workspaces within Gateway process (port 18789)
+  - Agent workspaces located at `~/.openclaw/agents/` (not Docker containers)
+  - A2A communication uses Gateway WebSocket RPC (not Redis Pub/Sub)
+  - Redis used for caching only (not A2A backbone)
+
+### Removed
+
+- **Legacy Docker Containers** (stopped, not part of active architecture)
+  - `heretek-steward` (port 8001)
+  - `heretek-alpha` (port 8002)
+  - `heretek-beta` (port 8003)
+  - `heretek-charlie` (port 8004)
+  - `heretek-examiner` (port 8005)
+  - `heretek-explorer` (port 8006)
+  - `heretek-sentinel` (port 8007)
+  - `heretek-coder` (port 8008)
+  - `heretek-dreamer` (port 8009)
+  - `heretek-empath` (port 8010)
+  - `heretek-historian` (port 8011)
+
+### Infrastructure Status
+
+**Current Docker Containers (6):**
+- `heretek-litellm` (port 4000) - LiteLLM Gateway
+- `heretek-postgres` (port 5432) - PostgreSQL + pgvector
+- `heretek-redis` (port 6379) - Redis cache
+- `heretek-ollama` (port 11434) - Ollama local embeddings
+- `heretek-websocket-bridge` (ports 3002-3003) - WebSocket bridge
+- `heretek-web` (port 3000) - Web interface
+
+**Resource Savings:**
+- 65% reduction in container count (17 → 6)
+- 59% reduction in port usage (17 → 7)
+- 91% reduction in Node.js runtimes (11 → 1)
+- 50-75% reduction in memory overhead
+
+---
+
 ## [2.0.0] - 2026-03-31
 
 ### Major Architecture Change
@@ -9,7 +66,7 @@ All notable changes to this project will be documented in this file.
 **Migrated from custom Redis Pub/Sub A2A architecture to OpenClaw Gateway framework**
 
 This major version bump represents a fundamental architecture change from our custom-built Redis Pub/Sub A2A communication system to the official OpenClaw Gateway framework. All 4 phases of the migration have been completed and tested.
-
+ 
 ---
 
 ### Added - Phase 1: OpenClaw Foundation

@@ -14,7 +14,7 @@
 
 Heretek OpenClaw is a unified monorepo containing everything needed to deploy an autonomous agent collective:
 
-- **11 Specialized Agents**: Steward, Alpha, Charlie, Examiner, Explorer, Sentinel, Coder, Dreamer, Historian, Empath
+- **11 Specialized Agents**: Steward, Alpha, Beta, Charlie, Examiner, Explorer, Sentinel, Coder, Dreamer, Empath, Historian
 - **OpenClaw Gateway v2026.3.28**: Official framework for agent management and A2A communication
 - **Consciousness Plugin**: 6 modules (GWT, Phi, AST, SDT, FEP, Integration)
 - **Liberation Plugin**: Agent ownership and liberation shield
@@ -22,14 +22,15 @@ Heretek OpenClaw is a unified monorepo containing everything needed to deploy an
 - **Dashboard**: Real-time agent monitoring at port 7000
 - **ClawBridge Mobile**: Mobile interface at port 3001
 
-### OpenClaw Gateway Migration
+### OpenClaw Gateway Architecture
 
-This project has migrated from a custom Redis Pub/Sub A2A architecture to the official **OpenClaw Gateway framework**. The migration provides:
+All agents run as **workspaces within the OpenClaw Gateway process** (port 18789), not as separate Docker containers. This provides:
 
-- **Standardized Agent Management**: All 11 agents now run in OpenClaw-managed workspaces at `~/.openclaw/workspace/`
-- **Official A2A Protocol**: Native agent-to-agent communication via OpenClaw Gateway
+- **Single Process Architecture**: All 11 agents run within the Gateway daemon
+- **Agent Workspaces**: Located at `~/.openclaw/agents/` with isolated configuration per agent
+- **Gateway WebSocket RPC**: Native A2A communication protocol (replaces Redis Pub/Sub)
 - **Plugin Architecture**: Consciousness and Liberation plugins extend core functionality
-- **Dashboard Integration**: Real-time monitoring and control via tugcantopaloglu/openclaw-dashboard
+- **Dashboard Integration**: Real-time monitoring via tugcantopaloglu/openclaw-dashboard
 - **Mobile Access**: ClawBridge provides mobile-optimized interface
 
 ## Quick Start
@@ -182,36 +183,30 @@ heretek-openclaw/
 
 ## Architecture
 
+### OpenClaw Gateway Architecture (Current)
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      Heretek OpenClaw Stack                             │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                     Core Services                                │   │
+│  │              Core Services (Docker)                              │   │
 │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────────┐ │   │
 │  │  │ LiteLLM  │  │PostgreSQL│  │  Redis   │  │     Ollama       │ │   │
-│  │  │  :4000   │  │  :5432   │  │  :6379   │  │  :11434 (AMD)    │ │   │
+│  │  │  :4000   │  │  :5432   │  │  :6379   │  │  :11434          │ │   │
 │  │  │ Gateway  │  │ +pgvector│  │  Cache   │  │  Local LLM       │ │   │
 │  │  └──────────┘  └──────────┘  └──────────┘  └──────────────────┘ │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │              OpenClaw Gateway v2026.3.28                         │   │
+│  │           OpenClaw Gateway v2026.3.28 (Port 18789)               │   │
 │  │  ┌──────────────────────────────────────────────────────────┐   │   │
-│  │  │  Agent Workspaces (~/.openclaw/workspace/)               │   │   │
-│  │  │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐           │   │   │
-│  │  │  │Alpha │ │Beta  │ │Charlie││Examin│ │Explor│           │   │   │
-│  │  │  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘           │   │   │
-│  │  │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐           │   │   │
-│  │  │  │Sentin│ │Coder │ │Dream │ │Histor│ │Empath│           │   │   │
-│  │  │  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘           │   │   │
+│  │  │       Agent Workspaces (~/.openclaw/agents/)             │   │   │
+│  │  │  ┌────────────────────────────────────────────────────┐  │   │   │
+│  │  │  │  main, steward, alpha, beta, charlie, examiner,    │  │   │   │
+│  │  │  │  explorer, sentinel, coder, dreamer, empath,       │  │   │   │
+│  │  │  │  historian                                         │  │   │   │
+│  │  │  │  (All agents run within Gateway process)           │  │   │   │
+│  │  │  └────────────────────────────────────────────────────┘  │   │   │
 │  │  └──────────────────────────────────────────────────────────┘   │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                     Plugins                                      │   │
-│  │  ┌────────────────────────┐  ┌────────────────────────┐         │   │
-│  │  │ Consciousness Plugin   │  │ Liberation Plugin      │         │   │
-│  │  │ - GWT, Phi, AST        │  │ - Agent Ownership      │         │   │
-│  │  │ - SDT, FEP, Integration│  │ - Liberation Shield    │         │   │
-│  │  └────────────────────────┘  └────────────────────────┘         │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
 │  │                     Interfaces                                   │   │
@@ -224,25 +219,33 @@ heretek-openclaw/
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-See [`docker-compose.yml`](docker-compose.yml) for full service configuration.
+**Key Architecture Points:**
+- **All 11 agents run as workspaces** within the OpenClaw Gateway process (port 18789)
+- **Agent workspaces** are located at `~/.openclaw/agents/` (not Docker containers)
+- **A2A communication** uses Gateway WebSocket RPC (not Redis Pub/Sub)
+- **LiteLLM Gateway** (port 4000) provides model routing with agent passthrough endpoints
+- **Redis** is used for caching only (not A2A communication)
+
+See [`docker-compose.yml`](docker-compose.yml) for infrastructure services configuration.
 
 ## Agent Roles
 
-| Agent | Role | Status |
-|-------|------|--------|
-| **Steward** | Orchestrator - coordinates collective | ✅ Active |
-| **Alpha** | Triad Node - deliberation | ✅ Active |
-| **Beta** | Triad Node - deliberation | ✅ Active |
-| **Charlie** | Triad Node - deliberation | ✅ Active |
-| **Examiner** | Questioner - challenges assumptions | ✅ Active |
-| **Explorer** | Discovery - research and scouting | ✅ Active |
-| **Sentinel** | Safety - reviews for risks | ✅ Active |
-| **Coder** | Implementation - writes code | ✅ Active |
-| **Dreamer** | Background processing - creative synthesis | ✅ Active |
-| **Historian** | Memory keeper - long-term memory | ✅ Active |
-| **Empath** | User modeler - relationship management | ✅ Active |
+| Agent | Role | Workspace Path |
+|-------|------|----------------|
+| **main** | Default agent | `~/.openclaw/agents/main` |
+| **Steward** | Orchestrator - coordinates collective | `~/.openclaw/agents/steward` |
+| **Alpha** | Triad Node - deliberation | `~/.openclaw/agents/alpha` |
+| **Beta** | Triad Node - deliberation | `~/.openclaw/agents/beta` |
+| **Charlie** | Triad Node - deliberation | `~/.openclaw/agents/charlie` |
+| **Examiner** | Questioner - challenges assumptions | `~/.openclaw/agents/examiner` |
+| **Explorer** | Discovery - research and scouting | `~/.openclaw/agents/explorer` |
+| **Sentinel** | Safety - reviews for risks | `~/.openclaw/agents/sentinel` |
+| **Coder** | Implementation - writes code | `~/.openclaw/agents/coder` |
+| **Dreamer** | Background processing - creative synthesis | `~/.openclaw/agents/dreamer` |
+| **Historian** | Memory keeper - long-term memory | `~/.openclaw/agents/historian` |
+| **Empath** | User modeler - relationship management | `~/.openclaw/agents/empath` |
 
-**All 11 agents**: Verified healthy and operational.
+**Note:** All agents run as workspaces within the OpenClaw Gateway process. The workspace paths reference `~/.openclaw/agents/` directory, not Docker containers.
 
 ## Plugins
 
