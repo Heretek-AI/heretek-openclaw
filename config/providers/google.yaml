@@ -1,0 +1,196 @@
+# ==============================================================================
+# Google Provider Template for LiteLLM
+# ==============================================================================
+# Models: Gemini-Pro, Gemini-Ultra, Gemini-Flash, Gemini-1.5 variants
+# API Documentation: https://ai.google.dev/docs
+# LiteLLM Documentation: https://docs.litellm.ai/docs/providers/google
+# ==============================================================================
+# Required Environment Variables:
+#   - GOOGLE_API_KEY: Your Google AI Studio API key
+#   - GOOGLE_VERTEX_PROJECT_ID: Your GCP project ID (for Vertex AI)
+#   - GOOGLE_VERTEX_LOCATION: GCP region (e.g., us-central1)
+# ==============================================================================
+
+model_list:
+  # ==========================================================================
+  # Gemini 1.5 Models
+  # ==========================================================================
+  
+  - model_name: google/gemini-1.5-pro
+    litellm_params:
+      model: gemini/gemini-1.5-pro
+      api_key: os.environ/GOOGLE_API_KEY
+    model_info:
+      description: "Google Gemini 1.5 Pro - Advanced multimodal model"
+      max_tokens: 2097152
+      input_cost_per_token: 0.0000035
+      output_cost_per_token: 0.0000105
+      supports_vision: true
+      supports_function_calling: true
+
+  - model_name: google/gemini-1.5-flash
+    litellm_params:
+      model: gemini/gemini-1.5-flash
+      api_key: os.environ/GOOGLE_API_KEY
+    model_info:
+      description: "Google Gemini 1.5 Flash - Fast and efficient model"
+      max_tokens: 1048576
+      input_cost_per_token: 0.00000035
+      output_cost_per_token: 0.00000105
+      supports_vision: true
+      supports_function_calling: true
+
+  - model_name: google/gemini-1.5-flash-8b
+    litellm_params:
+      model: gemini/gemini-1.5-flash-8b
+      api_key: os.environ/GOOGLE_API_KEY
+    model_info:
+      description: "Google Gemini 1.5 Flash 8B - Lightweight flash model"
+      max_tokens: 1048576
+      input_cost_per_token: 0.000000075
+      output_cost_per_token: 0.0000003
+      supports_vision: true
+      supports_function_calling: true
+
+  # ==========================================================================
+  # Gemini 2.0 Models
+  # ==========================================================================
+  
+  - model_name: google/gemini-2.0-flash
+    litellm_params:
+      model: gemini/gemini-2.0-flash-exp
+      api_key: os.environ/GOOGLE_API_KEY
+    model_info:
+      description: "Google Gemini 2.0 Flash - Next generation flash model"
+      max_tokens: 1048576
+      input_cost_per_token: 0.00000015
+      output_cost_per_token: 0.0000006
+      supports_vision: true
+      supports_function_calling: true
+
+  - model_name: google/gemini-2.0-pro
+    litellm_params:
+      model: gemini/gemini-2.0-pro-exp
+      api_key: os.environ/GOOGLE_API_KEY
+    model_info:
+      description: "Google Gemini 2.0 Pro - Next generation pro model"
+      max_tokens: 2097152
+      input_cost_per_token: 0.000002
+      output_cost_per_token: 0.000008
+      supports_vision: true
+      supports_function_calling: true
+
+  # ==========================================================================
+  # Gemini Ultra (Vertex AI)
+  # ==========================================================================
+  
+  - model_name: google/gemini-ultra
+    litellm_params:
+      model: vertex_ai/gemini-ultra
+      api_key: os.environ/GOOGLE_API_KEY
+      vertex_project: os.environ/GOOGLE_VERTEX_PROJECT_ID
+      vertex_location: os.environ/GOOGLE_VERTEX_LOCATION
+    model_info:
+      description: "Google Gemini Ultra - Most capable model (Vertex AI)"
+      max_tokens: 32768
+      input_cost_per_token: 0.000005
+      output_cost_per_token: 0.000015
+      supports_vision: true
+      supports_function_calling: true
+
+  # ==========================================================================
+  # Legacy Gemini Models
+  # ==========================================================================
+  
+  - model_name: google/gemini-pro
+    litellm_params:
+      model: gemini/gemini-pro
+      api_key: os.environ/GOOGLE_API_KEY
+    model_info:
+      description: "Google Gemini Pro - Original Gemini model"
+      max_tokens: 32768
+      input_cost_per_token: 0.0000005
+      output_cost_per_token: 0.0000015
+      supports_vision: true
+      supports_function_calling: true
+
+  - model_name: google/gemini-pro-vision
+    litellm_params:
+      model: gemini/gemini-pro-vision
+      api_key: os.environ/GOOGLE_API_KEY
+    model_info:
+      description: "Google Gemini Pro Vision - Vision-optimized model"
+      max_tokens: 16384
+      input_cost_per_token: 0.0000005
+      output_cost_per_token: 0.0000015
+      supports_vision: true
+      supports_function_calling: false
+
+  # ==========================================================================
+  # Vertex AI Models (GCP)
+  # ==========================================================================
+  
+  - model_name: google/vertex-claude-3-sonnet
+    litellm_params:
+      model: vertex_ai/claude-3-sonnet
+      api_key: os.environ/GOOGLE_API_KEY
+      vertex_project: os.environ/GOOGLE_VERTEX_PROJECT_ID
+      vertex_location: os.environ/GOOGLE_VERTEX_LOCATION
+    model_info:
+      description: "Anthropic Claude 3 Sonnet via Vertex AI"
+      max_tokens: 4096
+      input_cost_per_token: 0.000003
+      output_cost_per_token: 0.000015
+      supports_function_calling: true
+      supports_vision: true
+
+  - model_name: google/vertex-llama2
+    litellm_params:
+      model: vertex_ai/llama2-70b-chat
+      api_key: os.environ/GOOGLE_API_KEY
+      vertex_project: os.environ/GOOGLE_VERTEX_PROJECT_ID
+      vertex_location: os.environ/GOOGLE_VERTEX_LOCATION
+    model_info:
+      description: "Meta Llama 2 70B Chat via Vertex AI"
+      max_tokens: 4096
+      input_cost_per_token: 0.0000005
+      output_cost_per_token: 0.000001
+
+  # ==========================================================================
+  # Model Aliases (Convenience)
+  # ==========================================================================
+  
+  - model_name: google/default
+    litellm_params:
+      model: gemini/gemini-1.5-pro
+      api_key: os.environ/GOOGLE_API_KEY
+    model_info:
+      description: "Google Default - Points to Gemini 1.5 Pro"
+
+  - model_name: google/fast
+    litellm_params:
+      model: gemini/gemini-1.5-flash
+      api_key: os.environ/GOOGLE_API_KEY
+    model_info:
+      description: "Google Fast - Points to Gemini 1.5 Flash"
+
+  - model_name: google/cheap
+    litellm_params:
+      model: gemini/gemini-1.5-flash-8b
+      api_key: os.environ/GOOGLE_API_KEY
+    model_info:
+      description: "Google Cheap - Points to Gemini 1.5 Flash 8B"
+
+  - model_name: google/vision
+    litellm_params:
+      model: gemini/gemini-1.5-pro
+      api_key: os.environ/GOOGLE_API_KEY
+    model_info:
+      description: "Google Vision - Points to Gemini 1.5 Pro for vision tasks"
+
+  - model_name: google/powerful
+    litellm_params:
+      model: gemini/gemini-2.0-pro-exp
+      api_key: os.environ/GOOGLE_API_KEY
+    model_info:
+      description: "Google Powerful - Points to Gemini 2.0 Pro"

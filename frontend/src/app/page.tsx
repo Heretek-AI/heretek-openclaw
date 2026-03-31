@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Moon, Sun, Github } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -8,8 +8,11 @@ export default function Home() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  useState(() => {
+  // Use effect to detect when component is mounted on client
+  // This avoids SSR hydration mismatch with next-themes
+  useEffect(() => {
     setMounted(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

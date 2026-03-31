@@ -1,0 +1,59 @@
+[Unit]
+Description=OpenClaw Automated Backup Service
+Documentation=file:///root/heretek/heretek-openclaw/docs/operations/AUTOMATED_BACKUP.md
+After=network.target postgresql.service redis.service
+Wants=postgresql.service redis.service
+
+[Service]
+Type=oneshot
+
+# Environment configuration
+Environment="OPENCLAW_BACKUP_DIR=/root/.openclaw/backups"
+Environment="OPENCLAW_TEMP_DIR=/tmp/openclaw-backup"
+Environment="OPENCLAW_RETENTION_DAYS=30"
+Environment="POSTGRES_HOST=localhost"
+Environment="POSTGRES_PORT=5432"
+Environment="POSTGRES_DB=heretek"
+Environment="POSTGRES_USER=heretek"
+Environment="REDIS_HOST=localhost"
+Environment="REDIS_PORT=6379"
+
+# Load additional environment variables from file if it exists
+EnvironmentFile=-/etc/openclaw/backup.env
+
+# Working directory
+WorkingDirectory=/root/heretek/heretek-openclaw
+
+# Main backup script execution
+# Determines backup type based on day of week (Sunday = full, otherwise incremental)
+ExecStart=/bin/bash -c '\
+    if [ "$(date +\%u)" = "7" ]; then \
+        /root/heretek/heretek-openclaw/scripts/automated-backup.sh --type full --verify --rotate; \
+    else \
+        /root/heretek/heretek-openclaw/scripts/automated-backup.sh --type incremental --verify; \
+    fi'
+
+# Timeout for backup operation (2 hours max)
+TimeoutStartSec=7200
+
+# Run as root (required for accessing all system files)
+User=root
+Group=root
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+
+# Allow write access to backup directories
+ReadWritePaths=/root/.openclaw/backups
+ReadWritePaths=/tmp/openclaw-backup
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=openclaw-backup
+
+[Install]
+WantedBy=multi-user.target

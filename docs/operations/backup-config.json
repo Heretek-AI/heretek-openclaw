@@ -1,6 +1,20 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Automated backup configuration for Heretek OpenClaw",
+  "systemd": {
+    "timer_unit": "systemd/openclaw-backup.timer",
+    "service_unit": "systemd/openclaw-backup.service",
+    "environment_file": "/etc/openclaw/backup.env",
+    "installation": {
+      "copy_units": [
+        "sudo cp systemd/openclaw-backup.timer /etc/systemd/system/",
+        "sudo cp systemd/openclaw-backup.service /etc/systemd/system/",
+        "sudo systemctl daemon-reload",
+        "sudo systemctl enable openclaw-backup.timer",
+        "sudo systemctl start openclaw-backup.timer"
+      ]
+    }
+  },
   "backup_settings": {
     "base_directory": "/root/.openclaw/backups",
     "temp_directory": "/tmp/openclaw-backup",
@@ -12,40 +26,23 @@
     }
   },
   "schedules": {
-    "database": {
+    "incremental": {
       "enabled": true,
-      "cron": "0 2 * * *",
-      "description": "Daily PostgreSQL backup at 2 AM",
+      "systemd_timer": "openclaw-backup.timer",
+      "onCalendar": "*-*-* 02:00:00",
+      "description": "Daily incremental backup at 2 AM",
       "retention_days": 30,
-      "min_backups": 7
+      "min_backups": 7,
+      "backup_types": ["postgresql", "redis", "workspace", "agent_state", "config"]
     },
-    "redis": {
+    "full": {
       "enabled": true,
-      "cron": "0 3 * * *",
-      "description": "Daily Redis backup at 3 AM",
-      "retention_days": 7,
-      "min_backups": 3
-    },
-    "workspace": {
-      "enabled": true,
-      "cron": "0 4 * * *",
-      "description": "Daily workspace backup at 4 AM",
-      "retention_days": 30,
-      "min_backups": 7
-    },
-    "agent_state": {
-      "enabled": true,
-      "cron": "0 */6 * * *",
-      "description": "Agent state backup every 6 hours",
-      "retention_days": 7,
-      "min_backups": 4
-    },
-    "full_system": {
-      "enabled": true,
-      "cron": "0 5 * * 0",
-      "description": "Weekly full system backup on Sunday at 5 AM",
+      "systemd_timer": "openclaw-backup.timer",
+      "onCalendar": "Sun *-*-* 03:00:00",
+      "description": "Weekly full backup on Sunday at 3 AM",
       "retention_days": 90,
-      "min_backups": 4
+      "min_backups": 4,
+      "backup_types": ["postgresql", "redis", "workspace", "agent_state", "config"]
     }
   },
   "sources": {
@@ -118,7 +115,34 @@
     "on_success": false,
     "on_failure": true,
     "on_rotation": false,
-    "channels": ["file", "console"]
+    "channels": ["file", "console", "email"],
+    "email": {
+      "enabled": false,
+      "on_failure": true,
+      "recipients": [],
+      "smtp": {
+        "host": "",
+        "port": 587,
+        "user": "",
+        "use_tls": true
+      }
+    }
+  },
+  "remote_storage": {
+    "enabled": false,
+    "type": "",
+    "s3": {
+      "bucket": "",
+      "region": "",
+      "prefix": "openclaw-backups",
+      "encryption": true
+    },
+    "scp": {
+      "host": "",
+      "user": "",
+      "path": "",
+      "ssh_key": ""
+    }
   },
   "verification": {
     "verify_after_backup": true,

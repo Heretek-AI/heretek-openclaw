@@ -1,0 +1,291 @@
+# ==============================================================================
+# Ollama Provider Template for LiteLLM
+# ==============================================================================
+# Models: Llama-2, Llama-3, Mistral, CodeLlama, and other local models
+# API Documentation: https://github.com/ollama/ollama/blob/main/docs/api.md
+# LiteLLM Documentation: https://docs.litellm.ai/docs/providers/ollama
+# ==============================================================================
+# Required Environment Variables:
+#   - OLLAMA_HOST: Ollama server URL (default: http://ollama:11434)
+#   - OLLAMA_API_KEY: Not required for local Ollama (can be empty)
+# ==============================================================================
+# Note: Pull models before using with: ollama pull <model-name>
+# ==============================================================================
+
+model_list:
+  # ==========================================================================
+  # Llama 3 Models
+  # ==========================================================================
+  
+  - model_name: ollama/llama3.1
+    litellm_params:
+      model: ollama/llama3.1
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Meta Llama 3.1 - Latest Llama model (8B)"
+      max_tokens: 131072
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  - model_name: ollama/llama3.1-70b
+    litellm_params:
+      model: ollama/llama3.1:70b
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Meta Llama 3.1 70B - Large Llama model"
+      max_tokens: 131072
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  - model_name: ollama/llama3.1-405b
+    litellm_params:
+      model: ollama/llama3.1:405b
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Meta Llama 3.1 405B - Largest Llama model"
+      max_tokens: 131072
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  - model_name: ollama/llama3
+    litellm_params:
+      model: ollama/llama3
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Meta Llama 3 - Original Llama 3 (8B)"
+      max_tokens: 8192
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  - model_name: ollama/llama3-70b
+    litellm_params:
+      model: ollama/llama3:70b
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Meta Llama 3 70B - Large Llama 3 model"
+      max_tokens: 8192
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  # ==========================================================================
+  # Llama 2 Models
+  # ==========================================================================
+  
+  - model_name: ollama/llama2
+    litellm_params:
+      model: ollama/llama2
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Meta Llama 2 - Original Llama 2 (7B)"
+      max_tokens: 4096
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  - model_name: ollama/llama2-13b
+    litellm_params:
+      model: ollama/llama2:13b
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Meta Llama 2 13B - Medium Llama 2 model"
+      max_tokens: 4096
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  - model_name: ollama/llama2-70b
+    litellm_params:
+      model: ollama/llama2:70b
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Meta Llama 2 70B - Large Llama 2 model"
+      max_tokens: 4096
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  # ==========================================================================
+  # Mistral Models
+  # ==========================================================================
+  
+  - model_name: ollama/mistral
+    litellm_params:
+      model: ollama/mistral
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Mistral 7B - Efficient and capable model"
+      max_tokens: 8192
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  - model_name: ollama/mistral-large
+    litellm_params:
+      model: ollama/mistral-large
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Mistral Large - Larger Mistral model"
+      max_tokens: 32768
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  - model_name: ollama/mixtral
+    litellm_params:
+      model: ollama/mixtral-8x7b
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Mixtral 8x7B - Mixture of experts model"
+      max_tokens: 32768
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  # ==========================================================================
+  # Code Models
+  # ==========================================================================
+  
+  - model_name: ollama/codellama
+    litellm_params:
+      model: ollama/codellama
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "CodeLlama - Code generation and understanding"
+      max_tokens: 16384
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  - model_name: ollama/codellama-34b
+    litellm_params:
+      model: ollama/codellama:34b
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "CodeLlama 34B - Larger code model"
+      max_tokens: 16384
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  - model_name: ollama/deepseek-coder
+    litellm_params:
+      model: ollama/deepseek-coder
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "DeepSeek Coder - Advanced coding model"
+      max_tokens: 16384
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  # ==========================================================================
+  # Phi Models (Microsoft)
+  # ==========================================================================
+  
+  - model_name: ollama/phi3
+    litellm_params:
+      model: ollama/phi3
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Microsoft Phi-3 - Compact capable model"
+      max_tokens: 128000
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  - model_name: ollama/phi3-mini
+    litellm_params:
+      model: ollama/phi3:mini
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Microsoft Phi-3 Mini - Smallest Phi model"
+      max_tokens: 128000
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  # ==========================================================================
+  # Gemma Models (Google)
+  # ==========================================================================
+  
+  - model_name: ollama/gemma2
+    litellm_params:
+      model: ollama/gemma2
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Google Gemma 2 - Efficient Google model"
+      max_tokens: 8192
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  - model_name: ollama/gemma2-9b
+    litellm_params:
+      model: ollama/gemma2:9b
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Google Gemma 2 9B - Medium Gemma model"
+      max_tokens: 8192
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  # ==========================================================================
+  # Embedding Models
+  # ==========================================================================
+  
+  - model_name: ollama/nomic-embed-text
+    litellm_params:
+      model: ollama/nomic-embed-text-v2-moe
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Nomic Embed Text v2 MoE - 768 dimensions"
+      mode: embedding
+      embedding_dim: 768
+      input_cost_per_token: 0.0
+
+  - model_name: ollama/mxbai-embed
+    litellm_params:
+      model: ollama/mxbai-embed-large
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "mxbai-embed-large - High quality embeddings"
+      mode: embedding
+      embedding_dim: 1024
+      input_cost_per_token: 0.0
+
+  - model_name: ollama/all-minilm
+    litellm_params:
+      model: ollama/all-minilm
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "All-MiniLM - Lightweight embedding model"
+      mode: embedding
+      embedding_dim: 384
+      input_cost_per_token: 0.0
+
+  # ==========================================================================
+  # Model Aliases (Convenience)
+  # ==========================================================================
+  
+  - model_name: ollama/default
+    litellm_params:
+      model: ollama/llama3.1
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Ollama Default - Points to Llama 3.1"
+
+  - model_name: ollama/fast
+    litellm_params:
+      model: ollama/phi3-mini
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Ollama Fast - Points to Phi-3 Mini"
+
+  - model_name: ollama/code
+    litellm_params:
+      model: ollama/codellama
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Ollama Code - Points to CodeLlama"
+
+  - model_name: ollama/powerful
+    litellm_params:
+      model: ollama/llama3.1-70b
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Ollama Powerful - Points to Llama 3.1 70B"
+
+  - model_name: ollama/embedding
+    litellm_params:
+      model: ollama/nomic-embed-text-v2-moe
+      api_base: os.environ/OLLAMA_HOST
+    model_info:
+      description: "Ollama Embedding - Points to Nomic Embed Text"

@@ -1,0 +1,18 @@
+[Unit]
+Description=OpenClaw Automated Backup Timer
+Documentation=file:///root/heretek/heretek-openclaw/docs/operations/AUTOMATED_BACKUP.md
+
+[Timer]
+# Daily incremental backup at 2:00 AM
+OnCalendar=*-*-* 02:00:00
+# Weekly full backup on Sunday at 3:00 AM
+OnCalendar=Sun *-*-* 03:00:00
+# Ensure timer is persistent across reboots
+Persistent=true
+# Randomize start time by up to 30 minutes to avoid thundering herd
+RandomizedDelaySec=1800
+# Start immediately if last scheduled run was missed
+OnBootSec=5min
+
+[Install]
+WantedBy=timers.target

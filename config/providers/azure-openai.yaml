@@ -1,0 +1,268 @@
+# ==============================================================================
+# Azure OpenAI Provider Template for LiteLLM
+# ==============================================================================
+# Models: Azure-hosted GPT-4, GPT-35-Turbo, and other OpenAI models
+# API Documentation: https://learn.microsoft.com/en-us/azure/ai-services/openai/
+# LiteLLM Documentation: https://docs.litellm.ai/docs/providers/azure
+# ==============================================================================
+# Required Environment Variables:
+#   - AZURE_API_KEY: Your Azure OpenAI API key
+#   - AZURE_API_BASE: Your Azure OpenAI endpoint URL
+#   - AZURE_API_VERSION: API version (e.g., 2024-02-15-preview)
+# ==============================================================================
+# Note: Deployment names must match your Azure OpenAI deployments
+# ==============================================================================
+
+model_list:
+  # ==========================================================================
+  # GPT-4 Models (Azure)
+  # ==========================================================================
+  
+  - model_name: azure/gpt-4
+    litellm_params:
+      model: azure/gpt-4
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure OpenAI GPT-4 - Standard GPT-4 deployment"
+      max_tokens: 8192
+      input_cost_per_token: 0.00003
+      output_cost_per_token: 0.00006
+      supports_function_calling: true
+
+  - model_name: azure/gpt-4-turbo
+    litellm_params:
+      model: azure/gpt-4-turbo
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure OpenAI GPT-4 Turbo - Latest GPT-4 with improved performance"
+      max_tokens: 128000
+      input_cost_per_token: 0.00001
+      output_cost_per_token: 0.00003
+      supports_vision: true
+      supports_function_calling: true
+
+  - model_name: azure/gpt-4o
+    litellm_params:
+      model: azure/gpt-4o
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure OpenAI GPT-4o - Optimized GPT-4 with faster inference"
+      max_tokens: 128000
+      input_cost_per_token: 0.000005
+      output_cost_per_token: 0.000015
+      supports_vision: true
+      supports_function_calling: true
+
+  - model_name: azure/gpt-4o-mini
+    litellm_params:
+      model: azure/gpt-4o-mini
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure OpenAI GPT-4o Mini - Cost-effective GPT-4o variant"
+      max_tokens: 128000
+      input_cost_per_token: 0.00000015
+      output_cost_per_token: 0.0000006
+      supports_vision: true
+      supports_function_calling: true
+
+  - model_name: azure/gpt-4-32k
+    litellm_params:
+      model: azure/gpt-4-32k
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure OpenAI GPT-4 32K - Extended context window"
+      max_tokens: 32768
+      input_cost_per_token: 0.00006
+      output_cost_per_token: 0.00012
+      supports_function_calling: true
+
+  # ==========================================================================
+  # GPT-35-Turbo Models (Azure)
+  # ==========================================================================
+  
+  - model_name: azure/gpt-35-turbo
+    litellm_params:
+      model: azure/gpt-35-turbo
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure OpenAI GPT-35-Turbo - Fast and cost-effective model"
+      max_tokens: 16385
+      input_cost_per_token: 0.0000005
+      output_cost_per_token: 0.0000015
+      supports_function_calling: true
+
+  - model_name: azure/gpt-35-turbo-16k
+    litellm_params:
+      model: azure/gpt-35-turbo-16k
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure OpenAI GPT-35-Turbo 16K - Extended context window"
+      max_tokens: 16385
+      input_cost_per_token: 0.000003
+      output_cost_per_token: 0.000004
+      supports_function_calling: true
+
+  # ==========================================================================
+  # o1 Models (Azure)
+  # ==========================================================================
+  
+  - model_name: azure/o1
+    litellm_params:
+      model: azure/o1
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure OpenAI o1 - Advanced reasoning model"
+      max_tokens: 100000
+      input_cost_per_token: 0.000015
+      output_cost_per_token: 0.00006
+      supports_vision: true
+      supports_function_calling: false
+
+  - model_name: azure/o1-mini
+    litellm_params:
+      model: azure/o1-mini
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure OpenAI o1-mini - Lightweight reasoning model"
+      max_tokens: 65536
+      input_cost_per_token: 0.000003
+      output_cost_per_token: 0.000012
+      supports_vision: false
+      supports_function_calling: false
+
+  # ==========================================================================
+  # Embedding Models (Azure)
+  # ==========================================================================
+  
+  - model_name: azure/text-embedding-ada-002
+    litellm_params:
+      model: azure/text-embedding-ada-002
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure OpenAI Text Embedding Ada-002 - 1536 dimensions"
+      mode: embedding
+      embedding_dim: 1536
+      input_cost_per_token: 0.0000001
+
+  - model_name: azure/text-embedding-3-small
+    litellm_params:
+      model: azure/text-embedding-3-small
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure OpenAI Text Embedding 3 Small - 1536 dimensions"
+      mode: embedding
+      embedding_dim: 1536
+      input_cost_per_token: 0.00000002
+
+  - model_name: azure/text-embedding-3-large
+    litellm_params:
+      model: azure/text-embedding-3-large
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure OpenAI Text Embedding 3 Large - 3072 dimensions"
+      mode: embedding
+      embedding_dim: 3072
+      input_cost_per_token: 0.00000013
+
+  # ==========================================================================
+  # Custom Deployment Names (Example)
+  # ==========================================================================
+  # Replace deployment names with your actual Azure OpenAI deployment names
+  # ==========================================================================
+  
+  - model_name: azure/my-gpt4-deployment
+    litellm_params:
+      model: azure/my-custom-gpt4-deployment-name
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Custom GPT-4 deployment - Replace with your deployment name"
+      max_tokens: 8192
+      input_cost_per_token: 0.00003
+      output_cost_per_token: 0.00006
+
+  - model_name: azure/my-gpt35-deployment
+    litellm_params:
+      model: azure/my-custom-gpt35-deployment-name
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Custom GPT-35-Turbo deployment - Replace with your deployment name"
+      max_tokens: 16385
+      input_cost_per_token: 0.0000005
+      output_cost_per_token: 0.0000015
+
+  # ==========================================================================
+  # Model Aliases (Convenience)
+  # ==========================================================================
+  
+  - model_name: azure/default
+    litellm_params:
+      model: azure/gpt-4o
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure Default - Points to GPT-4o"
+
+  - model_name: azure/fast
+    litellm_params:
+      model: azure/gpt-35-turbo
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure Fast - Points to GPT-35-Turbo"
+
+  - model_name: azure/cheap
+    litellm_params:
+      model: azure/gpt-4o-mini
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure Cheap - Points to GPT-4o Mini"
+
+  - model_name: azure/powerful
+    litellm_params:
+      model: azure/gpt-4-turbo
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure Powerful - Points to GPT-4 Turbo"
+
+  - model_name: azure/embedding
+    litellm_params:
+      model: azure/text-embedding-3-small
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure Embedding - Points to Text Embedding 3 Small"

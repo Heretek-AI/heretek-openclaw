@@ -1,0 +1,163 @@
+# ==============================================================================
+# xAI Provider Template for LiteLLM
+# ==============================================================================
+# Models: Grok-Beta, Grok-Vision, Grok-2
+# API Documentation: https://docs.x.ai/docs
+# LiteLLM Documentation: https://docs.litellm.ai/docs/providers/xai
+# ==============================================================================
+# Required Environment Variables:
+#   - XAI_API_KEY: Your xAI API key
+#   - XAI_API_BASE: Optional custom API base URL (default: https://api.x.ai)
+# ==============================================================================
+
+model_list:
+  # ==========================================================================
+  # Grok-2 Models
+  # ==========================================================================
+  
+  - model_name: xai/grok-2
+    litellm_params:
+      model: xai/grok-2
+      api_key: os.environ/XAI_API_KEY
+      api_base: os.environ/XAI_API_BASE
+    model_info:
+      description: "xAI Grok-2 - Latest Grok model with improved capabilities"
+      max_tokens: 131072
+      input_cost_per_token: 0.000002
+      output_cost_per_token: 0.00001
+      supports_vision: true
+      supports_function_calling: true
+
+  - model_name: xai/grok-2-mini
+    litellm_params:
+      model: xai/grok-2-mini
+      api_key: os.environ/XAI_API_KEY
+      api_base: os.environ/XAI_API_BASE
+    model_info:
+      description: "xAI Grok-2 Mini - Lightweight Grok model"
+      max_tokens: 131072
+      input_cost_per_token: 0.0000005
+      output_cost_per_token: 0.0000025
+      supports_vision: false
+      supports_function_calling: true
+
+  # ==========================================================================
+  # Grok Beta Models
+  # ==========================================================================
+  
+  - model_name: xai/grok-beta
+    litellm_params:
+      model: xai/grok-beta
+      api_key: os.environ/XAI_API_KEY
+      api_base: os.environ/XAI_API_BASE
+    model_info:
+      description: "xAI Grok Beta - Beta version of Grok model"
+      max_tokens: 131072
+      input_cost_per_token: 0.000005
+      output_cost_per_token: 0.000015
+      supports_vision: false
+      supports_function_calling: true
+
+  # ==========================================================================
+  # Grok Vision Models
+  # ==========================================================================
+  
+  - model_name: xai/grok-vision
+    litellm_params:
+      model: xai/grok-vision
+      api_key: os.environ/XAI_API_KEY
+      api_base: os.environ/XAI_API_BASE
+    model_info:
+      description: "xAI Grok Vision - Vision-optimized Grok model"
+      max_tokens: 8192
+      input_cost_per_token: 0.000005
+      output_cost_per_token: 0.000015
+      supports_vision: true
+      supports_function_calling: false
+
+  - model_name: xai/grok-2-vision
+    litellm_params:
+      model: xai/grok-2-vision
+      api_key: os.environ/XAI_API_KEY
+      api_base: os.environ/XAI_API_BASE
+    model_info:
+      description: "xAI Grok-2 Vision - Latest vision-optimized model"
+      max_tokens: 131072
+      input_cost_per_token: 0.000003
+      output_cost_per_token: 0.000015
+      supports_vision: true
+      supports_function_calling: true
+
+  # ==========================================================================
+  # Legacy Grok Models
+  # ==========================================================================
+  
+  - model_name: xai/grok-1
+    litellm_params:
+      model: xai/grok-1
+      api_key: os.environ/XAI_API_KEY
+      api_base: os.environ/XAI_API_BASE
+    model_info:
+      description: "xAI Grok-1 - Original Grok model (legacy)"
+      max_tokens: 8192
+      input_cost_per_token: 0.00001
+      output_cost_per_token: 0.00003
+      supports_vision: false
+      supports_function_calling: false
+
+  - model_name: xai/grok-1-vision
+    litellm_params:
+      model: xai/grok-1-vision
+      api_key: os.environ/XAI_API_KEY
+      api_base: os.environ/XAI_API_BASE
+    model_info:
+      description: "xAI Grok-1 Vision - Original vision model (legacy)"
+      max_tokens: 4096
+      input_cost_per_token: 0.00001
+      output_cost_per_token: 0.00003
+      supports_vision: true
+      supports_function_calling: false
+
+  # ==========================================================================
+  # Model Aliases (Convenience)
+  # ==========================================================================
+  
+  - model_name: xai/default
+    litellm_params:
+      model: xai/grok-2
+      api_key: os.environ/XAI_API_KEY
+      api_base: os.environ/XAI_API_BASE
+    model_info:
+      description: "xAI Default - Points to Grok-2"
+
+  - model_name: xai/fast
+    litellm_params:
+      model: xai/grok-2-mini
+      api_key: os.environ/XAI_API_KEY
+      api_base: os.environ/XAI_API_BASE
+    model_info:
+      description: "xAI Fast - Points to Grok-2 Mini"
+
+  - model_name: xai/cheap
+    litellm_params:
+      model: xai/grok-2-mini
+      api_key: os.environ/XAI_API_KEY
+      api_base: os.environ/XAI_API_BASE
+    model_info:
+      description: "xAI Cheap - Points to Grok-2 Mini"
+
+  - model_name: xai/powerful
+    litellm_params:
+      model: xai/grok-2
+      api_key: os.environ/XAI_API_KEY
+      api_base: os.environ/XAI_API_BASE
+    model_info:
+      description: "xAI Powerful - Points to Grok-2"
+
+  - model_name: xai/vision
+    litellm_params:
+      model: xai/grok-2-vision
+      api_key: os.environ/XAI_API_KEY
+      api_base: os.environ/XAI_API_BASE
+    model_info:
+      description: "xAI Vision - Points to Grok-2 Vision"

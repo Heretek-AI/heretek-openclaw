@@ -1,0 +1,177 @@
+# ==============================================================================
+# OpenAI Provider Template for LiteLLM
+# ==============================================================================
+# Models: GPT-4, GPT-4-Turbo, GPT-3.5-Turbo, o1, o1-mini
+# API Documentation: https://platform.openai.com/docs
+# LiteLLM Documentation: https://docs.litellm.ai/docs/providers/openai
+# ==============================================================================
+# Required Environment Variables:
+#   - OPENAI_API_KEY: Your OpenAI API key (sk-...)
+#   - OPENAI_API_BASE: Optional custom API base URL
+#   - OPENAI_ORGANIZATION: Optional organization ID
+# ==============================================================================
+
+model_list:
+  # ==========================================================================
+  # GPT-4 Models
+  # ==========================================================================
+  
+  - model_name: openai/gpt-4-turbo
+    litellm_params:
+      model: gpt-4-turbo
+      api_key: os.environ/OPENAI_API_KEY
+      api_base: os.environ/OPENAI_API_BASE
+    model_info:
+      description: "OpenAI GPT-4 Turbo - Latest GPT-4 model with improved performance"
+      max_tokens: 128000
+      input_cost_per_token: 0.00001
+      output_cost_per_token: 0.00003
+      supports_vision: true
+      supports_function_calling: true
+
+  - model_name: openai/gpt-4
+    litellm_params:
+      model: gpt-4
+      api_key: os.environ/OPENAI_API_KEY
+      api_base: os.environ/OPENAI_API_BASE
+    model_info:
+      description: "OpenAI GPT-4 - Standard GPT-4 model"
+      max_tokens: 8192
+      input_cost_per_token: 0.00003
+      output_cost_per_token: 0.00006
+      supports_function_calling: true
+
+  - model_name: openai/gpt-4-32k
+    litellm_params:
+      model: gpt-4-32k
+      api_key: os.environ/OPENAI_API_KEY
+      api_base: os.environ/OPENAI_API_BASE
+    model_info:
+      description: "OpenAI GPT-4 32K - Extended context window"
+      max_tokens: 32768
+      input_cost_per_token: 0.00006
+      output_cost_per_token: 0.00012
+      supports_function_calling: true
+
+  # ==========================================================================
+  # GPT-4o Models (Optimized)
+  # ==========================================================================
+  
+  - model_name: openai/gpt-4o
+    litellm_params:
+      model: gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+      api_base: os.environ/OPENAI_API_BASE
+    model_info:
+      description: "OpenAI GPT-4o - Optimized GPT-4 with faster inference"
+      max_tokens: 128000
+      input_cost_per_token: 0.000005
+      output_cost_per_token: 0.000015
+      supports_vision: true
+      supports_function_calling: true
+
+  - model_name: openai/gpt-4o-mini
+    litellm_params:
+      model: gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+      api_base: os.environ/OPENAI_API_BASE
+    model_info:
+      description: "OpenAI GPT-4o Mini - Cost-effective GPT-4o variant"
+      max_tokens: 128000
+      input_cost_per_token: 0.00000015
+      output_cost_per_token: 0.0000006
+      supports_vision: true
+      supports_function_calling: true
+
+  # ==========================================================================
+  # GPT-3.5-Turbo Models
+  # ==========================================================================
+  
+  - model_name: openai/gpt-3.5-turbo
+    litellm_params:
+      model: gpt-3.5-turbo
+      api_key: os.environ/OPENAI_API_KEY
+      api_base: os.environ/OPENAI_API_BASE
+    model_info:
+      description: "OpenAI GPT-3.5 Turbo - Fast and cost-effective model"
+      max_tokens: 16385
+      input_cost_per_token: 0.0000005
+      output_cost_per_token: 0.0000015
+      supports_function_calling: true
+
+  - model_name: openai/gpt-3.5-turbo-16k
+    litellm_params:
+      model: gpt-3.5-turbo-16k
+      api_key: os.environ/OPENAI_API_KEY
+      api_base: os.environ/OPENAI_API_BASE
+    model_info:
+      description: "OpenAI GPT-3.5 Turbo 16K - Extended context window"
+      max_tokens: 16385
+      input_cost_per_token: 0.000003
+      output_cost_per_token: 0.000004
+
+  # ==========================================================================
+  # o1 Models (Reasoning)
+  # ==========================================================================
+  
+  - model_name: openai/o1
+    litellm_params:
+      model: o1
+      api_key: os.environ/OPENAI_API_KEY
+      api_base: os.environ/OPENAI_API_BASE
+    model_info:
+      description: "OpenAI o1 - Advanced reasoning model"
+      max_tokens: 100000
+      input_cost_per_token: 0.000015
+      output_cost_per_token: 0.00006
+      supports_vision: true
+      supports_function_calling: false
+
+  - model_name: openai/o1-mini
+    litellm_params:
+      model: o1-mini
+      api_key: os.environ/OPENAI_API_KEY
+      api_base: os.environ/OPENAI_API_BASE
+    model_info:
+      description: "OpenAI o1-mini - Lightweight reasoning model"
+      max_tokens: 65536
+      input_cost_per_token: 0.000003
+      output_cost_per_token: 0.000012
+      supports_vision: false
+      supports_function_calling: false
+
+  # ==========================================================================
+  # Model Aliases (Convenience)
+  # ==========================================================================
+  
+  - model_name: openai/default
+    litellm_params:
+      model: gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+      api_base: os.environ/OPENAI_API_BASE
+    model_info:
+      description: "OpenAI Default - Points to GPT-4o"
+
+  - model_name: openai/fast
+    litellm_params:
+      model: gpt-3.5-turbo
+      api_key: os.environ/OPENAI_API_KEY
+      api_base: os.environ/OPENAI_API_BASE
+    model_info:
+      description: "OpenAI Fast - Points to GPT-3.5-Turbo"
+
+  - model_name: openai/cheap
+    litellm_params:
+      model: gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+      api_base: os.environ/OPENAI_API_BASE
+    model_info:
+      description: "OpenAI Cheap - Points to GPT-4o-Mini"
+
+  - model_name: openai/reasoning
+    litellm_params:
+      model: o1
+      api_key: os.environ/OPENAI_API_KEY
+      api_base: os.environ/OPENAI_API_BASE
+    model_info:
+      description: "OpenAI Reasoning - Points to o1"
