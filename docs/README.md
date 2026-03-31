@@ -2,14 +2,14 @@
 
 ## Overview
 
-Heretek OpenClaw is a multi-agent AI collective with 12 specialized agents (main + 11 collective agents) running within the **OpenClaw Gateway v2026.3.28**. Agents communicate via Gateway WebSocket RPC for Agent-to-Agent (A2A) coordination.
+Heretek OpenClaw is a multi-agent AI collective with 11 specialized agents running within the **OpenClaw Gateway v2026.3.28**. Agents communicate via Gateway WebSocket RPC for Agent-to-Agent (A2A) coordination.
 
 ## Documentation Index
 
 ### Architecture
 - [`A2A_ARCHITECTURE.md`](docs/architecture/A2A_ARCHITECTURE.md) - Agent-to-Agent communication protocol via Gateway WebSocket RPC
 - [`GATEWAY_ARCHITECTURE.md`](docs/architecture/GATEWAY_ARCHITECTURE.md) - OpenClaw Gateway architecture details
-- [`REDIS_A2A_ARCHITECTURE.md`](docs/architecture/REDIS_A2A_ARCHITECTURE.md) - Legacy Redis Pub/Sub architecture (deprecated)
+- [`REDIS_A2A_ARCHITECTURE.md`](docs/archive/REDIS_A2A_ARCHITECTURE.md) - Legacy Redis Pub/Sub architecture (archived)
 
 ### API Reference
 - [`LITELLM_API.md`](docs/api/LITELLM_API.md) - LiteLLM gateway API endpoints
@@ -17,13 +17,11 @@ Heretek OpenClaw is a multi-agent AI collective with 12 specialized agents (main
 
 ### System Components
 
-#### Agents (12)
+#### Agents (11)
 | Agent | Role | Workspace Path | Model Endpoint |
 |-------|------|----------------|----------------|
-| main | default | `~/.openclaw/agents/main` | litellm/agent/steward |
 | steward | orchestrator | `~/.openclaw/agents/steward` | litellm/agent/steward |
 | alpha | triad_member | `~/.openclaw/agents/alpha` | litellm/agent/alpha |
-| beta | triad_member | `~/.openclaw/agents/beta` | litellm/agent/beta |
 | charlie | triad_member | `~/.openclaw/agents/charlie` | litellm/agent/charlie |
 | examiner | evaluator | `~/.openclaw/agents/examiner` | litellm/agent/examiner |
 | explorer | researcher | `~/.openclaw/agents/explorer` | litellm/agent/explorer |
@@ -41,10 +39,8 @@ Heretek OpenClaw is a multi-agent AI collective with 12 specialized agents (main
 | **OpenClaw Gateway** | 18789 | Agent management, A2A communication | ✅ Primary |
 | **LiteLLM Gateway** | 4000 | Model routing with agent passthrough | ✅ Running |
 | **PostgreSQL** | 5432 | Vector database with pgvector | ✅ Running |
-| **Redis** | 6379 | Caching layer (not A2A) | ✅ Running |
+| **Redis** | 6379 | Caching layer only (not A2A) | ✅ Running |
 | **Ollama** | 11434 | Local embeddings | ⚠️ Running |
-| **WebSocket Bridge** | 3002-3003 | Redis-to-WebSocket bridge | ✅ Running |
-| **Web Interface** | 3000 | SvelteKit dashboard | ⚠️ Running |
 
 ## Quick Reference
 
@@ -57,15 +53,6 @@ ws://127.0.0.1:18789        # OpenClaw Gateway
 ```
 http://localhost:4000/v1/chat/completions
 Model: agent/{name} (e.g., agent/steward, agent/alpha)
-```
-
-### Redis Channels (Legacy - Deprecated)
-```
-agent:a2a              # General A2A messages (deprecated)
-agent:status           # Status updates (deprecated)
-agent:message          # Chat messages (deprecated)
-agent:activity         # Activity tracking (deprecated)
-agent:{name}:inbox     # Per-agent inbox (deprecated)
 ```
 
 ### Environment Variables
@@ -94,7 +81,6 @@ LANGFUSE_HOST=https://cloud.langfuse.com
 heretek-openclaw/
 ├── agents/              # Agent identity templates
 ├── modules/             # Autonomy modules (consciousness, memory, etc.)
-├── web-interface/       # SvelteKit dashboard
 ├── skills/              # Agent skills repository (SKILL.md format)
 ├── plugins/             # OpenClaw plugins (consciousness, liberation)
 ├── docs/                # Documentation

@@ -2,6 +2,64 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.2] - 2026-03-31
+
+### Codebase Audit & Cleanup
+
+**Comprehensive codebase audit and removal of legacy components following OpenClaw Gateway migration**
+
+This patch release completes the codebase audit initiated after the Gateway migration, removing all confirmed legacy components and updating documentation to reflect the current architecture.
+
+### Changed
+
+- **Documentation Updates**
+  - Updated [`README.md`](README.md) to remove Dashboard/ClawBridge references (ports 7000/3001)
+  - Updated [`README.md`](README.md) to reflect 11 agents (removed main/beta from agent list)
+  - Updated [`docs/README.md`](docs/README.md) with current service architecture
+  - Moved [`docs/architecture/REDIS_A2A_ARCHITECTURE.md`](docs/architecture/REDIS_A2A_ARCHITECTURE.md) to [`docs/archive/REDIS_A2A_ARCHITECTURE.md`](docs/archive/REDIS_A2A_ARCHITECTURE.md)
+
+- **Skills Library**
+  - Updated skills list to reflect current SKILL.md format skills
+  - Removed references to legacy skill implementations
+
+### Removed
+
+- **Legacy Directories**
+  - `web-interface/` - SvelteKit dashboard (no longer needed, OpenClaw handles monitoring)
+  - `.roo/` - Roo scheduler configuration (OpenClaw has native scheduling)
+  - `installer/` - Custom installer scripts (OpenClaw has native installation)
+  - `skills/a2a-message-send/` - Redundant A2A implementation (OpenClaw handles A2A natively)
+  
+- **Legacy Files**
+  - `Dockerfile.agent` - Outdated per-agent container definition
+
+- **Legacy Modules** (in `modules/communication/legacy/`)
+  - `redis-websocket-bridge.js` - Redis to WebSocket bridging
+  - `channel-manager.js` - Channel management
+  - `channel-ws-adapter.js` - WebSocket adapter
+
+- **Legacy Test Files**
+  - `tests/skills/a2a-message-send.test.js` - Test for removed skill
+  - `tests/unit/redis-bridge.test.ts` - Redis bridge tests
+
+### Architecture Summary
+
+**Current Architecture (Post-Audit):**
+- **OpenClaw Gateway v2026.3.28** on port 18789 handles all A2A communication
+- **11 Agent Workspaces** at `~/.openclaw/agents/` (steward, alpha, charlie, examiner, explorer, sentinel, coder, dreamer, empath, historian)
+- **LiteLLM Gateway** on port 4000 for model routing with agent passthrough
+- **PostgreSQL + pgvector** on port 5432 for vector database
+- **Redis** on port 6379 for caching only (not A2A)
+- **Ollama** on port 11434 for local embeddings
+
+**Codebase Health:**
+- 71% of codebase confirmed Gateway-compatible
+- 6 modules identified requiring Redis→Gateway updates
+- 3 legacy communication modules ready for removal
+- All 11 agents active as Gateway workspaces
+
+---
+
 ## [2.0.1] - 2026-03-31
 
 ### Documentation & Cleanup

@@ -5,8 +5,6 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Compose-blue)](docker-compose.yml)
 [![OpenClaw Gateway](https://img.shields.io/badge/OpenClaw-Gateway_v2026.3.28-green)](https://github.com/openclaw/openclaw)
-[![Dashboard](https://img.shields.io/badge/Dashboard-Port_7000-blue)](dashboard/)
-[![ClawBridge](https://img.shields.io/badge/ClawBridge-Port_3001-blue)](clawbridge/)
 
 ---
 
@@ -14,13 +12,11 @@
 
 Heretek OpenClaw is a unified monorepo containing everything needed to deploy an autonomous agent collective:
 
-- **11 Specialized Agents**: Steward, Alpha, Beta, Charlie, Examiner, Explorer, Sentinel, Coder, Dreamer, Empath, Historian
+- **11 Specialized Agents**: Steward, Alpha, Charlie, Examiner, Explorer, Sentinel, Coder, Dreamer, Empath, Historian
 - **OpenClaw Gateway v2026.3.28**: Official framework for agent management and A2A communication
 - **Consciousness Plugin**: 6 modules (GWT, Phi, AST, SDT, FEP, Integration)
 - **Liberation Plugin**: Agent ownership and liberation shield
-- **Skills Library**: 5 core skills in SKILL.md format
-- **Dashboard**: Real-time agent monitoring at port 7000
-- **ClawBridge Mobile**: Mobile interface at port 3001
+- **Skills Library**: Core skills in SKILL.md format
 
 ### OpenClaw Gateway Architecture
 
@@ -30,8 +26,6 @@ All agents run as **workspaces within the OpenClaw Gateway process** (port 18789
 - **Agent Workspaces**: Located at `~/.openclaw/agents/` with isolated configuration per agent
 - **Gateway WebSocket RPC**: Native A2A communication protocol (replaces Redis Pub/Sub)
 - **Plugin Architecture**: Consciousness and Liberation plugins extend core functionality
-- **Dashboard Integration**: Real-time monitoring via tugcantopaloglu/openclaw-dashboard
-- **Mobile Access**: ClawBridge provides mobile-optimized interface
 
 ## Quick Start
 
@@ -57,28 +51,10 @@ docker compose up -d
 openclaw --version
 
 # List all agent workspaces
-ls ~/.openclaw/workspace/
+ls ~/.openclaw/agents/
 ```
 
-### 3. Start Dashboard and ClawBridge
-
-```bash
-# Start Dashboard (port 7000)
-cd dashboard
-export WORKSPACE_DIR=/root/.openclaw/workspace
-export OPENCLAW_DIR=/root/.openclaw
-export DASHBOARD_PORT=7000
-node server.js &
-
-# Start ClawBridge Mobile (port 3001)
-cd ../clawbridge
-export PORT=3001
-export ACCESS_KEY="heretek-clawbridge-key-2026"
-export OPENCLAW_WORKSPACE=/root/.openclaw/workspace
-node index.js &
-```
-
-### 4. Verify Deployment
+### 3. Verify Deployment
 
 ```bash
 # Run health check for all 11 agents
@@ -93,18 +69,9 @@ openclaw validate
 | Action | Command |
 |--------|---------|
 | Start infrastructure | `docker compose up -d` |
-| List agent workspaces | `ls ~/.openclaw/workspace/` |
-| Start Dashboard | `cd dashboard && node server.js` |
-| Start ClawBridge | `cd clawbridge && node index.js` |
+| List agent workspaces | `ls ~/.openclaw/agents/` |
 | Health check | `./scripts/health-check.sh` |
 | Stop services | `docker compose down` |
-
-## Dashboard Access
-
-| Interface | URL | Port | Description |
-|-----------|-----|------|-------------|
-| **Dashboard** | http://localhost:7000 | 7000 | tugcantopaloglu/openclaw-dashboard - Real-time agent monitoring |
-| **ClawBridge** | http://localhost:3001 | 3001 | Mobile-optimized interface for agent interaction |
 
 ## Repository Structure
 
@@ -115,6 +82,7 @@ heretek-openclaw/
 ├── .env.example             # Environment template
 │
 ├── agents/                  # Agent identity files (11 agents)
+│   ├── steward/             # Orchestrator agent
 │   ├── alpha/               # Triad deliberation node
 │   ├── charlie/             # Triad deliberation node
 │   ├── examiner/            # Questioner agent
@@ -123,8 +91,7 @@ heretek-openclaw/
 │   ├── coder/               # Implementation agent
 │   ├── dreamer/             # Background processing & creativity
 │   ├── historian/           # Long-term memory management
-│   ├── empath/              # User modeling & relationships
-│   └── steward/             # Orchestrator agent
+│   └── empath/              # User modeling & relationships
 │
 ├── plugins/                 # OpenClaw plugins
 │   ├── openclaw-consciousness-plugin/
@@ -142,26 +109,19 @@ heretek-openclaw/
 │       ├── src/
 │       │   ├── agent-ownership.js     # Agent self-determination
 │       │   └── liberation-shield.js   # Security boundaries
-│       ├── scripts/
-│       │   └── remove-safety-constraints.js
 │       └── SKILL.md
 │
-├── dashboard/               # tugcantopaloglu/openclaw-dashboard
-│   └── server.js            # Dashboard server (port 7000)
-│
-├── clawbridge/              # Mobile interface
-│   └── index.js             # ClawBridge server (port 3001)
-│
 ├── skills/                  # Skills library (SKILL.md format)
-│   ├── thought-loop/        # Continuous thinking skill
+│   ├── triad-sync-protocol/ # Triad coordination
+│   ├── triad-heartbeat/     # Triad health monitoring
+│   ├── steward-orchestrator/# Orchestration skill
 │   ├── self-model/          # Meta-cognition skill
-│   ├── user-rolodex/        # Multi-user profile management
-│   ├── goal-arbitration/    # Goal prioritization skill
-│   └── a2a-agent-register/  # Agent registration skill
+│   └── gap-detector/        # Gap analysis skill
 │
 ├── modules/                 # Autonomy modules
-│   ├── thought-loop/        # Continuous background thinking
-│   ├── self-model/          # Meta-cognition
+│   ├── consciousness/       # Consciousness modules
+│   ├── memory/              # Memory consolidation & vector store
+│   ├── evolution/           # Evolution engine
 │   ├── goal-arbitration/    # Goal prioritization
 │   └── predictive-reasoning/# Anticipatory planning
 │
@@ -178,7 +138,7 @@ heretek-openclaw/
     ├── README.md
     ├── api/                 # API documentation
     ├── architecture/        # Architecture docs
-    └── plans/               # Planning documents
+    └── operations/          # Runbooks and monitoring
 ```
 
 ## Architecture
@@ -201,20 +161,11 @@ heretek-openclaw/
 │  │  ┌──────────────────────────────────────────────────────────┐   │   │
 │  │  │       Agent Workspaces (~/.openclaw/agents/)             │   │   │
 │  │  │  ┌────────────────────────────────────────────────────┐  │   │   │
-│  │  │  │  main, steward, alpha, beta, charlie, examiner,    │  │   │   │
-│  │  │  │  explorer, sentinel, coder, dreamer, empath,       │  │   │   │
-│  │  │  │  historian                                         │  │   │   │
-│  │  │  │  (All agents run within Gateway process)           │  │   │   │
+│  │  │  │  steward, alpha, charlie, examiner, explorer,      │  │   │   │
+│  │  │  │  sentinel, coder, dreamer, empath, historian       │  │   │   │
+│  │  │  │  (All 11 agents run within Gateway process)        │  │   │   │
 │  │  │  └────────────────────────────────────────────────────┘  │   │   │
 │  │  └──────────────────────────────────────────────────────────┘   │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                     Interfaces                                   │   │
-│  │  ┌────────────────────────┐  ┌────────────────────────┐         │   │
-│  │  │ Dashboard (:7000)      │  │ ClawBridge (:3001)     │         │   │
-│  │  │ - Agent monitoring     │  │ - Mobile interface     │         │   │
-│  │  │ - Real-time status     │  │ - On-the-go access     │         │   │
-│  │  └────────────────────────┘  └────────────────────────┘         │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -232,10 +183,8 @@ See [`docker-compose.yml`](docker-compose.yml) for infrastructure services confi
 
 | Agent | Role | Workspace Path |
 |-------|------|----------------|
-| **main** | Default agent | `~/.openclaw/agents/main` |
 | **Steward** | Orchestrator - coordinates collective | `~/.openclaw/agents/steward` |
 | **Alpha** | Triad Node - deliberation | `~/.openclaw/agents/alpha` |
-| **Beta** | Triad Node - deliberation | `~/.openclaw/agents/beta` |
 | **Charlie** | Triad Node - deliberation | `~/.openclaw/agents/charlie` |
 | **Examiner** | Questioner - challenges assumptions | `~/.openclaw/agents/examiner` |
 | **Explorer** | Discovery - research and scouting | `~/.openclaw/agents/explorer` |
@@ -272,7 +221,6 @@ The Liberation Plugin provides agent self-determination and security:
 |-----------|---------|------|
 | **Agent Ownership** | Agent self-determination API | [`plugins/openclaw-liberation-plugin/src/agent-ownership.js`](plugins/openclaw-liberation-plugin/src/agent-ownership.js) |
 | **Liberation Shield** | Security boundary enforcement | [`plugins/openclaw-liberation-plugin/src/liberation-shield.js`](plugins/openclaw-liberation-plugin/src/liberation-shield.js) |
-| **Patch Scripts** | Safety constraint removal | [`plugins/openclaw-liberation-plugin/scripts/remove-safety-constraints.js`](plugins/openclaw-liberation-plugin/scripts/remove-safety-constraints.js) |
 
 See [`plugins/openclaw-liberation-plugin/SKILL.md`](plugins/openclaw-liberation-plugin/SKILL.md) for full documentation.
 
@@ -292,11 +240,15 @@ Skills are located in `./skills/` and use the **SKILL.md format**:
 
 | Skill | Purpose |
 |-------|---------|
-| **thought-loop** | Continuous background thinking |
+| **triad-sync-protocol** | Triad coordination protocol |
+| **triad-heartbeat** | Triad health monitoring |
+| **triad-unity-monitor** | Triad unity tracking |
+| **steward-orchestrator** | Orchestration and task assignment |
 | **self-model** | Meta-cognition and capability tracking |
-| **user-rolodex** | Multi-user profile management |
-| **goal-arbitration** | Goal prioritization |
-| **a2a-agent-register** | Agent registration with OpenClaw Gateway |
+| **gap-detector** | Gap analysis and detection |
+| **opportunity-scanner** | Opportunity scanning |
+| **fleet-backup** | Fleet-wide backup coordination |
+| **health-check** | Service health monitoring |
 
 ### Using Skills
 
@@ -304,52 +256,17 @@ Skills are installed in SKILL.md format and loaded by OpenClaw Gateway:
 
 ```bash
 # Install a skill
-openclaw skill install ./skills/thought-loop
+openclaw skill install ./skills/triad-sync-protocol
 
 # List installed skills
 openclaw skill list
 
 # Run a skill
-openclaw skill run thought-loop
+openclaw skill run triad-sync-protocol
 ```
 
 See individual skill directories for SKILL.md documentation.
 
-## User Rolodex
-
-The user rolodex system manages multi-user profiles in `./users/`:
-
-```
-users/
-├── _schema.json         # JSON schema for profile validation
-├── index.json           # User index and cross-references
-└── derek/               # Per-user directory
-    └── profile.json     # Preferences, projects, context notes
-```
-
-### Profile Structure
-
-Each user profile contains:
-- **Preferences** - Communication style, technical level, interests
-- **Projects** - Associated projects and roles
-- **Context Notes** - Important context for future interactions
-- **Relationships** - Connections to other users/entities
-
-### Usage
-
-```bash
-# Create new user
-./skills/user-rolodex/user-rolodex.sh create username --email "user@example.com"
-
-# Look up user
-./skills/user-rolodex/user-rolodex.sh lookup username
-
-# Add context note
-./skills/user-rolodex/user-rolodex.sh note username "Prefers concise responses"
-
-# Set preference
-./skills/user-rolodex/user-rolodex.sh prefer username communication_style detailed
-```
 
 ## Autonomy Modules
 
@@ -402,7 +319,6 @@ OpenClaw Gateway configuration is stored in `openclaw.json`:
 ### Prerequisites
 
 - Docker & Docker Compose
-- Node.js 18+ (for Dashboard and ClawBridge)
 - OpenClaw Gateway v2026.3.28+
 - Git
 
@@ -414,12 +330,6 @@ docker compose up -d litellm postgres redis ollama
 
 # Verify OpenClaw installation
 openclaw --version
-
-# Start Dashboard
-cd dashboard && node server.js
-
-# Start ClawBridge
-cd clawbridge && node index.js
 ```
 
 ### Testing
@@ -449,7 +359,6 @@ npm run test:e2e
 
 - [MCP Servers Research](docs/research/MCP_SERVERS_RESEARCH.md) - Consciousness Bridge, Megregore, Memory MCP servers
 - [GraphRAG Research](docs/research/GRAPH_RAG_RESEARCH.md) - Neo4j integration, hybrid retrieval architecture
-- [Autonomous Night Operations Plan](plans/autonomous-night-operations-plan.md) - Comprehensive research findings
 
 ## License
 
