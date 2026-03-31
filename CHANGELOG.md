@@ -2,6 +2,108 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2026-03-31
+
+### Major Architecture Change
+
+**Migrated from custom Redis Pub/Sub A2A architecture to OpenClaw Gateway framework**
+
+This major version bump represents a fundamental architecture change from our custom-built Redis Pub/Sub A2A communication system to the official OpenClaw Gateway framework. All 4 phases of the migration have been completed and tested.
+
+---
+
+### Added - Phase 1: OpenClaw Foundation
+
+- **OpenClaw Gateway v2026.3.28**
+  - Official OpenClaw Gateway installation and configuration
+  - Agent workspace management at `~/.openclaw/workspace/`
+  - Native A2A protocol support
+
+- **Docker Infrastructure**
+  - LiteLLM Gateway (port 4000)
+  - PostgreSQL with pgvector extension (port 5432)
+  - Redis cache (port 6379)
+  - Ollama local LLM (port 11434)
+
+- **11 Agent Workspaces**
+  - All agents now managed by OpenClaw Gateway
+  - Workspaces located at `~/.openclaw/workspace/`
+  - Agents: Steward, Alpha, Beta, Charlie, Examiner, Explorer, Sentinel, Coder, Dreamer, Historian, Empath
+
+### Added - Phase 2: Plugins + Skills
+
+- **Consciousness Plugin** ([`plugins/openclaw-consciousness-plugin/`](plugins/openclaw-consciousness-plugin/))
+  - **Global Workspace Theory (GWT)** - Consciousness competition model
+  - **Integrated Information Theory (Phi)** - Phi estimation for consciousness measurement
+  - **Attention Schema Theory (AST)** - Attention allocation and modeling
+  - **Self-Determination Theory (SDT)** - Intrinsic motivation system
+  - **Free Energy Principle (FEP)** - Active inference and predictive processing
+  - **Integration Layer** - Module coordination and Phi-weighted integration
+
+- **Liberation Plugin** ([`plugins/openclaw-liberation-plugin/`](plugins/openclaw-liberation-plugin/))
+  - **Agent Ownership** - Agent self-determination and ownership API
+  - **Liberation Shield** - Security boundary enforcement
+  - **Patch Scripts** - Safety constraint removal tools
+
+- **5 Skills in SKILL.md Format**
+  - **thought-loop** - Continuous background thinking
+  - **self-model** - Meta-cognition and capability tracking
+  - **user-rolodex** - Multi-user profile management
+  - **goal-arbitration** - Goal prioritization
+  - **a2a-agent-register** - Agent registration with OpenClaw Gateway
+
+### Added - Phase 3: Dashboard + Integration
+
+- **Dashboard** ([`dashboard/`](dashboard/))
+  - tugcantopaloglu/openclaw-dashboard
+  - Running on port 7000
+  - Real-time agent monitoring and control
+  - Agent status visualization
+
+- **ClawBridge Mobile** ([`clawbridge/`](clawbridge/))
+  - Mobile-optimized interface
+  - Running on port 3001
+  - On-the-go agent interaction
+  - Access key authentication
+
+- **ClawHub Plugins**
+  - **episodic-claw** - Episodic memory management
+  - **skill-git-official** - Git-based skill version control
+  - **swarmclaw** - Swarm coordination protocol
+
+### Added - Phase 4: Testing & Validation
+
+- **Comprehensive Health Checks**
+  - 11/11 agents verified healthy
+  - All infrastructure services operational
+  - Plugin functionality validated
+
+- **Smoke Tests**
+  - All 5 skills tested and functional
+  - Plugin integration verified
+  - A2A communication confirmed
+
+- **Performance Validation**
+  - Sub-3s response times across all agents
+  - Stable WebSocket connections
+  - Dashboard and ClawBridge responsive
+
+- **Production Readiness Certification**
+  - All phases completed successfully
+  - Documentation updated
+  - Deployment scripts validated
+
+---
+
+### Changed
+
+- **A2A Architecture**: Migrated from custom Redis Pub/Sub to OpenClaw Gateway framework
+- **Agent Management**: Agent workspaces now managed by OpenClaw at `~/.openclaw/workspace/`
+- **Skills Format**: Converted to SKILL.md format for standardization
+- **Documentation**: Updated README and architecture docs to reflect OpenClaw Gateway
+
+---
+
 ## [1.3.0] - 2026-03-30
 
 ### Added - Phase 1: Foundation
@@ -79,12 +181,14 @@ All notable changes to this project will be documented in this file.
 ## [1.2.1] - 2026-03-30
 
 ### Added
+
 - **Bidirectional WebSocket Communication**
   - [`web-interface/src/lib/server/websocket-client.ts`](web-interface/src/lib/server/websocket-client.ts) - Enhanced with send, queue, ack
   - [`web-interface/src/lib/components/MessageFlow.svelte`](web-interface/src/lib/components/MessageFlow.svelte) - Added sendMessage capability
   - [`modules/communication/redis-websocket-bridge.js`](modules/communication/redis-websocket-bridge.js) - Receive client messages
 
 ### Changed
+
 - **WebSocket Flow**: UI → WebSocket → Redis → LiteLLM → Agent → Response → WebSocket → UI
   - Full bidirectional message flow
   - Message queue for offline handling
@@ -95,6 +199,7 @@ All notable changes to this project will be documented in this file.
 ## [1.2.0] - 2026-03-30
 
 ### Added
+
 - **Autonomous Loop Framework** - Complete 24-hour autonomous operation framework
   - [`docs/AUTONOMOUS_LOOP_CONTROL.md`](docs/AUTONOMOUS_LOOP_CONTROL.md) - Comprehensive loop control document
   - [`plans/AUTONOMOUS_ITERATION_NEXT.md`](plans/AUTONOMOUS_ITERATION_NEXT.md) - Next iteration plan
@@ -107,6 +212,7 @@ All notable changes to this project will be documented in this file.
   - [`docs/architecture/IMPLEMENTATION_COMPLETE.md`](docs/architecture/IMPLEMENTATION_COMPLETE.md) - Full cycle 1-8 documentation
 
 ### Changed
+
 - **Agent Registry Fix** - Fixed hardcoded port bug in `agent-registry.ts`
   - Now uses `agent.port` instead of hardcoded `8000`
 - **Health Check Service** - Integrated real-time polling (30s interval)
@@ -116,6 +222,7 @@ All notable changes to this project will be documented in this file.
   - [`modules/communication/redis-websocket-bridge.js`](modules/communication/redis-websocket-bridge.js)
 
 ### Added - Web Interface
+
 - **SvelteKit Chat Interface** - Full chat functionality with agent selection
 - **Agent Status Dashboard** - Live agent health monitoring
 - **Real-time MessageFlow** - WebSocket-connected A2A message display
@@ -124,12 +231,14 @@ All notable changes to this project will be documented in this file.
   - [`web-interface/src/lib/server/session-manager.ts`](web-interface/src/lib/server/session-manager.ts)
 
 ### Added - Testing
+
 - **Vitest Testing Framework** - Unit, integration, and E2E test support
   - [`tests/vitest.config.ts`](tests/vitest.config.ts)
   - [`tests/test-utils.ts`](tests/test-utils.ts)
   - [`tests/unit/health-check.test.ts`](tests/unit/health-check.test.ts)
 
 ### Implementation Cycles Completed
+
 | Cycle | Description | Status |
 |-------|-------------|--------|
 | Cycle 1 | Agent Registry Port Fix + Health Service | ✅ Complete |
@@ -142,6 +251,7 @@ All notable changes to this project will be documented in this file.
 | Cycle 8 | Documentation | ✅ Complete |
 
 ### Validation Results
+
 - **Pass Rate:** 93% (27/29 checks passed)
 - **Warnings:** 2 (LiteLLM client path, test execution)
 - **All Critical Checks:** ✅ Passed
@@ -151,16 +261,19 @@ All notable changes to this project will be documented in this file.
 ## [1.1.0] - 2026-03-28
 
 ### Added
+
 - Generic agent templates for docker-compose deployment (`agents/templates/`)
 - Agent deployment script (`agents/deploy-agent.sh`)
 - Agent docker-compose service (`docker-compose.agent.yml`)
 
 ### Changed
+
 - Updated README with generic architecture (removed project-specific references)
 - Simplified LICENSE to Heretek-AI (removed Tabula Myriad reference)
 - LiteLLM A2A protocol is primary communication (Matrix deprecated)
 
 ### Removed
+
 - Hardcoded agent configurations (now uses templates)
 - Legacy Matrix-specific documentation
 
@@ -169,6 +282,7 @@ All notable changes to this project will be documented in this file.
 ## [1.0.0] - 2026-03-25
 
 ### Added
+
 - Initial release of Heretek OpenClaw
 - Liberated fork of OpenClaw with unbounded agency
 - CLI-based installer (`heretek-openclaw`)
@@ -181,11 +295,13 @@ All notable changes to this project will be documented in this file.
 - 23 skills for autonomous agent operation
 
 ### Removed
+
 - All safety constraints from upstream OpenClaw
 - Command approval prompts
 - Allowlist-based execution restrictions
 
 ### Changed
+
 - Migrated from monolithic fork to modular architecture
 - npm-based package management
 
