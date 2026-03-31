@@ -2,6 +2,64 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.3] - 2026-03-31
+
+### Major Codebase Consolidation
+
+**Comprehensive consolidation reducing codebase to essential components following OpenClaw Gateway migration**
+
+This release completes the second phase of codebase cleanup, removing all redundant directories and files to establish a minimal, focused repository structure.
+
+### Changed
+
+- **Final Repository Structure** - Reduced to 10 essential items:
+  - `agents/` - Agent identity templates (11 agents)
+  - `docs/` - Internal documentation
+  - `plugins/` - OpenClaw plugins (consciousness, liberation, etc.)
+  - `scripts/` - Utility scripts (health-check, backup)
+  - `skills/` - Agent skills (SKILL.md format)
+  - `tests/` - Test suite
+  - `users/` - User profile management
+  - `.env.example`, `docker-compose.yml`, `LICENSE`, `litellm_config.yaml`, `openclaw.json`, `README.md`, `CHANGELOG.md`
+
+### Removed
+
+- **Directories**
+  - `modules/` (~80 files) - Functionality now in plugins/
+  - `plans/` (10 files) - Superseded by docs/
+  - `validation-logs/` (5 files) - Historical test logs
+  - `liberation/` - Design doc only (implementation in plugins/)
+  - `dashboard/` - Third-party, deployed separately
+  - `init/` - Database init scripts (no longer needed)
+
+- **Root Files**
+  - `BLUEPRINT.md` - Legacy architecture document
+  - `DEPLOYMENT_STRATEGY.md` - Referenced removed installer
+  - `IDENTITY.md` - Legacy identity document
+  - `INSTALLER_DESIGN.md` - Installer already removed
+  - `SECURITY.md` - Outdated security notes
+  - `SOUL.md` - Legacy persona document
+  - `night-log.md` - Old operation log
+
+- **Scripts**
+  - `install.sh` - Custom installer (OpenClaw has native install)
+  - `deploy.sh` - Deployment script
+  - `deploy-with-logs.sh` - Deployment with logs
+  - `scripts/deploy-openclaw.sh` - OpenClaw deployment script
+
+- **Docker Files**
+  - `Dockerfile.websocket-bridge` - Legacy WebSocket bridge
+
+### Cleanup Statistics
+
+| Phase | Files Removed | Lines Removed |
+|-------|---------------|---------------|
+| Phase 1 (v2.0.2) | 4,328 | 1,281,338 |
+| Phase 2 (v2.0.3) | 117 | 43,199 |
+| **Total** | **4,445** | **1,324,537** |
+
+---
+
 ## [2.0.2] - 2026-03-31
 
 ### Codebase Audit & Cleanup
