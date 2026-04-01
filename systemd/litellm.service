@@ -1,0 +1,46 @@
+[Unit]
+Description=LiteLLM Proxy Service
+Documentation=https://docs.litellm.ai
+After=network.target postgresql.service redis.service
+Wants=postgresql.service redis.service
+
+[Service]
+Type=simple
+User=litellm
+Group=litellm
+
+# Environment configuration
+Environment="LITELLM_CONFIG_PATH=/etc/litellm/litellm_config.yaml"
+Environment="DATABASE_URL=postgresql://openclaw:password@localhost:5432/openclaw"
+Environment="REDIS_URL=redis://localhost:6379/0"
+EnvironmentFile=-/etc/openclaw/.env
+
+# Working directory
+WorkingDirectory=/opt/litellm
+
+# Main execution
+ExecStart=/opt/litellm/venv/bin/litellm --config /etc/litellm/litellm_config.yaml --port 4000 --num_workers 4
+
+# Restart configuration
+Restart=on-failure
+RestartSec=5
+
+# Resource limits
+LimitNOFILE=65535
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+
+# Allow write access to log directory
+ReadWritePaths=/var/log/litellm
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=litellm
+
+[Install]
+WantedBy=multi-user.target

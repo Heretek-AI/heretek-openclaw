@@ -1,0 +1,43 @@
+[Unit]
+Description=Redis In-Memory Data Store
+Documentation=https://redis.io
+After=network.target
+Wants=network.target
+
+[Service]
+Type=notify
+User=redis
+Group=redis
+
+# Environment configuration
+Environment="REDIS_PORT=6379"
+Environment="REDIS_BIND_ADDRESS=127.0.0.1"
+
+# Working directory
+WorkingDirectory=/var/lib/redis
+
+# Main execution
+ExecStart=/usr/bin/redis-server /etc/redis/redis.conf --daemonize no
+
+# Restart configuration
+Restart=on-failure
+RestartSec=5
+
+# Resource limits
+LimitNOFILE=65535
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+ReadWritePaths=/var/lib/redis
+ReadWritePaths=/var/log/redis
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=redis
+
+[Install]
+WantedBy=multi-user.target

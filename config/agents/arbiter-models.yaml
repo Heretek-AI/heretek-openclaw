@@ -1,0 +1,106 @@
+# ==============================================================================
+# Arbiter Agent Model Configuration
+# ==============================================================================
+# Agent Role: Decision-maker / Conflict resolver
+# Priority: High - Critical for collective decisions
+# Recommended: Premium models with strong reasoning capabilities
+# ==============================================================================
+
+agent_name: arbiter
+agent_role: decision-maker
+agent_description: "Resolves conflicts and makes final decisions in the agent collective"
+
+# ==============================================================================
+# Model Configuration
+# ==============================================================================
+
+model_config:
+  # Primary model for arbiter - best reasoning capabilities
+  primary:
+    model: anthropic/claude-3-5-sonnet
+    max_tokens: 8192
+    temperature: 0.5
+    top_p: 0.9
+    api_key_env: ANTHROPIC_API_KEY
+    description: "Claude 3.5 Sonnet - Excellent reasoning and nuanced decision-making"
+  
+  # First fallback
+  fallback:
+    model: openai/gpt-4-turbo
+    max_tokens: 8192
+    temperature: 0.5
+    top_p: 0.9
+    api_key_env: OPENAI_API_KEY
+    description: "GPT-4 Turbo - Strong reasoning as fallback"
+  
+  # Additional fallback chain for high availability
+  fallback_chain:
+    - model: openai/gpt-4o
+      max_tokens: 8192
+      temperature: 0.5
+      description: "GPT-4o - Fast fallback with good reasoning"
+    - model: openai/gpt-4
+      max_tokens: 4096
+      temperature: 0.5
+      description: "GPT-4 - Legacy fallback"
+    - model: anthropic/claude-3-sonnet
+      max_tokens: 4096
+      temperature: 0.5
+      description: "Claude 3 Sonnet - Alternative provider fallback"
+
+# ==============================================================================
+# Rate Limiting
+# ==============================================================================
+
+rate_limits:
+  requests_per_minute: 60
+  tokens_per_minute: 50000
+  tokens_per_day: 1000000
+  burst_limit: 10
+
+# ==============================================================================
+# Budget Configuration
+# ==============================================================================
+
+budget:
+  daily_limit_usd: 25.00
+  monthly_limit_usd: 500.00
+  alert_threshold: 0.8  # Alert at 80% of budget
+  hard_stop_threshold: 1.0  # Stop at 100% of budget
+
+# ==============================================================================
+# Retry Configuration
+# ==============================================================================
+
+retry:
+  max_retries: 3
+  retry_delay_ms: 1000
+  exponential_backoff: true
+  max_delay_ms: 10000
+
+# ==============================================================================
+# Logging and Observability
+# ==============================================================================
+
+logging:
+  log_requests: true
+  log_responses: true
+  log_costs: true
+  log_fallbacks: true
+  trace_id_header: "x-arbiter-trace-id"
+
+# ==============================================================================
+# Model-Specific Overrides
+# ==============================================================================
+
+model_overrides:
+  # Override for specific request types
+  conflict_resolution:
+    temperature: 0.3  # Lower temperature for more deterministic decisions
+    max_tokens: 4096
+  
+  # Override for quick decisions
+  quick_decision:
+    model: openai/gpt-4o-mini
+    temperature: 0.7
+    max_tokens: 2048

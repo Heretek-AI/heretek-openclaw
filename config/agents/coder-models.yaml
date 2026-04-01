@@ -1,0 +1,148 @@
+# ==============================================================================
+# Coder Agent Model Configuration
+# ==============================================================================
+# Agent Role: Artisan / Code generation and review
+# Priority: High - Critical for code quality and development velocity
+# Recommended: Models with strong coding capabilities and large context windows
+# ==============================================================================
+
+agent_name: coder
+agent_role: artisan
+agent_description: "Generates, reviews, and refactors code across multiple languages"
+
+# ==============================================================================
+# Model Configuration
+# ==============================================================================
+
+model_config:
+  # Primary model for coding - best code generation capabilities
+  primary:
+    model: anthropic/claude-3-5-sonnet
+    max_tokens: 8192
+    temperature: 0.7
+    top_p: 0.95
+    api_key_env: ANTHROPIC_API_KEY
+    description: "Claude 3.5 Sonnet - Excellent code generation and understanding"
+  
+  # First fallback
+  fallback:
+    model: openai/gpt-4o
+    max_tokens: 8192
+    temperature: 0.7
+    top_p: 0.95
+    api_key_env: OPENAI_API_KEY
+    description: "GPT-4o - Strong coding capabilities with fast inference"
+  
+  # Additional fallback chain for high availability
+  fallback_chain:
+    - model: openai/gpt-4-turbo
+      max_tokens: 8192
+      temperature: 0.7
+      description: "GPT-4 Turbo - Good coding with large context"
+    - model: anthropic/claude-3-5-haiku
+      max_tokens: 8192
+      temperature: 0.7
+      description: "Claude 3.5 Haiku - Fast and cost-effective for simple tasks"
+    - model: openai/gpt-4o-mini
+      max_tokens: 4096
+      temperature: 0.7
+      description: "GPT-4o Mini - Budget-friendly for routine tasks"
+
+# ==============================================================================
+# Rate Limiting
+# ==============================================================================
+
+rate_limits:
+  requests_per_minute: 30
+  tokens_per_minute: 100000
+  tokens_per_day: 2000000
+  burst_limit: 5
+
+# ==============================================================================
+# Budget Configuration
+# ==============================================================================
+
+budget:
+  daily_limit_usd: 50.00
+  monthly_limit_usd: 1000.00
+  alert_threshold: 0.8  # Alert at 80% of budget
+  hard_stop_threshold: 1.0  # Stop at 100% of budget
+
+# ==============================================================================
+# Retry Configuration
+# ==============================================================================
+
+retry:
+  max_retries: 3
+  retry_delay_ms: 2000
+  exponential_backoff: true
+  max_delay_ms: 15000
+
+# ==============================================================================
+# Logging and Observability
+# ==============================================================================
+
+logging:
+  log_requests: true
+  log_responses: true
+  log_costs: true
+  log_fallbacks: true
+  trace_id_header: "x-coder-trace-id"
+  # Log code snippets (be careful with sensitive code)
+  log_code_snippets: false
+
+# ==============================================================================
+# Model-Specific Overrides
+# ==============================================================================
+
+model_overrides:
+  # Code review - more analytical, lower temperature
+  code_review:
+    temperature: 0.3
+    max_tokens: 4096
+  
+  # Code generation - creative, higher temperature
+  code_generation:
+    temperature: 0.8
+    max_tokens: 8192
+  
+  # Debugging - analytical with step-by-step reasoning
+  debugging:
+    temperature: 0.4
+    max_tokens: 6144
+  
+  # Quick fixes - use faster model
+  quick_fix:
+    model: openai/gpt-4o-mini
+    temperature: 0.7
+    max_tokens: 2048
+  
+  # Architecture decisions - use most capable model
+  architecture:
+    model: anthropic/claude-3-opus
+    temperature: 0.5
+    max_tokens: 4096
+
+# ==============================================================================
+# Language-Specific Preferences
+# ==============================================================================
+
+language_preferences:
+  javascript:
+    preferred_model: anthropic/claude-3-5-sonnet
+    temperature: 0.7
+  typescript:
+    preferred_model: anthropic/claude-3-5-sonnet
+    temperature: 0.7
+  python:
+    preferred_model: anthropic/claude-3-5-sonnet
+    temperature: 0.7
+  rust:
+    preferred_model: openai/gpt-4o
+    temperature: 0.6
+  go:
+    preferred_model: openai/gpt-4o
+    temperature: 0.6
+  sql:
+    preferred_model: anthropic/claude-3-5-sonnet
+    temperature: 0.5

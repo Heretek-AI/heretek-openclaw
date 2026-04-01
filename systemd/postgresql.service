@@ -1,0 +1,48 @@
+[Unit]
+Description=PostgreSQL RDBMS with pgvector
+Documentation=https://www.postgresql.org/docs/
+After=network.target
+Wants=network.target
+
+[Service]
+Type=forking
+User=postgres
+Group=postgres
+
+# Environment configuration
+Environment="PGDATA=/var/lib/postgresql/15/main"
+Environment="PGVERSION=15"
+
+# Working directory
+WorkingDirectory=/var/lib/postgresql
+
+# Main execution
+ExecStart=/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/15/main -o "-c config_file=/etc/postgresql/15/main/postgresql.conf" start
+ExecReload=/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/15/main reload
+ExecStop=/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/15/main -m fast stop
+
+# Restart configuration
+Restart=on-failure
+RestartSec=5
+
+# Timeout for startup
+TimeoutSec=300
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+
+# Allow write access to PostgreSQL directories
+ReadWritePaths=/var/lib/postgresql
+ReadWritePaths=/var/log/postgresql
+ReadWritePaths=/run/postgresql
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=postgresql
+
+[Install]
+WantedBy=multi-user.target

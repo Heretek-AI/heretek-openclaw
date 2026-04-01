@@ -1,0 +1,46 @@
+[Unit]
+Description=OpenClaw Gateway Service
+Documentation=https://github.com/Heretek-AI/heretek-openclaw
+After=network.target litellm.service postgresql.service redis.service
+Wants=litellm.service postgresql.service redis.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+
+# Environment configuration
+Environment="OPENCLAW_DIR=/root/.openclaw"
+Environment="OPENCLAW_WORKSPACE=/root/.openclaw/agents"
+Environment="NODE_ENV=production"
+EnvironmentFile=-/etc/openclaw/.env
+
+# Working directory
+WorkingDirectory=/root/heretek/heretek-openclaw
+
+# Main execution
+ExecStart=/usr/bin/node /root/heretek/heretek-openclaw/dist/gateway/index.js
+Restart=on-failure
+RestartSec=10
+
+# Resource limits
+LimitNOFILE=65535
+LimitNPROC=4096
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+
+# Allow write access to OpenClaw directories
+ReadWritePaths=/root/.openclaw
+ReadWritePaths=/var/log/openclaw
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=openclaw-gateway
+
+[Install]
+WantedBy=multi-user.target
