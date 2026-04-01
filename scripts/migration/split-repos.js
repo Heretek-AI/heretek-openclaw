@@ -2,12 +2,12 @@
 
 /**
  * Heretek OpenClaw Monorepo Split Script
- * 
+ *
  * Extracts specified paths from the monorepo into dedicated repositories.
  * Uses git-filter-repo for efficient history preservation.
- * 
+ *
  * Usage: node scripts/migration/split-repos.js <repo-name>
- * 
+ *
  * Available repositories:
  *   - heretek-openclaw-core
  *   - heretek-openclaw-cli
@@ -17,9 +17,9 @@
  *   - heretek-openclaw-docs
  */
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
 // Repository configuration
 const REPOS = {
@@ -306,6 +306,7 @@ function splitRepo(repoName, config) {
   console.log(`   Paths: ${config.paths.length} entries`);
   
   const repoDir = path.join(process.cwd(), repoName);
+  const sourceRepoDir = process.cwd(); // Use current directory as source
   
   // Check if git-filter-repo is installed
   try {
@@ -317,22 +318,19 @@ function splitRepo(repoName, config) {
     process.exit(1);
   }
   
-  // Clone the monorepo
-  console.log('  Cloning monorepo...');
+  // Clone from local repository
+  console.log('  Cloning from local monorepo...');
   if (fs.existsSync(repoDir)) {
     console.log('  ⚠️  Directory already exists, removing...');
     fs.rmSync(repoDir, { recursive: true, force: true });
   }
-  exec(`git clone --depth 1 git@github.com:heretek/heretek-openclaw.git ${repoName}`, { stdio: 'pipe' });
+  exec(`git clone file://${sourceRepoDir} ${repoName}`, { stdio: 'pipe' });
   
   // Change to repo directory
   const originalDir = process.cwd();
   process.chdir(repoDir);
   
   try {
-    // Initialize git for filter-repo (fresh clone might not have full history)
-    exec('git fetch --unshallow 2>/dev/null || true', { stdio: 'pipe' });
-    
     // Filter to only include specified paths
     const pathsArg = config.paths.map(p => `--path ${p}`).join(' ');
     console.log('  Filtering repository...');
@@ -344,16 +342,14 @@ function splitRepo(repoName, config) {
       config.postProcess(repoDir);
     }
     
-    // Update remote URL
-    console.log('  Updating remote...');
-    exec(`git remote set-url origin git@github.com:heretek/${repoName}.git`);
+    // Add remote URL for new GitHub repository
+    console.log('  Adding remote...');
+    exec(`git remote add origin git@github.com:Heretek-AI/${repoName}.git`);
     
-    // Push to new repository
-    console.log('  Pushing to new repository...');
-    exec('git push -u origin main --force');
-    
-    console.log(`✅ ${repoName} split complete!`);
-    console.log(`   Repository: https://github.com/heretek/${repoName}`);
+    console.log(`✅ ${repoName} extracted to ${repoDir}`);
+    console.log(`   Next steps:`);
+    console.log(`   1. cd ${repoDir}`);
+    console.log(`   2. git push -u origin main --force`);
     
   } catch (error) {
     console.error(`❌ Error splitting ${repoName}: ${error.message}`);
